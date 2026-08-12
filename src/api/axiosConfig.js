@@ -16,8 +16,7 @@ const api = axios.create({
   baseURL: API_BASE_URL,
   headers: {
     'Content-Type': 'application/json',
-  },
-  withCredentials: true,
+  }
 })
 
 const normalizeToken = (token) => {
@@ -120,8 +119,7 @@ api.interceptors.response.use(
 )
 
 export const apiUpload = axios.create({
-  baseURL: API_BASE_URL,
-  withCredentials: true,
+  baseURL: API_BASE_URL
 })
 
 apiUpload.interceptors.request.use((config) => {
