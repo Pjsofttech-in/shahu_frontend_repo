@@ -1,6 +1,7 @@
 import React from 'react'
 import { Routes, Route, Navigate } from 'react-router-dom'
 import ProtectedRoute from './components/common/ProtectedRoute.jsx'
+import { useAuth } from './context/AuthContext.jsx'
 
 import Login from './pages/Login.jsx'
 import Dashboard from './pages/Dashboard.jsx'
@@ -28,10 +29,16 @@ import Syllabus from './pages/sankalp/Syllabus.jsx'
 import AnswerKey from './pages/sankalp/AnswerKey.jsx'
 import ResultCheck from './pages/sankalp/ResultCheck.jsx'
 import ResultPdf from './pages/sankalp/ResultPdf.jsx'
+import Unauthorized from './pages/Unauthorized.jsx'
 
 const wrap = (Component) => (
   <ProtectedRoute><Component /></ProtectedRoute>
 )
+
+const HomeRoute = () => {
+  const { isAuthenticated } = useAuth()
+  return isAuthenticated ? <Navigate to="/dashboard" replace /> : <Navigate to="/login" replace />
+}
 
 export default function App() {
   return (
@@ -64,8 +71,10 @@ export default function App() {
       <Route path="/sankalp-exam/result-check" element={wrap(ResultCheck)} />
       <Route path="/sankalp-exam/result-pdf" element={wrap(ResultPdf)} />
 
-      <Route path="/" element={<Navigate to="/dashboard" replace />} />
-      <Route path="*" element={<Navigate to="/dashboard" replace />} />
+      <Route path="/401" element={<Unauthorized />} />
+
+      <Route path="/" element={<HomeRoute />} />
+      <Route path="*" element={<HomeRoute />} />
     </Routes>
   )
 }

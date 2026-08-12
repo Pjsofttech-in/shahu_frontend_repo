@@ -11,6 +11,7 @@ import axios from 'axios'
 
 const envBaseUrl = import.meta.env.VITE_API_BASE_URL?.trim()
 const API_BASE_URL = envBaseUrl || '/api'
+const USE_COOKIES = (import.meta.env.VITE_API_USE_COOKIES || '').toString() === 'true'
 
 const api = axios.create({
   baseURL: API_BASE_URL,
@@ -18,6 +19,10 @@ const api = axios.create({
     'Content-Type': 'application/json',
   }
 })
+
+if (USE_COOKIES) {
+  api.defaults.withCredentials = true
+}
 
 const normalizeToken = (token) => {
   if (!token) return null
@@ -39,9 +44,15 @@ export const tokenStore = {
     }
   },
 
+  getCookieAuth: () => sessionStorage.getItem('cookieAuth') === 'true',
+
+  setCookieAuth: (flag = true) => {
+    sessionStorage.setItem('cookieAuth', flag ? 'true' : 'false')
+  },
   clear: () => {
     sessionStorage.removeItem('authToken')
     sessionStorage.removeItem('authUser')
+    sessionStorage.removeItem('cookieAuth')
   },
 
   getUser: () => {
@@ -68,8 +79,9 @@ export const tokenStore = {
 try {
   const devToken = (import.meta.env.VITE_ADMIN_LOGIN_TOKEN || '').trim()
   const isDev = import.meta.env.MODE === 'development' || import.meta.env.VITE_APP_ENV === 'development'
+  const allowDevAutoLogin = (import.meta.env.VITE_ENABLE_DEV_AUTO_LOGIN || '').toString() === 'true'
 
-  if (isDev && devToken) {
+  if (isDev && devToken && allowDevAutoLogin) {
     if (!tokenStore.get()) {
       tokenStore.set(devToken)
       // eslint-disable-next-line no-console
@@ -87,6 +99,12 @@ try {
 api.interceptors.request.use(
   (config) => {
     const token = tokenStore.get()
+
+    // Dev-only: log outgoing requests to help debug missing auth headers
+    try {
+      const isDev = import.meta.env.MODE === 'development' || import.meta.env.VITE_APP_ENV === 'development'
+      if (isDev) console.debug('[api.request] url=', config.url, 'authorization=', token ? 'Bearer <token>' : '(none)')
+    } catch (e) {}
 
     if (token) {
       config.headers = config.headers || {}
@@ -106,11 +124,23 @@ api.interceptors.response.use(
   (response) => response,
 
   (error) => {
+    try {
+      const isDev = import.meta.env.MODE === 'development' || import.meta.env.VITE_APP_ENV === 'development'
+      if (isDev) console.debug('[api.response.error]', { url: error?.config?.url, status: error?.response?.status, data: error?.response?.data })
+    } catch (e) {}
+
     if (error.response?.status === 401) {
       tokenStore.clear()
 
-      if (window.location.pathname !== '/login') {
-        window.location.href = '/login'
+      const currentPath = window.location.pathname
+      const authEndpoint = /\/auth\//i.test(error?.config?.url || '')
+      const isLoginRoute = currentPath === '/login'
+      const isUnauthorizedRoute = currentPath === '/401'
+
+      // Keep users on the login screen when attempting to sign in. Only send
+      // genuinely unauthenticated app sessions to the 401 page.
+      if (!isLoginRoute && !isUnauthorizedRoute && !authEndpoint) {
+        window.location.href = '/401'
       }
     }
 
@@ -121,6 +151,10 @@ api.interceptors.response.use(
 export const apiUpload = axios.create({
   baseURL: API_BASE_URL
 })
+
+if (USE_COOKIES) {
+  apiUpload.defaults.withCredentials = true
+}
 
 apiUpload.interceptors.request.use((config) => {
   const token = tokenStore.get()

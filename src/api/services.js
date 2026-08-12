@@ -64,6 +64,14 @@ export const authService = {
       password,
     })
 
+    // Dev-only: log response shape to help diagnose missing token vs cookie sessions
+    try {
+      const isDev = import.meta.env.MODE === 'development' || import.meta.env.VITE_APP_ENV === 'development'
+      if (isDev) console.debug('[auth.login] response', { data: response.data, headers: response.headers })
+    } catch (e) {
+      // ignore
+    }
+
     const payload = getResponseData(response)
     const token = extractToken(payload, response) || import.meta.env.VITE_ADMIN_LOGIN_TOKEN?.trim() || null
     const user = extractUser(payload, response)
