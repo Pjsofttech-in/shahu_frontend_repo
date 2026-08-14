@@ -1,12 +1,10 @@
 import React from 'react'
-import Layout from '../../components/layout/Layout.jsx'
 import CrudManager from '../../components/common/CrudManager.jsx'
 import { facultyService, uploadFile } from '../../api/services.js'
 
 export default function Faculty() {
   return (
-    <Layout title="Website · Faculty">
-      <CrudManager
+    <CrudManager
         title="Faculty"
         subtitle="Teaching staff profiles shown on the public website."
         service={facultyService}
@@ -37,6 +35,5 @@ export default function Faculty() {
           return payload
         }}
       />
-    </Layout>
   )
 }

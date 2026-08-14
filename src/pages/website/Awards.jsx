@@ -1,12 +1,10 @@
 import React from 'react'
-import Layout from '../../components/layout/Layout.jsx'
 import CrudManager from '../../components/common/CrudManager.jsx'
 import { awardService, uploadFile } from '../../api/services.js'
 
 export default function Awards() {
   return (
-    <Layout title="Website · Awards">
-      <CrudManager
+    <CrudManager
         title="Awards & Recognition"
         subtitle="Awards and achievements displayed on the public website."
         service={awardService}
@@ -34,6 +32,5 @@ export default function Awards() {
           return payload
         }}
       />
-    </Layout>
   )
 }

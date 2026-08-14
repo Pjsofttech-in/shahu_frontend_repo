@@ -21,10 +21,9 @@ export function AuthProvider({ children }) {
     if (!storedToken) return null
     if (devAutoLoginEnabled) return storedToken
 
-    // Prevent stale tokens from previous failed attempts or prior dev sessions
-    // from auto-authenticating the app when the user actually needs to log in.
-    tokenStore.clear()
-    return null
+    // Keep a valid stored token so the app remains authenticated across refreshes.
+    // Clearing it here causes false 401s and makes authorized routes redirect to /401.
+    return storedToken
   })
 
   const login = useCallback(async (email, password) => {

@@ -1,13 +1,11 @@
 import React from 'react'
 import { FiFileText } from 'react-icons/fi'
-import Layout from '../../components/layout/Layout.jsx'
 import CrudManager from '../../components/common/CrudManager.jsx'
 import { answerKeyService, uploadFile } from '../../api/services.js'
 
 export default function AnswerKey() {
   return (
-    <Layout title="Sankalp Exam · Answer Key">
-      <CrudManager
+    <CrudManager
         title="Answer Keys"
         subtitle="Publish answer keys for each Sankalp Exam set / class."
         service={answerKeyService}
@@ -42,6 +40,5 @@ export default function AnswerKey() {
           return payload
         }}
       />
-    </Layout>
   )
 }

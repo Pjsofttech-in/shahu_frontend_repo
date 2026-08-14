@@ -130,6 +130,15 @@ api.interceptors.response.use(
     } catch (e) {}
 
     if (error.response?.status === 401) {
+      const isDev = import.meta.env.MODE === 'development' || import.meta.env.VITE_APP_ENV === 'development'
+
+      // In local development, do not forcibly kick the user to /401 when the API is
+      // still being worked on or the backend is rejecting a permission check. This
+      // lets the page remain accessible for debugging while still surfacing the issue.
+      if (isDev) {
+        return Promise.reject(error)
+      }
+
       tokenStore.clear()
 
       const currentPath = window.location.pathname

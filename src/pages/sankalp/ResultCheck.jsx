@@ -1,12 +1,10 @@
 import React from 'react'
-import Layout from '../../components/layout/Layout.jsx'
 import CrudManager from '../../components/common/CrudManager.jsx'
 import { resultCheckService } from '../../api/services.js'
 
 export default function ResultCheck() {
   return (
-    <Layout title="Sankalp Exam · Result Check">
-      <CrudManager
+    <CrudManager
         title="Result Check"
         subtitle="Per-student results — students use these to check their result on the public website using Roll Number."
         service={resultCheckService}
@@ -34,6 +32,5 @@ export default function ResultCheck() {
           { name: 'year', label: 'Exam Year', type: 'number', required: true },
         ]}
       />
-    </Layout>
   )
 }

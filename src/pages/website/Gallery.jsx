@@ -1,12 +1,10 @@
 import React from 'react'
-import Layout from '../../components/layout/Layout.jsx'
 import CrudManager from '../../components/common/CrudManager.jsx'
 import { galleryService, uploadFile } from '../../api/services.js'
 
 export default function Gallery() {
   return (
-    <Layout title="Website · Gallery">
-      <CrudManager
+    <CrudManager
         title="Gallery"
         subtitle="Photos shown in the public website gallery, grouped by category."
         service={galleryService}
@@ -37,6 +35,5 @@ export default function Gallery() {
           return payload
         }}
       />
-    </Layout>
   )
 }

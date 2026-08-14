@@ -1,16 +1,20 @@
 import React, { useState } from 'react'
-import { useNavigate, useLocation } from 'react-router-dom'
+import { useNavigate, useLocation, Navigate } from 'react-router-dom'
 import { FiMail, FiLock } from 'react-icons/fi'
 import { useAuth } from '../context/AuthContext.jsx'
 
 export default function Login() {
-  const { login } = useAuth()
+  const { login, isAuthenticated } = useAuth()
   const navigate = useNavigate()
   const location = useLocation()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
+
+  if (isAuthenticated) {
+    return <Navigate to="/dashboard" replace />
+  }
 
   const handleSubmit = async (e) => {
     e.preventDefault()

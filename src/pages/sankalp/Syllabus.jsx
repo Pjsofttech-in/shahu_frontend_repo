@@ -1,13 +1,11 @@
 import React from 'react'
 import { FiFileText } from 'react-icons/fi'
-import Layout from '../../components/layout/Layout.jsx'
 import CrudManager from '../../components/common/CrudManager.jsx'
 import { syllabusService, uploadFile } from '../../api/services.js'
 
 export default function Syllabus() {
   return (
-    <Layout title="Sankalp Exam · Syllabus">
-      <CrudManager
+    <CrudManager
         title="Syllabus"
         subtitle="Upload class-wise / subject-wise syllabus documents for the Sankalp Exam."
         service={syllabusService}
@@ -40,6 +38,5 @@ export default function Syllabus() {
           return payload
         }}
       />
-    </Layout>
   )
 }

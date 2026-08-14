@@ -1,12 +1,10 @@
 import React from 'react'
-import Layout from '../../components/layout/Layout.jsx'
 import SingletonForm from '../../components/common/SingletonForm.jsx'
 import { contactService } from '../../api/services.js'
 
 export default function ContactUs() {
   return (
-    <Layout title="Website · Contact Us">
-      <SingletonForm
+    <SingletonForm
         title="Contact Us"
         subtitle="Edit the contact details shown on the public website's Contact page."
         service={contactService}
@@ -18,6 +16,5 @@ export default function ContactUs() {
           { name: 'mapEmbedUrl', label: 'Google Maps Embed URL', type: 'url' },
         ]}
       />
-    </Layout>
   )
 }

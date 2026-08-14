@@ -1,5 +1,4 @@
 import React, { useState } from 'react'
-import Layout from '../../components/layout/Layout.jsx'
 import CrudManager from '../../components/common/CrudManager.jsx'
 import {
   studentService, districtService, talukasByDistrict, centersByTaluka, coordinatorService, uploadFile,
@@ -47,8 +46,7 @@ export default function Students() {
   const [classFilter, setClassFilter] = useState('')
 
   return (
-    <Layout title="Students">
-      <CrudManager
+    <CrudManager
         title="Students"
         subtitle="All students registered under Sankalp centers. Add students manually or review registrations."
         service={studentService}
@@ -94,48 +92,62 @@ export default function Students() {
           ] },
         ]}
         transformSubmit={async (fv, editing) => {
+          // Ensure required IDs are numeric and never null
+          const districtId = fv.districtId ? Number(fv.districtId) : null
+          const talukaId = fv.talukaId ? Number(fv.talukaId) : null
+          const centerId = fv.centerId ? Number(fv.centerId) : null
+          const coordinatorId = fv.coordinatorId ? Number(fv.coordinatorId) : null
+
+          if (!districtId) {
+            throw new Error('District is required')
+          }
+          if (!talukaId) {
+            throw new Error('Taluka is required')
+          }
+          if (!centerId) {
+            throw new Error('Center is required')
+          }
+
           // Map flat select ids into nested objects expected by backend (JPA entity children)
           const payload = {
-            name: fv.name,
+            name: fv.name?.trim(),
             dob: fv.dob,
             gender: fv.gender,
             standard: fv.standard,
-            schoolName: fv.schoolName,
-            fatherName: fv.fatherName,
-            motherName: fv.motherName,
-            mobile: fv.mobile,
-            email: fv.email,
-            address: fv.address,
+            schoolName: fv.schoolName?.trim(),
+            fatherName: fv.fatherName?.trim(),
+            motherName: fv.motherName?.trim() || null,
+            mobile: fv.mobile?.trim(),
+            email: fv.email?.trim() || null,
+            address: fv.address?.trim() || null,
             status: fv.status || 'ACTIVE',
-            district: fv.districtId ? { id: Number(fv.districtId) } : undefined,
-            taluka: fv.talukaId ? { id: Number(fv.talukaId) } : undefined,
-            center: fv.centerId ? { id: Number(fv.centerId) } : undefined,
-            coordinator: fv.coordinatorId ? { id: Number(fv.coordinatorId) } : undefined,
-            // also include primitive/DB-style fields to satisfy controllers that expect ids or snake_case
-            districtId: fv.districtId ? Number(fv.districtId) : undefined,
-            talukaId: fv.talukaId ? Number(fv.talukaId) : undefined,
-            centerId: fv.centerId ? Number(fv.centerId) : undefined,
-            coordinatorId: fv.coordinatorId ? Number(fv.coordinatorId) : undefined,
-            district_id: fv.districtId ? Number(fv.districtId) : undefined,
-            taluka_id: fv.talukaId ? Number(fv.talukaId) : undefined,
-            center_id: fv.centerId ? Number(fv.centerId) : undefined,
-            coordinator_id: fv.coordinatorId ? Number(fv.coordinatorId) : undefined,
+            districtId,
+            talukaId,
+            centerId,
           }
-          // Handle file upload for photo (development: replace file with uploaded URL)
+
+          if (coordinatorId) {
+            payload.coordinatorId = coordinatorId
+          }
+
+          // Handle file upload for photo
           if (fv.photo && fv.photo instanceof File) {
             try {
               const res = await uploadFile(fv.photo, 'students')
-              // backend might expect 'photoUrl' or 'photo' — send both fallback
               payload.photo = res.url || res.data?.url || res.fileUrl || res.photoUrl || null
             } catch (e) {
-              // ignore upload error in submit mapping, allow backend to handle missing photo
-              console.warn('Photo upload failed', e)
+              console.warn('Photo upload failed:', e)
+              // Continue without photo if upload fails
             }
           } else if (fv.photo && typeof fv.photo === 'string') {
             payload.photo = fv.photo
           }
+
           // If editing, ensure id is included
-          if (editing && fv.id) payload.id = fv.id
+          if (editing?.id) {
+            payload.id = editing.id
+          }
+
           return payload
         }}
         extraToolbar={(
@@ -151,6 +163,5 @@ export default function Students() {
         )}
         filterFn={classFilter ? (r) => r.standard === classFilter : undefined}
       />
-    </Layout>
-  )
-}
+    )
+  }

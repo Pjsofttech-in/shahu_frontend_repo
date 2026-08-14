@@ -1,5 +1,4 @@
 import React from 'react'
-import Layout from '../../components/layout/Layout.jsx'
 import SingletonForm from '../../components/common/SingletonForm.jsx'
 import { footerService } from '../../api/services.js'
 
@@ -28,8 +27,7 @@ const FooterPreview = (v) => (
 
 export default function Footer() {
   return (
-    <Layout title="Website · Footer">
-      <SingletonForm
+    <SingletonForm
         title="Footer Settings"
         subtitle="Edit the content shown in the website footer. Preview updates live below."
         service={footerService}
@@ -45,6 +43,5 @@ export default function Footer() {
           { name: 'youtubeUrl', label: 'YouTube URL', type: 'url' },
         ]}
       />
-    </Layout>
   )
 }

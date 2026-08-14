@@ -1,12 +1,10 @@
 import React from 'react'
-import Layout from '../../components/layout/Layout.jsx'
 import CrudManager from '../../components/common/CrudManager.jsx'
 import { testimonialService, uploadFile } from '../../api/services.js'
 
 export default function Testimonials() {
   return (
-    <Layout title="Website · Testimonials">
-      <CrudManager
+    <CrudManager
         title="Testimonials"
         subtitle="Reviews and feedback shown on the public website."
         service={testimonialService}
@@ -34,6 +32,5 @@ export default function Testimonials() {
           return payload
         }}
       />
-    </Layout>
   )
 }

@@ -1,12 +1,10 @@
 import React from 'react'
-import Layout from '../../components/layout/Layout.jsx'
 import SingletonForm from '../../components/common/SingletonForm.jsx'
 import { visionMissionService } from '../../api/services.js'
 
 export default function VisionMission() {
   return (
-    <Layout title="Website · Vision & Mission">
-      <SingletonForm
+    <SingletonForm
         title="Vision & Mission"
         subtitle="Edit the Vision, Mission, and About text shown on the public website."
         service={visionMissionService}
@@ -16,6 +14,5 @@ export default function VisionMission() {
           { name: 'aboutUs', label: 'About Us', type: 'textarea', rows: 5 },
         ]}
       />
-    </Layout>
   )
 }

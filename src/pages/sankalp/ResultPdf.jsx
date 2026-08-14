@@ -1,13 +1,11 @@
 import React from 'react'
 import { FiFileText } from 'react-icons/fi'
-import Layout from '../../components/layout/Layout.jsx'
 import CrudManager from '../../components/common/CrudManager.jsx'
 import { resultPdfService, uploadFile } from '../../api/services.js'
 
 export default function ResultPdf() {
   return (
-    <Layout title="Sankalp Exam · Result PDF">
-      <CrudManager
+    <CrudManager
         title="Result PDFs"
         subtitle="Upload consolidated result sheets (center-wise / class-wise) for download on the public website."
         service={resultPdfService}
@@ -40,6 +38,5 @@ export default function ResultPdf() {
           return payload
         }}
       />
-    </Layout>
   )
 }

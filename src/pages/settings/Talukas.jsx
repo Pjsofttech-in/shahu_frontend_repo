@@ -1,7 +1,6 @@
 import React from 'react'
 import { useNavigate } from 'react-router-dom'
 import { FiHome } from 'react-icons/fi'
-import Layout from '../../components/layout/Layout.jsx'
 import CrudManager from '../../components/common/CrudManager.jsx'
 import { talukaService, districtService } from '../../api/services.js'
 
@@ -19,8 +18,7 @@ export default function Talukas() {
   const navigate = useNavigate()
 
   return (
-    <Layout title="Settings · Talukas">
-      <CrudManager
+    <CrudManager
         title="Talukas"
         subtitle="Each Taluka belongs to a District, and contains Centers."
         service={talukaService}
@@ -36,21 +34,31 @@ export default function Talukas() {
           { name: 'name', label: 'Taluka Name', type: 'text', required: true },
           { name: 'districtId', label: 'District', type: 'select', required: true, options: loadDistrictOptions },
         ]}
-        transformSubmit={async (fv, editing) => ({
-          name: fv.name,
-          talukaName: fv.name,
-          taluka_name: fv.name,
-          district: fv.districtId ? { id: Number(fv.districtId) } : undefined,
-          districtId: fv.districtId ? Number(fv.districtId) : undefined,
-          district_id: fv.districtId ? Number(fv.districtId) : undefined,
-          id: editing ? fv.id : undefined,
-        })}
+        transformSubmit={async (fv, editing) => {
+          // Ensure required district ID is numeric and never null
+          const districtId = fv.districtId ? Number(fv.districtId) : null
+
+          if (!districtId) {
+            throw new Error('District is required')
+          }
+
+          const payload = {
+            name: fv.name?.trim(),
+            districtId,
+          }
+
+          if (editing?.id) {
+            payload.id = editing.id
+          }
+
+          return payload
+        }}
         extraRowAction={{
           label: 'Add Center',
           icon: <FiHome />,
           onClick: () => navigate('/settings/centers'),
         }}
       />
-    </Layout>
+
   )
 }

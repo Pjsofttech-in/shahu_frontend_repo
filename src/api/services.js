@@ -95,6 +95,9 @@ export const talukaService = makeCrudService('/talukas')
 export const centerService = makeCrudService('/centers')
 export const coordinatorService = makeCrudService('/coordinators')
 
+// ---------------- Schools ----------------
+export const schoolService = makeCrudService('/schools')
+
 export const talukasByDistrict = (districtId) =>
   api.get(`/talukas/district/${districtId}`).then((r) => r.data)
 export const centersByTaluka = (talukaId) =>
@@ -135,9 +138,32 @@ export const resultPdfService = makeCrudService('/sankalp/result-pdfs')
 
 // ---------------- File upload helper ----------------
 // Use for image / pdf uploads (gallery photos, download PDFs, result PDFs, etc.)
-export const uploadFile = (file, folder = 'general') => {
+export const uploadFile = async (file, folder = 'general') => {
   const form = new FormData()
   form.append('file', file)
   form.append('folder', folder)
-  return apiUpload.post('/files/upload', form).then((r) => r.data) // -> { url }
+  
+  try {
+    const response = await apiUpload.post('/files/upload', form)
+    const data = response.data
+    
+    // Extract URL from various possible response structures
+    const url = data?.url || 
+                data?.fileUrl || 
+                data?.photoUrl || 
+                data?.data?.url || 
+                data?.data?.fileUrl || 
+                data?.message || 
+                null
+    
+    if (!url) {
+      console.warn('File upload response did not contain expected URL field:', data)
+      throw new Error('File upload succeeded but no URL returned from backend')
+    }
+    
+    return { url, data }
+  } catch (error) {
+    console.error('File upload error:', error?.response?.data || error?.message || error)
+    throw new Error(`File upload failed: ${error?.response?.data?.message || error?.message || 'Unknown error'}`)
+  }
 }

@@ -1,7 +1,6 @@
 import React from 'react'
 import { useNavigate } from 'react-router-dom'
 import { FiMap } from 'react-icons/fi'
-import Layout from '../../components/layout/Layout.jsx'
 import CrudManager from '../../components/common/CrudManager.jsx'
 import { districtService } from '../../api/services.js'
 
@@ -9,8 +8,7 @@ export default function Districts() {
   const navigate = useNavigate()
 
   return (
-    <Layout title="Settings · Districts">
-      <CrudManager
+    <CrudManager
         title="Districts"
         subtitle="Top level of the location hierarchy — Districts contain Talukas."
         service={districtService}
@@ -37,6 +35,5 @@ export default function Districts() {
           onClick: () => navigate('/settings/talukas'),
         }}
       />
-    </Layout>
   )
 }

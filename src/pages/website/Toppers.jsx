@@ -1,12 +1,10 @@
 import React from 'react'
-import Layout from '../../components/layout/Layout.jsx'
 import CrudManager from '../../components/common/CrudManager.jsx'
 import { topperService, uploadFile } from '../../api/services.js'
 
 export default function Toppers() {
   return (
-    <Layout title="Website · Toppers">
-      <CrudManager
+    <CrudManager
         title="Toppers"
         subtitle="Highlight top-performing students on the public website."
         service={topperService}
@@ -36,6 +34,5 @@ export default function Toppers() {
           return payload
         }}
       />
-    </Layout>
   )
 }

@@ -53,26 +53,36 @@ export default function CrudManager({
   // Resolve select options (static array or async loader keyed on another field's value)
   useEffect(() => {
     if (!showModal) return
-    fields.forEach(async (f) => {
-      if (f.type !== 'select') return
-      if (Array.isArray(f.options)) {
-        setOptionsCache((prev) => ({ ...prev, [f.name]: f.options }))
-      } else if (typeof f.options === 'function') {
-        const depVal = f.dependsOn ? formValues[f.dependsOn] : undefined
-        if (f.dependsOn && !depVal) {
-          setOptionsCache((prev) => ({ ...prev, [f.name]: [] }))
-          return
-        }
-        try {
-          const opts = await f.options(formValues)
-          setOptionsCache((prev) => ({ ...prev, [f.name]: opts }))
-        } catch {
-          setOptionsCache((prev) => ({ ...prev, [f.name]: [] }))
+    
+    const loadOptions = async () => {
+      for (const f of fields) {
+        if (f.type !== 'select') continue
+        
+        if (Array.isArray(f.options)) {
+          setOptionsCache((prev) => ({ ...prev, [f.name]: f.options }))
+        } else if (typeof f.options === 'function') {
+          const depVal = f.dependsOn ? formValues[f.dependsOn] : undefined
+          
+          // If field depends on another field but that field is empty, clear options
+          if (f.dependsOn && !depVal) {
+            setOptionsCache((prev) => ({ ...prev, [f.name]: [] }))
+            continue
+          }
+          
+          try {
+            const opts = await f.options(formValues)
+            setOptionsCache((prev) => ({ ...prev, [f.name]: opts }))
+          } catch (err) {
+            console.error(`Failed to load options for ${f.name}:`, err)
+            setOptionsCache((prev) => ({ ...prev, [f.name]: [] }))
+          }
         }
       }
-    })
+    }
+    
+    loadOptions()
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [showModal, formValues.district, formValues.districtId, formValues.talukaId, formValues.taluka])
+  }, [showModal, formValues.districtId, formValues.talukaId])
 
   const openCreate = () => {
     setEditing(null)
@@ -107,61 +117,68 @@ export default function CrudManager({
       //   and also include primitive variants (districtId, district_id) to maximize compatibility with backend DTOs.
       const autoTransform = (fv) => {
         const out = { ...fv }
+
         Object.keys(fv).forEach((k) => {
           const v = fv[k]
           if (v === '' || v === null || typeof v === 'undefined') {
-            // drop empty values to avoid inserting empty strings into NOT NULL columns
             delete out[k]
             return
           }
 
-          // camelCase Id -> base (e.g., districtId -> district)
-          const m = k.match(/^(.+?)(Id|ID|id)$/)
-          if (m) {
-            const base = m[1]
-            const idNum = Number(v)
-            if (!Number.isNaN(idNum)) {
-              out[base] = { id: idNum }
-              out[`${base}Id`] = idNum
-              out[`${base}_id`] = idNum
-              // keep original key removed to avoid confusion if it's a string
+          if (typeof v === 'string') {
+            const trimmed = v.trim()
+            if (trimmed === '') {
               delete out[k]
+              return
             }
-            return
+            out[k] = trimmed
           }
 
-          // snake_case id -> base (e.g., district_id -> district)
-          const m2 = k.match(/^(.+)_id$/)
-          if (m2) {
-            const base = m2[1]
-            const idNum = Number(v)
-            if (!Number.isNaN(idNum)) {
-              out[base] = { id: idNum }
-              out[`${base}Id`] = idNum
-              out[`${base}_id`] = idNum
-              delete out[k]
-            }
-            return
+          const idMatch = k.match(/^(.+?)(Id|ID|id)$/)
+          if (idMatch && !Number.isNaN(Number(v))) {
+            out[k] = Number(v)
+          }
+
+          const snakeMatch = k.match(/^(.+)_id$/)
+          if (snakeMatch && !Number.isNaN(Number(v))) {
+            out[k] = Number(v)
           }
         })
+
         return out
       }
 
       let payload = null
-      if (transformSubmit) {
-        payload = await transformSubmit(formValues, editing)
-      } else {
-        payload = autoTransform(formValues)
+      try {
+        if (transformSubmit) {
+          payload = await transformSubmit(formValues, editing)
+        } else {
+          payload = autoTransform(formValues)
+        }
+      } catch (transformErr) {
+        // Validation error from transformSubmit
+        setError(transformErr?.message || 'Form validation failed')
+        setSaving(false)
+        return
       }
 
       // Ensure editing id is sent when updating
       if (editing && editing.id) payload.id = editing.id
 
+      // Ensure all ID fields are numeric and never null/undefined for required foreign keys
+      // Remove null/undefined values to avoid sending them to the backend
+      Object.keys(payload).forEach((key) => {
+        const val = payload[key]
+        if (val === null || val === undefined || val === '') {
+          delete payload[key]
+        }
+      })
+
       // Development debug: show outgoing payload so backend contract mismatches are visible in console
       try {
         if (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.MODE === 'development') {
           // eslint-disable-next-line no-console
-          console.debug('CrudManager outgoing payload:', payload)
+          console.debug('CrudManager outgoing payload:', { formValues, payload, editing })
         }
       } catch (err) {
         // ignore
@@ -175,7 +192,9 @@ export default function CrudManager({
       setShowModal(false)
       await load()
     } catch (e) {
-      setError(e?.response?.data?.message || 'Save failed. Please check the fields and try again.')
+      // Handle both validation errors (from transformSubmit) and backend errors
+      const errorMessage = e?.message || e?.response?.data?.message || e?.response?.data?.error || 'Save failed. Please check the fields and try again.'
+      setError(errorMessage)
     } finally {
       setSaving(false)
     }

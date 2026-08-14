@@ -1,9 +1,16 @@
 import React from 'react'
 import { useNavigate } from 'react-router-dom'
 import { FiUserCheck } from 'react-icons/fi'
-import Layout from '../../components/layout/Layout.jsx'
 import CrudManager from '../../components/common/CrudManager.jsx'
-import { centerService, districtService, talukasByDistrict } from '../../api/services.js'
+import { centerService, districtService, schoolService, talukasByDistrict } from '../../api/services.js'
+
+const loadSchoolOptions = async () => {
+  const list = await schoolService.getAll()
+  return list.map((s) => ({
+    label: s?.name || s?.schoolName || s?.title || s?.label || `#${s?.id}`,
+    value: s?.id,
+  }))
+}
 
 const loadDistrictOptions = async () => {
   const list = await districtService.getAll()
@@ -28,47 +35,81 @@ export default function Centers() {
   const navigate = useNavigate()
 
   return (
-    <Layout title="Settings · Centers">
-      <CrudManager
+    <CrudManager
         title="Centers"
         subtitle="Each Center belongs to a Taluka, and has Coordinators assigned to it."
         service={centerService}
         addLabel="Add Center"
-        searchKeys={['name']}
+        searchKeys={['name', 'centerName']}
         searchPlaceholder="Search centers…"
         columns={[
           { key: 'id', label: 'ID', width: 70 },
           { key: 'name', label: 'Center Name', render: (r) => r.name || r.centerName || r.center?.name || r.title || r.label || '' },
-          { key: 'talukaName', label: 'Taluka', render: (r) => r.talukaName || r.taluka?.name || r.taluka?.talukaName || r.taluka?.fullName || r.taluka?.title || r.taluka?.label || r.talukaId || '' },
-          { key: 'districtName', label: 'District', render: (r) => r.districtName || r.district?.name || r.district?.districtName || r.district?.fullName || r.district?.title || r.district?.label || r.districtId || '' },
+          { key: 'centerCode', label: 'Code', render: (r) => r.centerCode || r.code || '' },
+          { key: 'talukaName', label: 'Taluka', render: (r) => r.talukaName || r.taluka?.name || r.taluka?.talukaName || r.talukaId || '' },
+          { key: 'districtName', label: 'District', render: (r) => r.districtName || r.district?.name || r.district?.districtName || r.districtId || '' },
           { key: 'address', label: 'Address' },
-          { key: 'phone', label: 'Phone', render: (r) => r.phone || r.mobile || r.contactNumber || r.phoneNumber || r.mobileNumber || '' },
         ]}
         fields={[
+          { name: 'schoolId', label: 'School', type: 'select', required: true, options: loadSchoolOptions },
           { name: 'districtId', label: 'District', type: 'select', required: true, options: loadDistrictOptions },
           { name: 'talukaId', label: 'Taluka', type: 'select', required: true, dependsOn: 'districtId', options: loadTalukaOptions },
           { name: 'name', label: 'Center Name', type: 'text', required: true },
+          { name: 'centerCode', label: 'Center Code', type: 'text', required: true },
+          { name: 'village', label: 'Village', type: 'text', required: true },
+          { name: 'state', label: 'State', type: 'text', required: true },
+          { name: 'pincode', label: 'Pincode', type: 'text', required: true },
           { name: 'address', label: 'Address', type: 'textarea' },
         ]}
-        transformSubmit={async (fv, editing) => ({
-          name: fv.name,
-          centerName: fv.name,
-          center_name: fv.name,
-          address: fv.address,
-          district: fv.districtId ? { id: Number(fv.districtId) } : undefined,
-          taluka: fv.talukaId ? { id: Number(fv.talukaId) } : undefined,
-          districtId: fv.districtId ? Number(fv.districtId) : undefined,
-          talukaId: fv.talukaId ? Number(fv.talukaId) : undefined,
-          district_id: fv.districtId ? Number(fv.districtId) : undefined,
-          taluka_id: fv.talukaId ? Number(fv.talukaId) : undefined,
-          id: editing ? fv.id : undefined,
-        })}
+        transformSubmit={async (fv, editing) => {
+          const schoolId = fv.schoolId ? Number(fv.schoolId) : null
+          const districtId = fv.districtId ? Number(fv.districtId) : null
+          const talukaId = fv.talukaId ? Number(fv.talukaId) : null
+
+          if (!schoolId) {
+            throw new Error('School is required')
+          }
+          if (!districtId) {
+            throw new Error('District is required')
+          }
+          if (!talukaId) {
+            throw new Error('Taluka is required')
+          }
+          if (!fv.name || !fv.name.trim()) {
+            throw new Error('Center Name is required')
+          }
+          if (!fv.centerCode || !fv.centerCode.trim()) {
+            throw new Error('Center Code is required')
+          }
+
+          const village = (fv.village ?? '').trim() || 'NA'
+          const state = (fv.state ?? '').trim() || 'Maharashtra'
+          const pincode = (fv.pincode ?? '').trim() || '000000'
+
+          const payload = {
+            schoolId,
+            districtId,
+            talukaId,
+            centerName: fv.name.trim(),
+            centerCode: fv.centerCode.trim(),
+            address: fv.address?.trim() || null,
+            village,
+            state,
+            pincode,
+            active: true,
+          }
+
+          if (editing?.id) {
+            payload.id = editing.id
+          }
+
+          return payload
+        }}
         extraRowAction={{
           label: 'Add Coordinator',
           icon: <FiUserCheck />,
           onClick: () => navigate('/settings/coordinators'),
         }}
       />
-    </Layout>
   )
 }

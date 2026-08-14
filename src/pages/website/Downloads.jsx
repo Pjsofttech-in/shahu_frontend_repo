@@ -1,13 +1,11 @@
 import React from 'react'
 import { FiFileText } from 'react-icons/fi'
-import Layout from '../../components/layout/Layout.jsx'
 import CrudManager from '../../components/common/CrudManager.jsx'
 import { downloadService, uploadFile } from '../../api/services.js'
 
 export default function Downloads() {
   return (
-    <Layout title="Website · Downloads">
-      <CrudManager
+    <CrudManager
         title="Downloads"
         subtitle="Downloadable documents (name + PDF) shown on the public website."
         service={downloadService}
@@ -33,6 +31,5 @@ export default function Downloads() {
           return payload
         }}
       />
-    </Layout>
   )
 }
