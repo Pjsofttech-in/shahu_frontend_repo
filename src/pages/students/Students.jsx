@@ -1,8 +1,36 @@
 import React, { useState } from 'react'
 import CrudManager from '../../components/common/CrudManager.jsx'
 import {
-  studentService, districtService, talukasByDistrict, centersByTaluka, coordinatorService, uploadFile,
+  studentService,
+  districtService,
+  talukasByDistrict,
+  centersByTaluka,
+  coordinatorService,
+  schoolService,
 } from '../../api/services.js'
+
+const classOptions = ['5th', '6th', '7th', '8th', '9th', '10th', '11th', '12th'].map((s) => ({
+  label: s,
+  value: s,
+}))
+
+const paymentModeOptions = [
+  { label: 'Cash', value: 'CASH' },
+  { label: 'Online', value: 'ONLINE' },
+]
+
+const paymentStatusOptions = [
+  { label: 'Pending', value: 'PENDING' },
+  { label: 'Completed', value: 'COMPLETED' },
+]
+
+const loadSchoolOptions = async () => {
+  const list = await schoolService.getAll()
+  return list.map((school) => ({
+    label: school?.schoolName || school?.school_name || school?.name || school?.fullName || `#${school?.id}`,
+    value: school?.id,
+  }))
+}
 
 const loadDistrictOptions = async () => {
   const list = await districtService.getAll()
@@ -11,6 +39,7 @@ const loadDistrictOptions = async () => {
     value: d?.id,
   }))
 }
+
 const loadTalukaOptions = async (fv) => {
   if (!fv.districtId) return []
   const list = await talukasByDistrict(fv.districtId)
@@ -19,6 +48,7 @@ const loadTalukaOptions = async (fv) => {
     value: t?.id,
   }))
 }
+
 const loadCenterOptions = async (fv) => {
   if (!fv.talukaId) return []
   const list = await centersByTaluka(fv.talukaId)
@@ -31,137 +61,171 @@ const loadCenterOptions = async (fv) => {
     return { label, value: c?.id }
   })
 }
+
 const loadCoordinatorOptions = async () => {
   const list = await coordinatorService.getAll()
   return list.map((c) => ({
-    label: c?.name || c?.fullName || c?.displayName || c?.coordinatorName || `#${c?.id}`,
+    label: c?.coordinatorName || c?.name || c?.fullName || c?.displayName || `#${c?.id}`,
     value: c?.id,
   }))
 }
 
+const isValidIndianMobile = (value) => {
+  const digits = String(value ?? '').replace(/\s+/g, '').replace(/\+/g, '')
+  return /^9\d{9}$|^8\d{9}$|^7\d{9}$|^6\d{9}$/.test(digits)
+}
+
 export default function Students() {
-  // NOTE: field list below covers a typical school registration form
-  // (name, DOB, gender, class, guardian info, contact, address, photo, location hierarchy).
-  // Adjust names/labels to exactly match your registration form once confirmed.
   const [classFilter, setClassFilter] = useState('')
 
   return (
     <CrudManager
-        title="Students"
-        subtitle="All students registered under Sankalp centers. Add students manually or review registrations."
-        service={studentService}
-        addLabel="Add Student"
-        searchKeys={['name', 'rollNumber', 'mobile', 'email']}
-        searchPlaceholder="Search by name, roll no, mobile…"
-        columns={[
-          { key: 'id', label: 'ID', width: 60 },
-          { key: 'name', label: 'Student Name', render: (r) => r.name || r.fullName || r.studentName || `${r.firstName || ''} ${r.lastName || ''}` || '' },
-          { key: 'standard', label: 'Class', render: (r) => r.standard || r.std || r.class || r.grade || r.className || '' },
-          { key: 'schoolName', label: 'School' },
-          { key: 'mobile', label: 'Mobile', render: (r) => r.mobile || r.phone || r.phoneNumber || r.contact || r.mobileNumber || '' },
-          { key: 'districtName', label: 'District', render: (r) => r.districtName || r.district?.name || r.district?.districtName || r.district?.fullName || r.districtId || '' },
-          { key: 'talukaName', label: 'Taluka', render: (r) => r.talukaName || r.taluka?.name || r.taluka?.talukaName || r.taluka?.fullName || r.talukaId || '' },
-          { key: 'centerName', label: 'Center', render: (r) => r.centerName || r.center?.name || r.center?.centerName || r.centerId },
-          {
-            key: 'status', label: 'Status',
-            render: (r) => <span className={`badge ${r.status === 'INACTIVE' ? 'badge-inactive' : 'badge-active'}`}>{r.status || 'ACTIVE'}</span>,
+      title="Students"
+      subtitle="All students registered under Sankalp centers. Add students manually or review registrations."
+      service={studentService}
+      addLabel="Add Student"
+      searchKeys={['studentName', 'mobile', 'email']}
+      searchPlaceholder="Search by name, mobile, email…"
+      columns={[
+        { key: 'id', label: 'ID', width: 60 },
+        { key: 'studentName', label: 'Student Name', render: (r) => r.studentName || r.name || r.fullName || r.student?.name || '' },
+        { key: 'studentClass', label: 'Class', render: (r) => r.studentClass || r.standard || r.std || '' },
+        { key: 'schoolName', label: 'School', render: (r) => r.schoolName || r.school?.schoolName || r.school?.name || r.schoolId || '' },
+        { key: 'mobile', label: 'Mobile', render: (r) => r.mobile || r.phone || r.phoneNumber || r.contact || '' },
+        { key: 'districtName', label: 'District', render: (r) => r.districtName || r.district?.name || r.district?.districtName || r.districtId || '' },
+        { key: 'talukaName', label: 'Taluka', render: (r) => r.talukaName || r.taluka?.name || r.taluka?.talukaName || r.talukaId || '' },
+        { key: 'centerName', label: 'Center', render: (r) => r.centerName || r.center?.name || r.center?.centerName || r.centerId || '' },
+        { key: 'coordinatorName', label: 'Coordinator', render: (r) => r.coordinatorName || r.coordinator?.name || r.coordinator?.fullName || r.coordinatorId || '' },
+        {
+          key: 'active',
+          label: 'Status',
+          render: (r) => {
+            const isActive = r.active === true || r.status === 'ACTIVE' || r.status === 'active'
+            return <span className={`badge ${isActive ? 'badge-active' : 'badge-inactive'}`}>{isActive ? 'Active' : 'Inactive'}</span>
           },
-        ]}
-        fields={[
-          { name: 'name', label: 'Student Full Name', type: 'text', required: true },
-          { name: 'dob', label: 'Date of Birth', type: 'date', required: true },
-          { name: 'gender', label: 'Gender', type: 'select', required: true, options: [
-            { label: 'Male', value: 'MALE' }, { label: 'Female', value: 'FEMALE' }, { label: 'Other', value: 'OTHER' },
-          ] },
-          { name: 'standard', label: 'Class / Standard', type: 'select', required: true, options: [
-            '5th', '6th', '7th', '8th', '9th', '10th', '11th', '12th',
-          ].map((s) => ({ label: s, value: s })) },
-          { name: 'schoolName', label: 'School Name', type: 'text', required: true },
-          { name: 'fatherName', label: "Father's Name", type: 'text', required: true },
-          { name: 'motherName', label: "Mother's Name", type: 'text' },
-          { name: 'mobile', label: 'Mobile Number', type: 'tel', required: true },
-          { name: 'email', label: 'Email', type: 'email' },
-          { name: 'address', label: 'Address', type: 'textarea' },
-          { name: 'districtId', label: 'District', type: 'select', required: true, options: loadDistrictOptions },
-          { name: 'talukaId', label: 'Taluka', type: 'select', required: true, dependsOn: 'districtId', options: loadTalukaOptions },
-          { name: 'centerId', label: 'Center', type: 'select', required: true, dependsOn: 'talukaId', options: loadCenterOptions },
-          { name: 'coordinatorId', label: 'Coordinator', type: 'select', options: loadCoordinatorOptions },
-          { name: 'photo', label: 'Student Photo', type: 'file', accept: 'image/*' },
-          { name: 'status', label: 'Status', type: 'select', default: 'ACTIVE', options: [
-            { label: 'Active', value: 'ACTIVE' }, { label: 'Inactive', value: 'INACTIVE' },
-          ] },
-        ]}
-        transformSubmit={async (fv, editing) => {
-          // Ensure required IDs are numeric and never null
-          const districtId = fv.districtId ? Number(fv.districtId) : null
-          const talukaId = fv.talukaId ? Number(fv.talukaId) : null
-          const centerId = fv.centerId ? Number(fv.centerId) : null
-          const coordinatorId = fv.coordinatorId ? Number(fv.coordinatorId) : null
+        },
+        {
+          key: 'paymentMode',
+          label: 'Payment Mode',
+          render: (r) => r.paymentMode || r.payment_mode || '—',
+        },
+        {
+          key: 'paymentDone',
+          label: 'Payment Status',
+          render: (r) => {
+            const paymentStatus = r.paymentStatus || r.payment_status || (r.paymentDone ?? r.isPaymentDone ? 'COMPLETED' : 'PENDING')
+            const isCompleted = String(paymentStatus).toUpperCase() === 'COMPLETED' || !!(r.paymentDone ?? r.isPaymentDone)
+            return <span className={`badge ${isCompleted ? 'badge-active' : 'badge-inactive'}`}>{isCompleted ? 'Completed' : 'Pending'}</span>
+          },
+        },
+      ]}
+      fields={[
+        { name: 'studentName', label: 'Student Full Name', type: 'text', required: true },
+        { name: 'mobile', label: 'Mobile Number', type: 'tel', required: true },
+        { name: 'email', label: 'Email', type: 'email' },
+        { name: 'password', label: 'Password', type: 'password', placeholder: 'Optional; defaults to mobile number' },
+        { name: 'gender', label: 'Gender', type: 'select', required: true, options: [
+          { label: 'Male', value: 'MALE' },
+          { label: 'Female', value: 'FEMALE' },
+          { label: 'Other', value: 'OTHER' },
+        ] },
+        { name: 'studentClass', label: 'Class / Standard', type: 'select', required: true, options: classOptions },
+        { name: 'medium', label: 'Medium', type: 'select', required: true, options: [
+          { label: 'English', value: 'English' },
+          { label: 'Marathi', value: 'Marathi' },
+          { label: 'Hindi', value: 'Hindi' },
+        ] },
+        { name: 'address', label: 'Address', type: 'textarea' },
+        { name: 'village', label: 'Village', type: 'text' },
+        { name: 'state', label: 'State', type: 'text', default: 'Maharashtra' },
+        { name: 'pincode', label: 'Pincode', type: 'text' },
+        { name: 'dateOfBirth', label: 'Date of Birth', type: 'date', required: true },
+        { name: 'schoolId', label: 'School', type: 'select', required: true, options: loadSchoolOptions },
+        { name: 'districtId', label: 'District', type: 'select', required: true, options: loadDistrictOptions },
+        { name: 'talukaId', label: 'Taluka', type: 'select', required: true, dependsOn: 'districtId', options: loadTalukaOptions },
+        { name: 'centerId', label: 'Center', type: 'select', required: true, dependsOn: 'talukaId', options: loadCenterOptions },
+        { name: 'coordinatorId', label: 'Coordinator', type: 'select', required: true, options: loadCoordinatorOptions },
+        { name: 'status', label: 'Status', type: 'select', default: 'ACTIVE', options: [
+          { label: 'Active', value: 'ACTIVE' },
+          { label: 'Inactive', value: 'INACTIVE' },
+        ] },
+        { name: 'paymentMode', label: 'Payment Mode', type: 'select', default: 'CASH', options: paymentModeOptions },
+        { name: 'paymentStatus', label: 'Payment Status', type: 'select', default: 'PENDING', options: paymentStatusOptions },
+      ]}
+      transformSubmit={async (fv, editing) => {
+        const schoolId = fv.schoolId !== undefined && fv.schoolId !== null && fv.schoolId !== '' ? Number(fv.schoolId) : null
+        const districtId = fv.districtId !== undefined && fv.districtId !== null && fv.districtId !== '' ? Number(fv.districtId) : null
+        const talukaId = fv.talukaId !== undefined && fv.talukaId !== null && fv.talukaId !== '' ? Number(fv.talukaId) : null
+        const centerId = fv.centerId !== undefined && fv.centerId !== null && fv.centerId !== '' ? Number(fv.centerId) : null
+        const coordinatorId = fv.coordinatorId !== undefined && fv.coordinatorId !== null && fv.coordinatorId !== '' ? Number(fv.coordinatorId) : null
 
-          if (!districtId) {
-            throw new Error('District is required')
-          }
-          if (!talukaId) {
-            throw new Error('Taluka is required')
-          }
-          if (!centerId) {
-            throw new Error('Center is required')
-          }
+        if (!fv.studentName || !fv.studentName.trim()) throw new Error('Student Full Name is required')
+        if (!fv.mobile || !isValidIndianMobile(fv.mobile)) throw new Error('Please enter a valid Indian mobile number')
+        if (!fv.gender) throw new Error('Gender is required')
+        if (!fv.studentClass) throw new Error('Class / Standard is required')
+        if (!fv.medium) throw new Error('Medium is required')
+        if (!fv.dateOfBirth) throw new Error('Date of Birth is required')
+        if (!schoolId) throw new Error('School is required')
+        if (!districtId) throw new Error('District is required')
+        if (!talukaId) throw new Error('Taluka is required')
+        if (!centerId) throw new Error('Center is required')
+        if (!coordinatorId) throw new Error('Coordinator is required')
 
-          // Map flat select ids into nested objects expected by backend (JPA entity children)
-          const payload = {
-            name: fv.name?.trim(),
-            dob: fv.dob,
-            gender: fv.gender,
-            standard: fv.standard,
-            schoolName: fv.schoolName?.trim(),
-            fatherName: fv.fatherName?.trim(),
-            motherName: fv.motherName?.trim() || null,
-            mobile: fv.mobile?.trim(),
-            email: fv.email?.trim() || null,
-            address: fv.address?.trim() || null,
-            status: fv.status || 'ACTIVE',
-            districtId,
-            talukaId,
-            centerId,
-          }
+        if (fv.pincode && !/^\d{6}$/.test(String(fv.pincode).trim())) {
+          throw new Error('Pincode must be a 6-digit number')
+        }
 
-          if (coordinatorId) {
-            payload.coordinatorId = coordinatorId
-          }
+        const paymentStatus = (fv.paymentStatus || 'PENDING').toUpperCase()
+        const paymentMode = (fv.paymentMode || 'CASH').toUpperCase()
 
-          // Handle file upload for photo
-          if (fv.photo && fv.photo instanceof File) {
-            try {
-              const res = await uploadFile(fv.photo, 'students')
-              payload.photo = res.url || res.data?.url || res.fileUrl || res.photoUrl || null
-            } catch (e) {
-              console.warn('Photo upload failed:', e)
-              // Continue without photo if upload fails
-            }
-          } else if (fv.photo && typeof fv.photo === 'string') {
-            payload.photo = fv.photo
-          }
+        const payload = {
+          studentName: fv.studentName?.trim(),
+          mobile: fv.mobile?.trim(),
+          email: fv.email?.trim() || null,
+          password: (fv.password ?? '').trim() || fv.mobile?.trim(),
+          gender: fv.gender,
+          studentClass: fv.studentClass,
+          medium: fv.medium,
+          address: fv.address?.trim() || null,
+          village: fv.village?.trim() || null,
+          state: fv.state?.trim() || 'Maharashtra',
+          pincode: fv.pincode?.trim() || null,
+          dateOfBirth: fv.dateOfBirth || null,
+          active: fv.status === 'ACTIVE',
+          schoolId,
+          districtId,
+          talukaId,
+          centerId,
+          coordinatorId,
+          paymentMode,
+          paymentStatus,
+          paymentDone: paymentStatus === 'COMPLETED',
+        }
 
-          // If editing, ensure id is included
-          if (editing?.id) {
-            payload.id = editing.id
-          }
+        if (editing?.userId !== undefined && editing?.userId !== null && editing.userId !== '') {
+          payload.userId = Number(editing.userId)
+        } else if (fv.userId !== undefined && fv.userId !== null && fv.userId !== '') {
+          payload.userId = Number(fv.userId)
+        }
 
-          return payload
-        }}
-        extraToolbar={(
-          <div className="form-group">
-            <label>Filter by Class</label>
-            <select value={classFilter} onChange={(e) => setClassFilter(e.target.value)}>
-              <option value="">All Classes</option>
-              {['5th', '6th', '7th', '8th', '9th', '10th', '11th', '12th'].map((s) => (
-                <option key={s} value={s}>{s}</option>
-              ))}
-            </select>
-          </div>
-        )}
-        filterFn={classFilter ? (r) => r.standard === classFilter : undefined}
-      />
-    )
-  }
+        if (editing?.id) {
+          payload.id = editing.id
+        }
+
+        return payload
+      }}
+      extraToolbar={(
+        <div className="form-group">
+          <label>Filter by Class</label>
+          <select value={classFilter} onChange={(e) => setClassFilter(e.target.value)}>
+            <option value="">All Classes</option>
+            {classOptions.map((option) => (
+              <option key={option.value} value={option.value}>{option.label}</option>
+            ))}
+          </select>
+        </div>
+      )}
+      filterFn={classFilter ? (r) => (r.studentClass || r.standard || '') === classFilter : undefined}
+    />
+  )
+}

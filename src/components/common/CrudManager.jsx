@@ -35,6 +35,32 @@ export default function CrudManager({
   const [saving, setSaving] = useState(false)
   const [optionsCache, setOptionsCache] = useState({})
 
+  const getApiErrorMessage = (e, fallback = 'Something went wrong') => {
+    const payload = e?.response?.data
+
+    if (!payload) return e?.message || fallback
+    if (typeof payload === 'string') return payload
+    if (typeof payload?.message === 'string' && payload.message.trim()) return payload.message
+    if (typeof payload?.error === 'string' && payload.error.trim()) return payload.error
+
+    if (Array.isArray(payload)) {
+      const text = payload.map((item) => (typeof item === 'string' ? item : item?.message || item?.error || '')).filter(Boolean).join(', ')
+      if (text) return text
+    }
+
+    if (payload?.errors && typeof payload.errors === 'object') {
+      const text = Object.values(payload.errors)
+        .flatMap((value) => Array.isArray(value) ? value : [value])
+        .map((value) => (typeof value === 'string' ? value : value?.message || value?.error || ''))
+        .filter(Boolean)
+        .join(', ')
+      if (text) return text
+    }
+
+    const fallbackText = JSON.stringify(payload)
+    return fallbackText && fallbackText !== '{}' ? fallbackText : e?.message || fallback
+  }
+
   const load = useCallback(async () => {
     setLoading(true)
     setError('')
@@ -42,7 +68,7 @@ export default function CrudManager({
       const data = await service.getAll()
       setRows(Array.isArray(data) ? data : data?.content || [])
     } catch (e) {
-      setError(e?.response?.data?.message || 'Could not load data. Check backend connection.')
+      setError(getApiErrorMessage(e, 'Could not load data. Check backend connection.'))
     } finally {
       setLoading(false)
     }
@@ -157,7 +183,7 @@ export default function CrudManager({
         }
       } catch (transformErr) {
         // Validation error from transformSubmit
-        setError(transformErr?.message || 'Form validation failed')
+        setError(getApiErrorMessage(transformErr, 'Form validation failed'))
         setSaving(false)
         return
       }
@@ -193,8 +219,7 @@ export default function CrudManager({
       await load()
     } catch (e) {
       // Handle both validation errors (from transformSubmit) and backend errors
-      const errorMessage = e?.message || e?.response?.data?.message || e?.response?.data?.error || 'Save failed. Please check the fields and try again.'
-      setError(errorMessage)
+      setError(getApiErrorMessage(e, 'Save failed. Please check the fields and try again.'))
     } finally {
       setSaving(false)
     }
@@ -206,7 +231,7 @@ export default function CrudManager({
       await service.remove(row.id)
       setRows((prev) => prev.filter((r) => r.id !== row.id))
     } catch (e) {
-      alert(e?.response?.data?.message || 'Delete failed.')
+      alert(getApiErrorMessage(e, 'Delete failed.'))
     }
   }
 
