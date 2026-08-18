@@ -24,6 +24,9 @@ export default function CrudManager({
   transformSubmit,
   extraToolbar,
   filterFn,
+  showEditAction = true,
+  showDeleteAction = true,
+  initialFormValues = {},
 }) {
   const [rows, setRows] = useState([])
   const [loading, setLoading] = useState(true)
@@ -96,7 +99,7 @@ export default function CrudManager({
           }
           
           try {
-            const opts = await f.options(formValues)
+            const opts = await f.options(formValues, editing)
             setOptionsCache((prev) => ({ ...prev, [f.name]: opts }))
           } catch (err) {
             console.error(`Failed to load options for ${f.name}:`, err)
@@ -108,13 +111,20 @@ export default function CrudManager({
     
     loadOptions()
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [showModal, formValues.districtId, formValues.talukaId])
+  }, [showModal, formValues.districtId, formValues.talukaId, editing])
 
   const openCreate = () => {
     setEditing(null)
+
     const init = {}
-    fields.forEach((f) => { init[f.name] = f.default ?? '' })
-    setFormValues(init)
+    fields.forEach((f) => {
+      init[f.name] = f.default ?? ''
+    })
+
+    setFormValues({
+      ...init,
+      ...initialFormValues,
+    })
     setShowModal(true)
   }
 
@@ -191,6 +201,31 @@ export default function CrudManager({
       // Ensure editing id is sent when updating
       if (editing && editing.id) payload.id = editing.id
 
+      const normalizeIdFields = (obj) => {
+        const normalized = { ...obj }
+
+        Object.entries(normalized).forEach(([key, value]) => {
+          if (value === null || value === undefined || value === '') return
+
+          const isIdLikeKey = /(?:Id|_id)$/i.test(key)
+
+          if (isIdLikeKey) {
+            if (typeof value === 'object' && value !== null && 'value' in value) {
+              const coerced = Number(value.value)
+              if (!Number.isNaN(coerced)) normalized[key] = coerced
+              return
+            }
+
+            const coerced = Number(value)
+            if (!Number.isNaN(coerced)) normalized[key] = coerced
+          }
+        })
+
+        return normalized
+      }
+
+      payload = normalizeIdFields(payload)
+
       // Ensure all ID fields are numeric and never null/undefined for required foreign keys
       // Remove null/undefined values to avoid sending them to the backend
       Object.keys(payload).forEach((key) => {
@@ -213,6 +248,10 @@ export default function CrudManager({
       if (editing) {
         await service.update(editing.id, payload)
       } else {
+        console.log(
+          'FINAL CREATE REQUEST:',
+          JSON.stringify(payload, null, 2)
+        )
         await service.create(payload)
       }
       setShowModal(false)
@@ -245,6 +284,14 @@ export default function CrudManager({
     return result
   }, [rows, search, searchKeys, filterFn])
 
+  const fieldGroups = useMemo(() => {
+    const groups = []
+    for (let index = 0; index < fields.length; index += 2) {
+      groups.push(fields.slice(index, index + 2))
+    }
+    return groups
+  }, [fields])
+
   const tableColumns = [
     ...columns,
     {
@@ -253,8 +300,8 @@ export default function CrudManager({
       width: 150,
       render: (row) => (
         <div className="table-actions">
-          <button className="btn btn-outline btn-sm" onClick={() => openEdit(row)}><FiEdit2 /></button>
-          <button className="btn btn-danger btn-sm" onClick={() => handleDelete(row)}><FiTrash2 /></button>
+          {showEditAction && <button className="btn btn-outline btn-sm" onClick={() => openEdit(row)}><FiEdit2 /></button>}
+          {showDeleteAction && <button className="btn btn-danger btn-sm" onClick={() => handleDelete(row)}><FiTrash2 /></button>}
           {extraRowAction && (
             <button className="btn btn-gold btn-sm" onClick={() => extraRowAction.onClick(row)}>
               {extraRowAction.icon} {extraRowAction.label}
@@ -272,7 +319,7 @@ export default function CrudManager({
           <h1>{title}</h1>
           {subtitle && <p>{subtitle}</p>}
         </div>
-        <button className="btn btn-primary" onClick={openCreate}><FiPlus /> {addLabel}</button>
+        <button className="btn btn-primary" data-open-create onClick={openCreate}><FiPlus /> {addLabel}</button>
       </div>
 
       {searchKeys.length > 0 && (
@@ -293,6 +340,7 @@ export default function CrudManager({
         <Modal
           title={editing ? `Edit ${title}` : `${addLabel}`}
           onClose={() => setShowModal(false)}
+          maxWidth="760px"
           footer={(
             <>
               <button className="btn btn-outline" onClick={() => setShowModal(false)}>Cancel</button>
@@ -304,14 +352,18 @@ export default function CrudManager({
         >
           {error && <div className="login-alert">{error}</div>}
           <form onSubmit={handleSubmit}>
-            {fields.map((f) => (
-              <FormField
-                key={f.name}
-                field={f}
-                value={formValues[f.name]}
-                onChange={handleChange}
-                options={optionsCache[f.name]}
-              />
+            {fieldGroups.map((group, groupIndex) => (
+              <div className="form-row" key={`group-${groupIndex}`}>
+                {group.map((f) => (
+                  <FormField
+                    key={f.name}
+                    field={f}
+                    value={formValues[f.name]}
+                    onChange={handleChange}
+                    options={optionsCache[f.name]}
+                  />
+                ))}
+              </div>
             ))}
           </form>
         </Modal>

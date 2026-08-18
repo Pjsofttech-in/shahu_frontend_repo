@@ -299,8 +299,8 @@ table.data-table tr:hover td { background: var(--blue-100); }
   display: flex; align-items: center; justify-content: center; z-index: 100; padding: 16px;
 }
 .modal-box {
-  background: #fff; border-radius: 14px; width: 100%; max-width: 560px;
-  max-height: 90vh; overflow-y: auto; box-shadow: var(--shadow-md);
+  background: #fff; border-radius: 14px; width: 100%; max-width: 760px;
+  max-height: 86vh; overflow: hidden; box-shadow: var(--shadow-md);
 }
 .modal-header {
   display: flex; align-items: center; justify-content: space-between;
@@ -308,7 +308,7 @@ table.data-table tr:hover td { background: var(--blue-100); }
 }
 .modal-header h3 { margin: 0; font-size: 16px; color: var(--navy-900); }
 .modal-close { background: none; border: none; font-size: 18px; color: var(--text-600); }
-.modal-body { padding: 20px 22px; }
+.modal-body { padding: 20px 22px; max-height: calc(86vh - 132px); overflow-y: auto; }
 .modal-footer { display: flex; justify-content: flex-end; gap: 10px; padding: 16px 22px; border-top: 1px solid var(--border); }
 
 /* ---------- Login ---------- */

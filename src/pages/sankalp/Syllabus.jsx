@@ -7,33 +7,44 @@ export default function Syllabus() {
   return (
     <CrudManager
         title="Syllabus"
-        subtitle="Upload class-wise / subject-wise syllabus documents for the Sankalp Exam."
+        subtitle="Upload syllabus documents with a title and optional PDF or link."
         service={syllabusService}
         addLabel="Add Syllabus"
-        searchKeys={['title', 'standard']}
-        searchPlaceholder="Search by title or class…"
+        searchKeys={['title', 'link']}
+        searchPlaceholder="Search by title or link…"
         columns={[
           { key: 'title', label: 'Title' },
-          { key: 'standard', label: 'Class' },
-          { key: 'year', label: 'Exam Year' },
           {
-            key: 'fileUrl', label: 'File',
-            render: (r) => r.fileUrl ? <a href={r.fileUrl} target="_blank" rel="noreferrer" className="btn btn-outline btn-sm"><FiFileText /> View</a> : '—',
+            key: 'fileUrl', label: 'File / Link',
+            render: (r) => {
+              if (r.fileUrl) return <a href={r.fileUrl} target="_blank" rel="noreferrer" className="btn btn-outline btn-sm"><FiFileText /> View</a>
+              if (r.link) return <a href={r.link} target="_blank" rel="noreferrer" className="btn btn-outline btn-sm">Open Link</a>
+              return '—'
+            },
           },
         ]}
         fields={[
           { name: 'title', label: 'Title', type: 'text', required: true },
-          { name: 'standard', label: 'Class / Standard', type: 'select', options: [
-            '5th', '6th', '7th', '8th', '9th', '10th',
-          ].map((s) => ({ label: s, value: s })) },
-          { name: 'year', label: 'Exam Year', type: 'number', required: true },
-          { name: 'file', label: 'Syllabus PDF', type: 'file', accept: 'application/pdf', required: true },
+          { name: 'link', label: 'Link', type: 'url', placeholder: 'https://example.com/syllabus.pdf' },
+          { name: 'file', label: 'Upload PDF / Image', type: 'file', accept: 'application/pdf,image/*' },
         ]}
         transformSubmit={async (values) => {
-          const payload = { ...values }
+          const title = (values.title ?? '').trim()
+          const link = (values.link ?? '').trim()
+
+          if (!title) {
+            throw new Error('Title is required')
+          }
+          if (!values.file && !link) {
+            throw new Error('Please provide either a file or a link')
+          }
+
+          const payload = { title, link: link || null }
+
           if (values.file instanceof File) {
             payload.fileUrl = (await uploadFile(values.file, 'sankalp/syllabus')).url
           }
+
           delete payload.file
           return payload
         }}

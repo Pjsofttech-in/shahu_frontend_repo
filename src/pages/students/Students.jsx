@@ -6,7 +6,7 @@ import {
   talukasByDistrict,
   centersByTaluka,
   coordinatorService,
-  schoolService,
+  userService,
 } from '../../api/services.js'
 
 const classOptions = ['5th', '6th', '7th', '8th', '9th', '10th', '11th', '12th'].map((s) => ({
@@ -24,11 +24,11 @@ const paymentStatusOptions = [
   { label: 'Completed', value: 'COMPLETED' },
 ]
 
-const loadSchoolOptions = async () => {
-  const list = await schoolService.getAll()
-  return list.map((school) => ({
-    label: school?.schoolName || school?.school_name || school?.name || school?.fullName || `#${school?.id}`,
-    value: school?.id,
+const loadUserOptions = async () => {
+  const list = await userService.getAll()
+  return list.map((u) => ({
+    label: u?.fullName || u?.full_name || u?.name || u?.email || `User #${u?.id}`,
+    value: u?.id,
   }))
 }
 
@@ -84,13 +84,13 @@ export default function Students() {
       subtitle="All students registered under Sankalp centers. Add students manually or review registrations."
       service={studentService}
       addLabel="Add Student"
-      searchKeys={['studentName', 'mobile', 'email']}
-      searchPlaceholder="Search by name, mobile, email…"
+      searchKeys={['studentName', 'schoolName', 'mobile', 'email']}
+      searchPlaceholder="Search by name, school, mobile, email…"
       columns={[
         { key: 'id', label: 'ID', width: 60 },
         { key: 'studentName', label: 'Student Name', render: (r) => r.studentName || r.name || r.fullName || r.student?.name || '' },
+        { key: 'schoolName', label: 'School Name', render: (r) => r.schoolName || r.school?.schoolName || r.school?.name || r.school_name || r.schoolName || '' },
         { key: 'studentClass', label: 'Class', render: (r) => r.studentClass || r.standard || r.std || '' },
-        { key: 'schoolName', label: 'School', render: (r) => r.schoolName || r.school?.schoolName || r.school?.name || r.schoolId || '' },
         { key: 'mobile', label: 'Mobile', render: (r) => r.mobile || r.phone || r.phoneNumber || r.contact || '' },
         { key: 'districtName', label: 'District', render: (r) => r.districtName || r.district?.name || r.district?.districtName || r.districtId || '' },
         { key: 'talukaName', label: 'Taluka', render: (r) => r.talukaName || r.taluka?.name || r.taluka?.talukaName || r.talukaId || '' },
@@ -121,6 +121,7 @@ export default function Students() {
       ]}
       fields={[
         { name: 'studentName', label: 'Student Full Name', type: 'text', required: true },
+        { name: 'schoolName', label: 'School Name', type: 'text', required: true },
         { name: 'mobile', label: 'Mobile Number', type: 'tel', required: true },
         { name: 'email', label: 'Email', type: 'email' },
         { name: 'password', label: 'Password', type: 'password', placeholder: 'Optional; defaults to mobile number' },
@@ -140,7 +141,7 @@ export default function Students() {
         { name: 'state', label: 'State', type: 'text', default: 'Maharashtra' },
         { name: 'pincode', label: 'Pincode', type: 'text' },
         { name: 'dateOfBirth', label: 'Date of Birth', type: 'date', required: true },
-        { name: 'schoolId', label: 'School', type: 'select', required: true, options: loadSchoolOptions },
+        { name: 'userId', label: 'User', type: 'select', required: true, options: loadUserOptions },
         { name: 'districtId', label: 'District', type: 'select', required: true, options: loadDistrictOptions },
         { name: 'talukaId', label: 'Taluka', type: 'select', required: true, dependsOn: 'districtId', options: loadTalukaOptions },
         { name: 'centerId', label: 'Center', type: 'select', required: true, dependsOn: 'talukaId', options: loadCenterOptions },
@@ -153,19 +154,21 @@ export default function Students() {
         { name: 'paymentStatus', label: 'Payment Status', type: 'select', default: 'PENDING', options: paymentStatusOptions },
       ]}
       transformSubmit={async (fv, editing) => {
-        const schoolId = fv.schoolId !== undefined && fv.schoolId !== null && fv.schoolId !== '' ? Number(fv.schoolId) : null
+        const userId = fv.userId !== undefined && fv.userId !== null && fv.userId !== '' ? Number(fv.userId) : null
         const districtId = fv.districtId !== undefined && fv.districtId !== null && fv.districtId !== '' ? Number(fv.districtId) : null
         const talukaId = fv.talukaId !== undefined && fv.talukaId !== null && fv.talukaId !== '' ? Number(fv.talukaId) : null
         const centerId = fv.centerId !== undefined && fv.centerId !== null && fv.centerId !== '' ? Number(fv.centerId) : null
         const coordinatorId = fv.coordinatorId !== undefined && fv.coordinatorId !== null && fv.coordinatorId !== '' ? Number(fv.coordinatorId) : null
+        const schoolName = String(fv.schoolName ?? '').trim()
 
         if (!fv.studentName || !fv.studentName.trim()) throw new Error('Student Full Name is required')
+        if (!schoolName) throw new Error('School Name is required')
         if (!fv.mobile || !isValidIndianMobile(fv.mobile)) throw new Error('Please enter a valid Indian mobile number')
         if (!fv.gender) throw new Error('Gender is required')
         if (!fv.studentClass) throw new Error('Class / Standard is required')
         if (!fv.medium) throw new Error('Medium is required')
         if (!fv.dateOfBirth) throw new Error('Date of Birth is required')
-        if (!schoolId) throw new Error('School is required')
+        if (!userId) throw new Error('User is required')
         if (!districtId) throw new Error('District is required')
         if (!talukaId) throw new Error('Taluka is required')
         if (!centerId) throw new Error('Center is required')
@@ -180,6 +183,7 @@ export default function Students() {
 
         const payload = {
           studentName: fv.studentName?.trim(),
+          schoolName,
           mobile: fv.mobile?.trim(),
           email: fv.email?.trim() || null,
           password: (fv.password ?? '').trim() || fv.mobile?.trim(),
@@ -192,7 +196,7 @@ export default function Students() {
           pincode: fv.pincode?.trim() || null,
           dateOfBirth: fv.dateOfBirth || null,
           active: fv.status === 'ACTIVE',
-          schoolId,
+          userId,
           districtId,
           talukaId,
           centerId,

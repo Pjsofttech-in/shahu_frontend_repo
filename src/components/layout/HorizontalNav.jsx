@@ -25,9 +25,6 @@ export const sankalpLinks = [
 // Settings Submenu
 export const settingsLinks = [
   { to: '/settings/districts', label: 'Districts', icon: <FiMapPin /> },
-  { to: '/settings/talukas', label: 'Talukas', icon: <FiMap /> },
-  { to: '/settings/centers', label: 'Centers', icon: <FiHome /> },
-  { to: '/settings/coordinators', label: 'Coordinators', icon: <FiUserCheck /> },
 ]
 
 // Website Management Submenu

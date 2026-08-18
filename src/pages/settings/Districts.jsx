@@ -13,26 +13,37 @@ export default function Districts() {
         subtitle="Top level of the location hierarchy — Districts contain Talukas."
         service={districtService}
         addLabel="Add District"
-        searchKeys={['name']}
+        showEditAction={false}
+        searchKeys={['districtName']}
         searchPlaceholder="Search districts…"
         columns={[
           { key: 'id', label: 'ID', width: 70 },
-          { key: 'name', label: 'District Name', render: (r) => r.name || r.districtName || r.district?.name || r.districtId || '' },
+          { key: 'districtName', label: 'District Name', render: (r) => r.districtName || r.name || r.district?.name || r.districtId || '' },
         ]}
         fields={[
-          { name: 'name', label: 'District Name', type: 'text', required: true },
+          { name: 'districtName', label: 'District Name', type: 'text', required: true },
         ]}
-        transformSubmit={async (fv, editing) => ({
-          // send minimal name + id when editing
-          name: fv.name,
-          districtName: fv.name,
-          district_name: fv.name,
-          id: editing ? fv.id : undefined,
-        })}
+        transformSubmit={async (fv, editing) => {
+          const districtName = (fv.districtName ?? fv.name ?? '').trim()
+          if (!districtName) {
+            throw new Error('District name is required')
+          }
+
+          const payload = {
+            districtName,
+            active: true,
+          }
+
+          if (editing?.id) {
+            payload.id = editing.id
+          }
+
+          return payload
+        }}
         extraRowAction={{
           label: 'Add Taluka',
           icon: <FiMap />,
-          onClick: () => navigate('/settings/talukas'),
+          onClick: (row) => navigate('/settings/talukas', { state: { districtId: row?.id, districtName: row?.name || row?.districtName || '' } }),
         }}
       />
   )

@@ -1,21 +1,42 @@
-import React from 'react'
-import { useNavigate } from 'react-router-dom'
+import React, { useEffect } from 'react'
+import { useLocation, useNavigate } from 'react-router-dom'
 import { FiHome } from 'react-icons/fi'
 import CrudManager from '../../components/common/CrudManager.jsx'
 import { talukaService, districtService } from '../../api/services.js'
 
 const loadDistrictOptions = async () => {
   const list = await districtService.getAll()
-  return list.map((d) => {
-    const name = d?.name || d?.districtName || d?.fullName || d?.title || d?.label || `#${d?.id}`
-    const state = d?.state || d?.stateName || d?.state?.name
-    const label = state ? `${name} (${state})` : name
-    return { label, value: d?.id }
-  })
+
+  return list.map((d) => ({
+    label:
+      d?.districtName ||
+      d?.name ||
+      d?.fullName ||
+      d?.title ||
+      d?.label ||
+      `#${d?.id}`,
+    value: String(d?.id),
+  }))
 }
 
 export default function Talukas() {
   const navigate = useNavigate()
+  const location = useLocation()
+
+  useEffect(() => {
+    if (!location.state?.districtId) return
+    const openCreate = document.querySelector('[data-open-create]')
+    if (openCreate) {
+      openCreate.click()
+    }
+  }, [location.state])
+
+  const initialFormValues = {
+    districtId:
+      location.state?.districtId !== undefined && location.state?.districtId !== null && location.state?.districtId !== ''
+        ? String(location.state.districtId)
+        : '',
+  }
 
   return (
     <CrudManager
@@ -23,40 +44,63 @@ export default function Talukas() {
         subtitle="Each Taluka belongs to a District, and contains Centers."
         service={talukaService}
         addLabel="Add Taluka"
-        searchKeys={['name']}
+        initialFormValues={initialFormValues}
+        showEditAction={false}
+        searchKeys={['talukaName']}
         searchPlaceholder="Search talukas…"
         columns={[
           { key: 'id', label: 'ID', width: 70 },
-          { key: 'name', label: 'Taluka Name', render: (r) => r.name || r.talukaName || r.taluka?.name || r.talukaId || '' },
+          { key: 'talukaName', label: 'Taluka Name', render: (r) => r.talukaName || r.name || r.taluka?.name || r.talukaId || '' },
           { key: 'districtName', label: 'District', render: (r) => r.districtName || r.district?.name || r.district?.districtName || r.district?.fullName || r.district?.title || r.district?.label || r.districtId || '' },
         ]}
         fields={[
-          { name: 'name', label: 'Taluka Name', type: 'text', required: true },
+          { name: 'talukaName', label: 'Taluka Name', type: 'text', required: true },
           { name: 'districtId', label: 'District', type: 'select', required: true, options: loadDistrictOptions },
         ]}
         transformSubmit={async (fv, editing) => {
-          // Ensure required district ID is numeric and never null
-          const districtId = fv.districtId ? Number(fv.districtId) : null
+          const rawDistrictId =
+            fv?.districtId ??
+            fv?.district_id ??
+            location.state?.districtId ??
+            initialFormValues?.districtId
 
-          if (!districtId) {
-            throw new Error('District is required')
+          const districtId =
+            typeof rawDistrictId === 'object'
+              ? Number(rawDistrictId?.value)
+              : Number(rawDistrictId)
+
+          const talukaName = String(
+            fv?.talukaName ?? fv?.name ?? ''
+          ).trim()
+
+          if (!Number.isInteger(districtId) || districtId <= 0) {
+            throw new Error('Please select a valid District')
+          }
+
+          if (!talukaName) {
+            throw new Error('Taluka name is required')
           }
 
           const payload = {
-            name: fv.name?.trim(),
-            districtId,
+            talukaName,
+            district: {
+              id: districtId,
+            },
+            active: true,
           }
 
           if (editing?.id) {
             payload.id = editing.id
           }
 
+          console.log('Taluka create payload:', payload)
+
           return payload
         }}
         extraRowAction={{
           label: 'Add Center',
           icon: <FiHome />,
-          onClick: () => navigate('/settings/centers'),
+          onClick: (row) => navigate('/settings/centers', { state: { districtId: row?.districtId || row?.district?.id, talukaId: row?.id, talukaName: row?.name || row?.talukaName || '' } }),
         }}
       />
 

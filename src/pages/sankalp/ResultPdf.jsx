@@ -7,33 +7,44 @@ export default function ResultPdf() {
   return (
     <CrudManager
         title="Result PDFs"
-        subtitle="Upload consolidated result sheets (center-wise / class-wise) for download on the public website."
+        subtitle="Upload result PDFs or links with a title for the public website."
         service={resultPdfService}
         addLabel="Add Result PDF"
-        searchKeys={['title', 'standard']}
-        searchPlaceholder="Search by title or class…"
+        searchKeys={['title', 'link']}
+        searchPlaceholder="Search by title or link…"
         columns={[
           { key: 'title', label: 'Title' },
-          { key: 'standard', label: 'Class' },
-          { key: 'year', label: 'Year' },
           {
-            key: 'fileUrl', label: 'File',
-            render: (r) => r.fileUrl ? <a href={r.fileUrl} target="_blank" rel="noreferrer" className="btn btn-outline btn-sm"><FiFileText /> View</a> : '—',
+            key: 'fileUrl', label: 'File / Link',
+            render: (r) => {
+              if (r.fileUrl) return <a href={r.fileUrl} target="_blank" rel="noreferrer" className="btn btn-outline btn-sm"><FiFileText /> View</a>
+              if (r.link) return <a href={r.link} target="_blank" rel="noreferrer" className="btn btn-outline btn-sm">Open Link</a>
+              return '—'
+            },
           },
         ]}
         fields={[
           { name: 'title', label: 'Title', type: 'text', required: true },
-          { name: 'standard', label: 'Class / Standard', type: 'select', options: [
-            '5th', '6th', '7th', '8th', '9th', '10th',
-          ].map((s) => ({ label: s, value: s })) },
-          { name: 'year', label: 'Exam Year', type: 'number', required: true },
-          { name: 'file', label: 'Result PDF', type: 'file', accept: 'application/pdf', required: true },
+          { name: 'link', label: 'Link', type: 'url', placeholder: 'https://example.com/result.pdf' },
+          { name: 'file', label: 'Upload PDF / Image', type: 'file', accept: 'application/pdf,image/*' },
         ]}
         transformSubmit={async (values) => {
-          const payload = { ...values }
+          const title = (values.title ?? '').trim()
+          const link = (values.link ?? '').trim()
+
+          if (!title) {
+            throw new Error('Title is required')
+          }
+          if (!values.file && !link) {
+            throw new Error('Please provide either a file or a link')
+          }
+
+          const payload = { title, link: link || null }
+
           if (values.file instanceof File) {
             payload.fileUrl = (await uploadFile(values.file, 'sankalp/result-pdf')).url
           }
+
           delete payload.file
           return payload
         }}

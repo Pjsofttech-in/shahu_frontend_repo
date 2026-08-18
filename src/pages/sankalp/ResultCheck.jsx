@@ -1,36 +1,52 @@
 import React from 'react'
 import CrudManager from '../../components/common/CrudManager.jsx'
-import { resultCheckService } from '../../api/services.js'
+import { resultCheckService, uploadFile } from '../../api/services.js'
 
 export default function ResultCheck() {
   return (
     <CrudManager
         title="Result Check"
-        subtitle="Per-student results — students use these to check their result on the public website using Roll Number."
+        subtitle="Add result-check entries with a title and optional PDF or external link."
         service={resultCheckService}
         addLabel="Add Result"
-        searchKeys={['rollNumber', 'studentName']}
-        searchPlaceholder="Search by roll number or name…"
+        searchKeys={['title', 'link']}
+        searchPlaceholder="Search by title or link…"
         columns={[
-          { key: 'rollNumber', label: 'Roll No.' },
-          { key: 'studentName', label: 'Student Name' },
-          { key: 'standard', label: 'Class' },
-          { key: 'marksObtained', label: 'Marks' },
-          { key: 'totalMarks', label: 'Out of' },
-          { key: 'rank', label: 'Rank' },
-          { key: 'year', label: 'Year' },
+          { key: 'title', label: 'Title' },
+          {
+            key: 'fileUrl', label: 'File / Link',
+            render: (r) => {
+              if (r.fileUrl) return <a href={r.fileUrl} target="_blank" rel="noreferrer" className="btn btn-outline btn-sm">View</a>
+              if (r.link) return <a href={r.link} target="_blank" rel="noreferrer" className="btn btn-outline btn-sm">Open Link</a>
+              return '—'
+            },
+          },
         ]}
         fields={[
-          { name: 'rollNumber', label: 'Roll Number', type: 'text', required: true },
-          { name: 'studentName', label: 'Student Name', type: 'text', required: true },
-          { name: 'standard', label: 'Class / Standard', type: 'select', options: [
-            '5th', '6th', '7th', '8th', '9th', '10th',
-          ].map((s) => ({ label: s, value: s })) },
-          { name: 'marksObtained', label: 'Marks Obtained', type: 'number', required: true },
-          { name: 'totalMarks', label: 'Total Marks', type: 'number', required: true },
-          { name: 'rank', label: 'Rank', type: 'text' },
-          { name: 'year', label: 'Exam Year', type: 'number', required: true },
+          { name: 'title', label: 'Title', type: 'text', required: true },
+          { name: 'link', label: 'Link', type: 'url', placeholder: 'https://example.com/result-check.pdf' },
+          { name: 'file', label: 'Upload PDF / Image', type: 'file', accept: 'application/pdf,image/*' },
         ]}
+        transformSubmit={async (values) => {
+          const title = (values.title ?? '').trim()
+          const link = (values.link ?? '').trim()
+
+          if (!title) {
+            throw new Error('Title is required')
+          }
+          if (!values.file && !link) {
+            throw new Error('Please provide either a file or a link')
+          }
+
+          const payload = { title, link: link || null }
+
+          if (values.file instanceof File) {
+            payload.fileUrl = (await uploadFile(values.file, 'sankalp/result-check')).url
+          }
+
+          delete payload.file
+          return payload
+        }}
       />
   )
 }
