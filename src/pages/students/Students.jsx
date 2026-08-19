@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import CrudManager from '../../components/common/CrudManager.jsx'
 import {
   studentService,
@@ -77,6 +77,59 @@ const isValidIndianMobile = (value) => {
 
 export default function Students() {
   const [classFilter, setClassFilter] = useState('')
+  const [districtFilter, setDistrictFilter] = useState('')
+  const [talukaFilter, setTalukaFilter] = useState('')
+  const [centerFilter, setCenterFilter] = useState('')
+  const [coordinatorFilter, setCoordinatorFilter] = useState('')
+  const [paymentStatusFilter, setPaymentStatusFilter] = useState('')
+  const [districtOptions, setDistrictOptions] = useState([])
+  const [talukaOptions, setTalukaOptions] = useState([])
+  const [centerOptions, setCenterOptions] = useState([])
+  const [coordinatorOptions, setCoordinatorOptions] = useState([])
+
+  useEffect(() => {
+    Promise.all([loadDistrictOptions(), loadCoordinatorOptions()])
+      .then(([districts, coordinators]) => {
+        setDistrictOptions(districts)
+        setCoordinatorOptions(coordinators)
+      })
+      .catch(() => {
+        setDistrictOptions([])
+        setCoordinatorOptions([])
+      })
+  }, [])
+
+  useEffect(() => {
+    setTalukaFilter('')
+    setCenterFilter('')
+    if (!districtFilter) {
+      setTalukaOptions([])
+      return
+    }
+
+    loadTalukaOptions({ districtId: districtFilter }).then(setTalukaOptions).catch(() => setTalukaOptions([]))
+  }, [districtFilter])
+
+  useEffect(() => {
+    setCenterFilter('')
+    if (!talukaFilter) {
+      setCenterOptions([])
+      return
+    }
+
+    loadCenterOptions({ talukaId: talukaFilter }).then(setCenterOptions).catch(() => setCenterOptions([]))
+  }, [talukaFilter])
+
+  const matchesFilter = (row, filter, idKeys, nameKeys) => {
+    if (!filter) return true
+    const values = [...idKeys, ...nameKeys].flatMap((key) => {
+      const value = key.split('.').reduce((current, part) => current?.[part], row)
+      return value === undefined || value === null ? [] : [String(value)]
+    })
+    return values.includes(String(filter))
+  }
+
+  const getPaymentStatus = (row) => row.paymentStatus || row.payment_status || (row.paymentDone ?? row.isPaymentDone ? 'COMPLETED' : 'PENDING')
 
   return (
     <CrudManager
@@ -219,17 +272,59 @@ export default function Students() {
         return payload
       }}
       extraToolbar={(
-        <div className="form-group">
-          <label>Filter by Class</label>
-          <select value={classFilter} onChange={(e) => setClassFilter(e.target.value)}>
-            <option value="">All Classes</option>
-            {classOptions.map((option) => (
-              <option key={option.value} value={option.value}>{option.label}</option>
-            ))}
-          </select>
-        </div>
+        <>
+          <div className="form-group">
+            <label>District</label>
+            <select value={districtFilter} onChange={(e) => setDistrictFilter(e.target.value)}>
+              <option value="">All Districts</option>
+              {districtOptions.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
+            </select>
+          </div>
+          <div className="form-group">
+            <label>Taluka</label>
+            <select value={talukaFilter} onChange={(e) => setTalukaFilter(e.target.value)} disabled={!districtFilter}>
+              <option value="">All Talukas</option>
+              {talukaOptions.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
+            </select>
+          </div>
+          <div className="form-group">
+            <label>Center</label>
+            <select value={centerFilter} onChange={(e) => setCenterFilter(e.target.value)} disabled={!talukaFilter}>
+              <option value="">All Centers</option>
+              {centerOptions.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
+            </select>
+          </div>
+          <div className="form-group">
+            <label>Coordinator</label>
+            <select value={coordinatorFilter} onChange={(e) => setCoordinatorFilter(e.target.value)}>
+              <option value="">All Coordinators</option>
+              {coordinatorOptions.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
+            </select>
+          </div>
+          <div className="form-group">
+            <label>Payment Status</label>
+            <select value={paymentStatusFilter} onChange={(e) => setPaymentStatusFilter(e.target.value)}>
+              <option value="">All Payment Statuses</option>
+              {paymentStatusOptions.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
+            </select>
+          </div>
+          <div className="form-group">
+            <label>Class</label>
+            <select value={classFilter} onChange={(e) => setClassFilter(e.target.value)}>
+              <option value="">All Classes</option>
+              {classOptions.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
+            </select>
+          </div>
+        </>
       )}
-      filterFn={classFilter ? (r) => (r.studentClass || r.standard || '') === classFilter : undefined}
+      filterFn={(row) => (
+        (!classFilter || (row.studentClass || row.standard || '') === classFilter) &&
+        matchesFilter(row, districtFilter, ['districtId', 'district.id'], ['districtName', 'district.name', 'district.districtName']) &&
+        matchesFilter(row, talukaFilter, ['talukaId', 'taluka.id'], ['talukaName', 'taluka.name', 'taluka.talukaName']) &&
+        matchesFilter(row, centerFilter, ['centerId', 'center.id'], ['centerName', 'center.name', 'center.centerName']) &&
+        matchesFilter(row, coordinatorFilter, ['coordinatorId', 'coordinator.id'], ['coordinatorName', 'coordinator.name', 'coordinator.fullName']) &&
+        (!paymentStatusFilter || String(getPaymentStatus(row)).toUpperCase() === paymentStatusFilter)
+      )}
     />
   )
 }
