@@ -83,9 +83,7 @@ export default function Talukas() {
 
           const payload = {
             talukaName,
-            district: {
-              id: districtId,
-            },
+            districtId,
             active: true,
           }
 
