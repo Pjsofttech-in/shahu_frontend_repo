@@ -12,6 +12,10 @@ import axios from 'axios'
 const envBaseUrl = import.meta.env.VITE_API_BASE_URL?.trim()
 const API_BASE_URL = envBaseUrl || '/api'
 const USE_COOKIES = (import.meta.env.VITE_API_USE_COOKIES || '').toString() === 'true'
+const PUBLIC_AUTH_ENDPOINTS = [/^\/auth\/login(?:\/)?$/i, /^\/auth\/register(?:\/)?$/i, /^\/auth\/refresh(?:\/)?$/i]
+
+const shouldSkipAuthHeader = (url = '') =>
+  PUBLIC_AUTH_ENDPOINTS.some((pattern) => pattern.test(url))
 
 const api = axios.create({
   baseURL: API_BASE_URL,
@@ -98,17 +102,20 @@ try {
 
 api.interceptors.request.use(
   (config) => {
+    const url = config?.url || ''
     const token = tokenStore.get()
 
     // Dev-only: log outgoing requests to help debug missing auth headers
     try {
       const isDev = import.meta.env.MODE === 'development' || import.meta.env.VITE_APP_ENV === 'development'
-      if (isDev) console.debug('[api.request] url=', config.url, 'authorization=', token ? 'Bearer <token>' : '(none)')
+      if (isDev) console.debug('[api.request] url=', url, 'authorization=', token && !shouldSkipAuthHeader(url) ? 'Bearer <token>' : '(none)')
     } catch (e) {}
 
-    if (token) {
+    if (token && !shouldSkipAuthHeader(url)) {
       config.headers = config.headers || {}
       config.headers.Authorization = 'Bearer ' + token
+    } else if (config.headers?.Authorization) {
+      delete config.headers.Authorization
     }
 
     return config
@@ -166,11 +173,14 @@ if (USE_COOKIES) {
 }
 
 apiUpload.interceptors.request.use((config) => {
+  const url = config?.url || ''
   const token = tokenStore.get()
 
-  if (token) {
+  if (token && !shouldSkipAuthHeader(url)) {
     config.headers = config.headers || {}
-      config.headers.Authorization = 'Bearer ' + token
+    config.headers.Authorization = 'Bearer ' + token
+  } else if (config.headers?.Authorization) {
+    delete config.headers.Authorization
   }
 
   return config
