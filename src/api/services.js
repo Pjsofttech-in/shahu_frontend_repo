@@ -125,16 +125,39 @@ export const visionMissionService = {
   get: () => api.get('/website/vision-mission').then((r) => r.data),
   update: (payload) => api.put('/website/vision-mission', payload).then((r) => r.data),
 }
-export const contactService = {
-  get: () => api.get('/website/contact').then((r) => r.data),
-  update: (payload) => api.put('/website/contact', payload).then((r) => r.data),
-}
+export const contactService = makeCrudService('/contacts')
 
 // ---------------- Sankalp Exam ----------------
 export const syllabusService = makeCrudService('/sankalp/syllabus')
-export const answerKeyService = makeCrudService('/sankalp/answer-keys')
 export const resultCheckService = makeCrudService('/sankalp/results')
 export const resultPdfService = makeCrudService('/sankalp/result-pdfs')
+
+// Answer Key — uses multipart/form-data (PDF upload) — POST/PUT /api/answerkeys
+export const answerKeyService = {
+  getAll: () => api.get('/answerkeys').then((r) => r.data),
+  getById: (id) => api.get(`/answerkeys/${id}`).then((r) => r.data),
+  downloadPdf: (id) =>
+    api.get(`/answerkeys/${id}/download`, { responseType: 'blob' }).then((r) => r.data),
+  create: ({ title, link, examId, active, pdf }) => {
+    const form = new FormData()
+    form.append('title', title)
+    if (link) form.append('link', link)
+    form.append('examId', examId)
+    form.append('active', active ?? true)
+    form.append('pdf', pdf)
+    return apiUpload.post('/answerkeys', form).then((r) => r.data)
+  },
+  update: (id, { title, link, examId, active, pdf }) => {
+    const form = new FormData()
+    form.append('title', title)
+    if (link) form.append('link', link)
+    form.append('examId', examId)
+    form.append('active', active ?? true)
+    if (pdf) form.append('pdf', pdf)
+    return apiUpload.put(`/answerkeys/${id}`, form).then((r) => r.data)
+  },
+  remove: (id) => api.delete(`/answerkeys/${id}`).then((r) => r.data),
+}
 
 // ---------------- File upload helper ----------------
 // Use for image / pdf uploads (gallery photos, download PDFs, result PDFs, etc.)
