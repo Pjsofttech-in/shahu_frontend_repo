@@ -1,15 +1,15 @@
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { FiPlus, FiEdit2, FiTrash2, FiSave, FiArrowLeft } from 'react-icons/fi'
+import { topperService } from '../../api/services'
 
 // No mock data — table starts empty until backend is connected
 
 const EMPTY_FORM = {
   name:        '',
   totalMarks:  '',
-  class:       '',
+  post:        '',
   rank:        '',
   year:        '',
-  imageUrl:    '',
 }
 
 // View modes: 'list' | 'add' | 'edit'
@@ -21,12 +21,38 @@ export default function Toppers() {
   const [preview, setPreview] = useState(null)
   const [formError, setFormError] = useState('')
   const [deleteTarget, setDeleteTarget] = useState(null)
+  const [imageFile, setImageFile] = useState(null)
+  const [loading, setLoading] = useState(true)
+  const [saving, setSaving] = useState(false)
+  const [pageError, setPageError] = useState('')
+
+  const getErrorMessage = (error, fallback) => {
+    const data = error?.response?.data
+    if (typeof data === 'string' && data.trim()) return data
+    return data?.message || data?.error || error?.message || fallback
+  }
+
+  const loadToppers = async () => {
+    setLoading(true)
+    try {
+      const data = await topperService.getAll()
+      setRows(Array.isArray(data) ? data : data?.content || [])
+      setPageError('')
+    } catch (error) {
+      setPageError(getErrorMessage(error, 'Could not load toppers.'))
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  useEffect(() => { loadToppers() }, [])
 
   // ── navigation ────────────────────────────────────────────────────────────
   const openAdd = () => {
     setEditing(null)
     setForm(EMPTY_FORM)
     setPreview(null)
+    setImageFile(null)
     setFormError('')
     setView('add')
   }
@@ -36,12 +62,12 @@ export default function Toppers() {
     setForm({
       name:       row.name       ?? '',
       totalMarks: row.totalMarks ?? '',
-      class:      row.class      ?? '',
+      post:       row.post       ?? '',
       rank:       row.rank       ?? '',
       year:       row.year       ?? '',
-      imageUrl:   row.imageUrl   ?? '',
     })
-    setPreview(row.imageUrl || null)
+    setPreview(row.topperImage || null)
+    setImageFile(null)
     setFormError('')
     setView('edit')
   }
@@ -51,6 +77,7 @@ export default function Toppers() {
     setEditing(null)
     setForm(EMPTY_FORM)
     setPreview(null)
+    setImageFile(null)
     setFormError('')
   }
 
@@ -65,39 +92,49 @@ export default function Toppers() {
     if (file) {
       const url = URL.createObjectURL(file)
       setPreview(url)
-      // store object URL temporarily — replace with real upload URL when backend ready
-      setForm((prev) => ({ ...prev, imageUrl: url }))
+      setImageFile(file)
     } else {
-      setPreview(editing?.imageUrl || null)
-      setForm((prev) => ({ ...prev, imageUrl: editing?.imageUrl || '' }))
+      setPreview(editing?.topperImage || null)
+      setImageFile(null)
     }
   }
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault()
     if (!form.name.trim()) { setFormError('Student name is required.'); return }
 
-    if (editing) {
-      setRows((prev) =>
-        prev.map((r) => r.id === editing.id
-          ? { ...editing, ...form, rank: form.rank !== '' ? parseInt(form.rank, 10) : null, year: form.year !== '' ? parseInt(form.year, 10) : null }
-          : r
-        )
-      )
-    } else {
-      const newId = rows.length ? Math.max(...rows.map((r) => r.id)) + 1 : 1
-      setRows((prev) => [
-        ...prev,
-        { id: newId, ...form, rank: form.rank !== '' ? parseInt(form.rank, 10) : null, year: form.year !== '' ? parseInt(form.year, 10) : null },
-      ])
+    setSaving(true)
+    try {
+      const values = {
+        ...form,
+        rank: form.rank !== '' ? Number(form.rank) : null,
+        year: form.year !== '' ? Number(form.year) : null,
+      }
+      if (editing?.topperImage && !imageFile) values.topperImage = editing.topperImage
+      const saved = editing
+        ? await topperService.update(editing.topperId, values, imageFile)
+        : await topperService.create(values, imageFile)
+      setRows((prev) => editing
+        ? prev.map((row) => row.topperId === editing.topperId ? saved : row)
+        : [...prev, saved])
+      goBack()
+      setPageError('')
+    } catch (error) {
+      setFormError(getErrorMessage(error, 'Could not save topper.'))
+    } finally {
+      setSaving(false)
     }
-    goBack()
   }
 
   // ── delete ────────────────────────────────────────────────────────────────
-  const handleDelete = () => {
-    setRows((prev) => prev.filter((r) => r.id !== deleteTarget.id))
-    setDeleteTarget(null)
+  const handleDelete = async () => {
+    try {
+      await topperService.remove(deleteTarget.topperId)
+      setRows((prev) => prev.filter((r) => r.topperId !== deleteTarget.topperId))
+      setDeleteTarget(null)
+    } catch (error) {
+      setPageError(getErrorMessage(error, 'Could not delete topper.'))
+    }
   }
 
   // ── render: form view ─────────────────────────────────────────────────────
@@ -190,10 +227,10 @@ export default function Toppers() {
                     <label htmlFor="t-class">Class</label>
                     <input
                       id="t-class"
-                      name="class"
+                      name="post"
                       type="text"
                       placeholder="10TH"
-                      value={form.class}
+                      value={form.post}
                       onChange={handleField}
                     />
                   </div>
@@ -230,8 +267,8 @@ export default function Toppers() {
 
                 {/* Save + Cancel buttons */}
                 <div style={{ display: 'flex', gap: 10, marginTop: 6 }}>
-                  <button type="submit" className="btn btn-primary">
-                    <FiSave /> {view === 'edit' ? 'Update Topper' : 'Save Topper'}
+                  <button type="submit" className="btn btn-primary" disabled={saving}>
+                    <FiSave /> {saving ? 'Saving...' : view === 'edit' ? 'Update Topper' : 'Save Topper'}
                   </button>
                   <button type="button" className="btn btn-outline" onClick={goBack}>
                     Cancel
@@ -255,9 +292,11 @@ export default function Toppers() {
           <p>Manage top-performing students shown on the public website.</p>
         </div>
         <button className="btn btn-primary" onClick={openAdd}>
-          <FiPlus /> Create Topper
+          <FiPlus /> Add Topper
         </button>
       </div>
+
+      {pageError && <div className="login-alert" style={{ marginBottom: 14 }}>{pageError}</div>}
 
       {/* Table */}
       <div className="card" style={{ padding: 0 }}>
@@ -278,21 +317,21 @@ export default function Toppers() {
             <tbody>
               {rows.length === 0 ? (
                 <tr>
-                  <td colSpan={8} className="empty-row">No topper found</td>
+                  <td colSpan={8} className="empty-row">{loading ? 'Loading toppers...' : 'No topper found'}</td>
                 </tr>
               ) : (
                 rows.map((row) => (
-                  <tr key={row.id}>
-                    <td>{row.id}</td>
+                  <tr key={row.topperId}>
+                    <td>{row.topperId}</td>
                     <td>{row.name || '—'}</td>
                     <td>{row.totalMarks || '—'}</td>
-                    <td>{row.class || '—'}</td>
+                    <td>{row.post || '—'}</td>
                     <td>{row.rank ?? '—'}</td>
                     <td>{row.year ?? '—'}</td>
                     <td>
-                      {row.imageUrl ? (
+                      {row.topperImage ? (
                         <img
-                          src={row.imageUrl}
+                          src={row.topperImage}
                           alt={row.name}
                           style={{ width: 40, height: 40, borderRadius: '50%', objectFit: 'cover' }}
                         />

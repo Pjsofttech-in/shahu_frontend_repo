@@ -4,11 +4,7 @@ import { galleryService } from '../../api/services.js'
 
 const EMPTY_FORM = {
   title: '',
-  description: '',
-  imageUrl: '',
-  category: '',
-  displayOrder: '',
-  active: true,
+  link: '',
 }
 
 export default function Gallery() {
@@ -21,6 +17,8 @@ export default function Gallery() {
   const [form, setForm] = useState(EMPTY_FORM)
   const [saving, setSaving] = useState(false)
   const [formError, setFormError] = useState('')
+  const [imageFiles, setImageFiles] = useState([])
+  const [previews, setPreviews] = useState([])
 
   const [deleteTarget, setDeleteTarget] = useState(null)
   const [deleting, setDeleting] = useState(false)
@@ -55,6 +53,8 @@ export default function Gallery() {
   const openAdd = () => {
     setEditing(null)
     setForm(EMPTY_FORM)
+    setImageFiles([])
+    setPreviews([])
     setFormError('')
     setShowModal(true)
   }
@@ -62,13 +62,11 @@ export default function Gallery() {
   const openEdit = (row) => {
     setEditing(row)
     setForm({
-      title:        row.title        ?? '',
-      description:  row.description  ?? '',
-      imageUrl:     row.imageUrl     ?? '',
-      category:     row.category     ?? '',
-      displayOrder: row.displayOrder ?? '',
-      active:       row.active       ?? true,
+      title: row.title ?? '',
+      link: row.link ?? '',
     })
+    setImageFiles([])
+    setPreviews(row.galleryImages || [])
     setFormError('')
     setShowModal(true)
   }
@@ -77,40 +75,37 @@ export default function Gallery() {
     setShowModal(false)
     setEditing(null)
     setForm(EMPTY_FORM)
+    setImageFiles([])
+    setPreviews([])
     setFormError('')
   }
 
   // ── form handlers ─────────────────────────────────────────────────────────
   const handleField = (e) => {
-    const { name, value, type, checked } = e.target
-    setForm((prev) => ({
-      ...prev,
-      [name]: type === 'checkbox' ? checked : value,
-    }))
+    const { name, value } = e.target
+    setForm((prev) => ({ ...prev, [name]: value }))
+  }
+
+  const handleImages = (e) => {
+    const files = Array.from(e.target.files || [])
+    setImageFiles(files)
+    setPreviews(files.map((file) => URL.createObjectURL(file)))
   }
 
   const handleSubmit = async (e) => {
     e.preventDefault()
-    if (form.imageUrl && form.imageUrl.trim().startsWith('data:')) {
-      setFormError('Please enter a direct image URL (https://…). Base64 images are not supported.')
-      return
-    }
+    if (!editing && imageFiles.length === 0) { setFormError('At least one image is required.'); return }
     setSaving(true)
     setFormError('')
     try {
-      // Build payload exactly matching GalleryRequest DTO
       const payload = {
-        title:        form.title.trim()       || null,
-        description:  form.description.trim() || null,
-        imageUrl:     form.imageUrl.trim()    || null,
-        category:     form.category.trim()    || null,
-        displayOrder: form.displayOrder !== '' ? parseInt(form.displayOrder, 10) : null,
-        active:       form.active,
+        title: form.title.trim() || null,
+        link: form.link.trim() || null,
       }
       if (editing) {
-        await galleryService.update(editing.id, payload)
+        await galleryService.update(editing.galleryId, payload, imageFiles)
       } else {
-        await galleryService.create(payload)
+        await galleryService.create(payload, imageFiles)
       }
       closeModal()
       await load()
@@ -126,7 +121,7 @@ export default function Gallery() {
     if (!deleteTarget) return
     setDeleting(true)
     try {
-      await galleryService.remove(deleteTarget.id)
+      await galleryService.remove(deleteTarget.galleryId)
       setDeleteTarget(null)
       await load()
     } catch (e) {
@@ -160,12 +155,10 @@ export default function Gallery() {
             <thead>
               <tr>
                 <th style={{ width: '6%' }}>ID</th>
-                <th style={{ width: '10%' }}>Image</th>
-                <th style={{ width: '22%' }}>Title</th>
-                <th style={{ width: '22%' }}>Category</th>
-                <th style={{ width: '10%' }}>Order</th>
-                <th style={{ width: '10%' }}>Status</th>
-                <th style={{ width: '10%' }}>Action</th>
+                <th style={{ width: '14%' }}>Image</th>
+                <th style={{ width: '28%' }}>Title</th>
+                <th style={{ width: '28%' }}>Link</th>
+                <th style={{ width: '14%' }}>Action</th>
               </tr>
             </thead>
             <tbody>
@@ -177,16 +170,16 @@ export default function Gallery() {
                 </tr>
               ) : rows.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="empty-row">No gallery images found</td>
+                  <td colSpan={5} className="empty-row">No gallery images found</td>
                 </tr>
               ) : (
                 rows.map((row) => (
-                  <tr key={row.id}>
-                    <td>{row.id}</td>
+                  <tr key={row.galleryId}>
+                    <td>{row.galleryId}</td>
                     <td>
-                      {row.imageUrl ? (
+                      {row.galleryImages?.[0] ? (
                         <img
-                          src={row.imageUrl}
+                          src={row.galleryImages[0]}
                           alt={row.title}
                           style={{ width: 56, height: 40, objectFit: 'cover', borderRadius: 6 }}
                         />
@@ -195,13 +188,7 @@ export default function Gallery() {
                       )}
                     </td>
                     <td>{row.title || '—'}</td>
-                    <td>{row.category || '—'}</td>
-                    <td>{row.displayOrder ?? '—'}</td>
-                    <td>
-                      <span className={`badge ${row.active === false ? 'badge-inactive' : 'badge-active'}`}>
-                        {row.active === false ? 'Inactive' : 'Active'}
-                      </span>
-                    </td>
+                    <td>{row.link || '—'}</td>
                     <td>
                       <div className="table-actions">
                         <button className="btn btn-outline btn-sm" onClick={() => openEdit(row)}>
@@ -235,7 +222,7 @@ export default function Gallery() {
                   <div className="login-alert" style={{ marginBottom: 14 }}>{formError}</div>
                 )}
 
-                {/* Row 1: Title + Category */}
+                {/* Row 1: Title + Link */}
                 <div className="form-row">
                   <div className="form-group">
                     <label htmlFor="g-title">Title</label>
@@ -249,78 +236,41 @@ export default function Gallery() {
                     />
                   </div>
                   <div className="form-group">
-                    <label htmlFor="g-category">Category</label>
+                    <label htmlFor="g-link">Link</label>
                     <input
-                      id="g-category"
-                      name="category"
-                      type="text"
-                      placeholder="e.g. Events, Campus"
-                      value={form.category}
-                      onChange={handleField}
-                    />
-                  </div>
-                </div>
-
-                {/* Row 2: Image URL + Display Order */}
-                <div className="form-row">
-                  <div className="form-group">
-                    <label htmlFor="g-imageUrl">Image URL</label>
-                    <input
-                      id="g-imageUrl"
-                      name="imageUrl"
+                      id="g-link"
+                      name="link"
                       type="url"
-                      placeholder="https://example.com/image.jpg"
-                      value={form.imageUrl}
+                      placeholder="https://example.com"
+                      value={form.link}
                       onChange={handleField}
-                    />
-                    {/* Live preview */}
-                    {form.imageUrl && !form.imageUrl.startsWith('data:') && (
-                      <img
-                        src={form.imageUrl}
-                        alt="Preview"
-                        style={{ marginTop: 8, width: '100%', maxHeight: 120, objectFit: 'contain', borderRadius: 6, border: '1px solid var(--border)' }}
-                        onError={(e) => { e.target.style.display = 'none' }}
-                      />
-                    )}
-                  </div>
-                  <div className="form-group">
-                    <label htmlFor="g-displayOrder">Display Order</label>
-                    <input
-                      id="g-displayOrder"
-                      name="displayOrder"
-                      type="number"
-                      placeholder="e.g. 1"
-                      value={form.displayOrder}
-                      onChange={handleField}
-                      min="0"
                     />
                   </div>
                 </div>
 
-                {/* Description */}
+                {/* Row 2: Gallery images */}
                 <div className="form-group">
-                  <label htmlFor="g-description">Description</label>
-                  <textarea
-                    id="g-description"
-                    name="description"
-                    placeholder="Optional description"
-                    value={form.description}
-                    onChange={handleField}
-                    rows={3}
-                  />
-                </div>
-
-                {/* Active toggle */}
-                <div className="form-group" style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
-                  <input
-                    id="g-active"
-                    name="active"
-                    type="checkbox"
-                    checked={form.active}
-                    onChange={handleField}
-                    style={{ width: 16, height: 16, cursor: 'pointer' }}
-                  />
-                  <label htmlFor="g-active" style={{ margin: 0, cursor: 'pointer' }}>Active</label>
+                    <label htmlFor="g-images">Images</label>
+                    <input
+                      id="g-images"
+                      type="file"
+                      accept="image/*"
+                      multiple
+                      onChange={handleImages}
+                      style={{ padding: '6px 8px' }}
+                    />
+                    {previews.length > 0 && (
+                      <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 10 }}>
+                        {previews.map((image, index) => (
+                          <img
+                            key={`${image}-${index}`}
+                            src={image}
+                            alt={`Gallery preview ${index + 1}`}
+                            style={{ width: 72, height: 56, objectFit: 'cover', borderRadius: 6, border: '1px solid var(--border)' }}
+                          />
+                        ))}
+                      </div>
+                    )}
                 </div>
               </div>
 

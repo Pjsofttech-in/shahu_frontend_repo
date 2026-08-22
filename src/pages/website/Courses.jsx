@@ -1,12 +1,12 @@
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { FiPlus, FiEdit2, FiTrash2, FiSave } from 'react-icons/fi'
+import { courseService } from '../../api/services'
 
 const EMPTY_FORM = {
-  name:        '',
-  description: '',
-  duration:    '',
-  price:       '',
-  imageUrl:    '',
+  courseName:        '',
+  courseDescription: '',
+  duration:          '',
+  price:             '',
 }
 
 export default function Courses() {
@@ -15,14 +15,40 @@ export default function Courses() {
   const [editing, setEditing] = useState(null)
   const [form, setForm] = useState(EMPTY_FORM)
   const [preview, setPreview] = useState(null)
+  const [imageFile, setImageFile] = useState(null)
   const [formError, setFormError] = useState('')
   const [deleteTarget, setDeleteTarget] = useState(null)
+  const [loading, setLoading] = useState(true)
+  const [saving, setSaving] = useState(false)
+  const [pageError, setPageError] = useState('')
+
+  const getErrorMessage = (error, fallback) => {
+    const data = error?.response?.data
+    if (typeof data === 'string' && data.trim()) return data
+    return data?.message || data?.error || error?.message || fallback
+  }
+
+  const loadCourses = async () => {
+    setLoading(true)
+    try {
+      const data = await courseService.getAll()
+      setRows(Array.isArray(data) ? data : data?.content || [])
+      setPageError('')
+    } catch (error) {
+      setPageError(getErrorMessage(error, 'Could not load courses.'))
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  useEffect(() => { loadCourses() }, [])
 
   // ── modal open / close ────────────────────────────────────────────────────
   const openAdd = () => {
     setEditing(null)
     setForm(EMPTY_FORM)
     setPreview(null)
+    setImageFile(null)
     setFormError('')
     setShowModal(true)
   }
@@ -30,13 +56,13 @@ export default function Courses() {
   const openEdit = (row) => {
     setEditing(row)
     setForm({
-      name:        row.name        ?? '',
-      description: row.description ?? '',
-      duration:    row.duration    ?? '',
-      price:       row.price       ?? '',
-      imageUrl:    row.imageUrl    ?? '',
+      courseName:        row.courseName        ?? '',
+      courseDescription: row.courseDescription ?? '',
+      duration:          row.duration          ?? '',
+      price:             row.price             ?? '',
     })
-    setPreview(row.imageUrl || null)
+    setPreview(row.courseImage || null)
+    setImageFile(null)
     setFormError('')
     setShowModal(true)
   }
@@ -46,6 +72,7 @@ export default function Courses() {
     setEditing(null)
     setForm(EMPTY_FORM)
     setPreview(null)
+    setImageFile(null)
     setFormError('')
   }
 
@@ -60,32 +87,46 @@ export default function Courses() {
     if (file) {
       const url = URL.createObjectURL(file)
       setPreview(url)
-      setForm((prev) => ({ ...prev, imageUrl: url }))
+      setImageFile(file)
     } else {
-      setPreview(editing?.imageUrl || null)
-      setForm((prev) => ({ ...prev, imageUrl: editing?.imageUrl || '' }))
+      setPreview(editing?.courseImage || null)
+      setImageFile(null)
     }
   }
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault()
-    if (!form.name.trim()) { setFormError('Course name is required.'); return }
+    if (!form.courseName.trim()) { setFormError('Course name is required.'); return }
+    if (!editing && !imageFile) { setFormError('Course image is required.'); return }
 
-    if (editing) {
-      setRows((prev) =>
-        prev.map((r) => r.id === editing.id ? { ...editing, ...form } : r)
-      )
-    } else {
-      const newId = rows.length ? Math.max(...rows.map((r) => r.id)) + 1 : 1
-      setRows((prev) => [...prev, { id: newId, ...form }])
+    setSaving(true)
+    try {
+      const values = { ...form }
+      if (editing?.courseImage && !imageFile) values.courseImage = editing.courseImage
+      const saved = editing
+        ? await courseService.update(editing.id, values, imageFile)
+        : await courseService.create(values, imageFile)
+      setRows((prev) => editing
+        ? prev.map((row) => row.id === editing.id ? saved : row)
+        : [...prev, saved])
+      closeModal()
+      setPageError('')
+    } catch (error) {
+      setFormError(getErrorMessage(error, 'Could not save course.'))
+    } finally {
+      setSaving(false)
     }
-    closeModal()
   }
 
   // ── delete ────────────────────────────────────────────────────────────────
-  const handleDelete = () => {
-    setRows((prev) => prev.filter((r) => r.id !== deleteTarget.id))
-    setDeleteTarget(null)
+  const handleDelete = async () => {
+    try {
+      await courseService.remove(deleteTarget.id)
+      setRows((prev) => prev.filter((r) => r.id !== deleteTarget.id))
+      setDeleteTarget(null)
+    } catch (error) {
+      setPageError(getErrorMessage(error, 'Could not delete course.'))
+    }
   }
 
   // ── render ────────────────────────────────────────────────────────────────
@@ -101,6 +142,8 @@ export default function Courses() {
           <FiPlus /> Add Course
         </button>
       </div>
+
+      {pageError && <div className="login-alert" style={{ marginBottom: 14 }}>{pageError}</div>}
 
       {/* Table */}
       <div className="card" style={{ padding: 0 }}>
@@ -120,27 +163,27 @@ export default function Courses() {
             <tbody>
               {rows.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="empty-row">No course found</td>
+                  <td colSpan={7} className="empty-row">{loading ? 'Loading courses…' : 'No course found'}</td>
                 </tr>
               ) : (
                 rows.map((row) => (
                   <tr key={row.id}>
                     <td>{row.id}</td>
                     <td>
-                      {row.imageUrl ? (
+                      {row.courseImage ? (
                         <img
-                          src={row.imageUrl}
-                          alt={row.name}
+                          src={row.courseImage}
+                          alt={row.courseName}
                           style={{ width: 48, height: 40, objectFit: 'cover', borderRadius: 6 }}
                         />
                       ) : (
                         <span style={{ color: 'var(--text-400)', fontSize: 12 }}>—</span>
                       )}
                     </td>
-                    <td>{row.name || '—'}</td>
+                    <td>{row.courseName || '—'}</td>
                     <td style={{ maxWidth: 200 }}>
                       <span style={{ display: 'block', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: 200 }}>
-                        {row.description || '—'}
+                        {row.courseDescription || '—'}
                       </span>
                     </td>
                     <td>{row.duration || '—'}</td>
@@ -219,10 +262,10 @@ export default function Courses() {
                       <label htmlFor="c-name">Course Name</label>
                       <input
                         id="c-name"
-                        name="name"
+                        name="courseName"
                         type="text"
                         placeholder="Course Name"
-                        value={form.name}
+                        value={form.courseName}
                         onChange={handleField}
                         required
                       />
@@ -232,9 +275,9 @@ export default function Courses() {
                       <label htmlFor="c-description">Description</label>
                       <textarea
                         id="c-description"
-                        name="description"
+                        name="courseDescription"
                         placeholder="Description"
-                        value={form.description}
+                        value={form.courseDescription}
                         onChange={handleField}
                         rows={3}
                       />
@@ -258,7 +301,7 @@ export default function Courses() {
                         id="c-price"
                         name="price"
                         type="text"
-                        placeholder="₹4,500 / year"
+                        placeholder="4500 / year"
                         value={form.price}
                         onChange={handleField}
                       />
@@ -290,7 +333,7 @@ export default function Courses() {
             </div>
             <div className="modal-body">
               <p style={{ margin: 0, color: 'var(--text-600)', fontSize: 13.5 }}>
-                Are you sure you want to delete <strong>{deleteTarget.name}</strong>? This action cannot be undone.
+                Are you sure you want to delete <strong>{deleteTarget.courseName}</strong>? This action cannot be undone.
               </p>
             </div>
             <div className="modal-footer">

@@ -119,10 +119,82 @@ export const userService = makeCrudService('/users')
 export const studentService = makeCrudService('/students')
 
 // ---------------- Website management ----------------
-export const galleryService = makeDynamicCrudService('/gallery')
-export const topperService = makeDynamicCrudService('/toppers')
-export const testimonialService = makeDynamicCrudService('/testimonials')
-export const courseService = makeDynamicCrudService('/courses')
+export const galleryService = {
+  getAll: () => dynamicApi.get('/getAllGalleries', { params: { url: getWebsiteRequestParams().url } }).then((r) => r.data),
+  getById: (id) => dynamicApi.get(`/getGalleryById/${id}`, { params: { url: getWebsiteRequestParams().url } }).then((r) => r.data),
+  create: (values, images) => {
+    const form = new FormData()
+    form.append('gallery', JSON.stringify(values))
+    form.append('url', getWebsiteRequestParams().url)
+    images.forEach((image) => form.append('images', image))
+    return dynamicApiUpload.post('/createGallery', form).then((r) => r.data)
+  },
+  update: (id, values, images) => {
+    const form = new FormData()
+    form.append('gallery', JSON.stringify(values))
+    form.append('url', getWebsiteRequestParams().url)
+    images.forEach((image) => form.append('newImages', image))
+    return dynamicApiUpload.put(`/updateGallery/${id}`, form).then((r) => r.data)
+  },
+  remove: (id) => dynamicApi.delete(`/deleteGallery/${id}`, { params: { url: getWebsiteRequestParams().url } }).then((r) => r.data),
+}
+export const topperService = {
+  getAll: () => dynamicApi.get('/getAllToppers', { params: { url: getWebsiteRequestParams().url } }).then((r) => r.data),
+  getById: (id) => dynamicApi.get(`/getTopperById/${id}`, { params: { url: getWebsiteRequestParams().url } }).then((r) => r.data),
+  create: (values, image) => {
+    const form = new FormData()
+    form.append('topper', new Blob([JSON.stringify(values)], { type: 'application/json' }))
+    form.append('url', getWebsiteRequestParams().url)
+    if (image) form.append('topperImage', image)
+    return dynamicApiUpload.post('/createTopper', form).then((r) => r.data)
+  },
+  update: (id, values, image) => {
+    const form = new FormData()
+    form.append('topper', new Blob([JSON.stringify(values)], { type: 'application/json' }))
+    form.append('url', getWebsiteRequestParams().url)
+    if (image) form.append('topperImage', image)
+    return dynamicApiUpload.put(`/updateTopper/${id}`, form).then((r) => r.data)
+  },
+  remove: (id) => dynamicApi.delete(`/deleteTopper/${id}`, { params: { url: getWebsiteRequestParams().url } }).then((r) => r.data),
+}
+export const testimonialService = {
+  getAll: () => dynamicApi.get('/getAllTestimonials', { params: { url: getWebsiteRequestParams().url } }).then((r) => r.data),
+  getById: (id) => dynamicApi.get(`/getTestimonialById/${id}`, { params: { url: getWebsiteRequestParams().url } }).then((r) => r.data),
+  create: (values, image) => {
+    const form = new FormData()
+    form.append('testimonial', JSON.stringify(values))
+    form.append('url', getWebsiteRequestParams().url)
+    form.append('testimonialImage', image)
+    return dynamicApiUpload.post('/createTestimonial', form).then((r) => r.data)
+  },
+  update: (id, values, image) => {
+    const form = new FormData()
+    form.append('testimonial', JSON.stringify(values))
+    form.append('url', getWebsiteRequestParams().url)
+    if (image) form.append('testimonialImage', image)
+    return dynamicApiUpload.put(`/updateTestimonial/${id}`, form).then((r) => r.data)
+  },
+  remove: (id) => dynamicApi.delete(`/deleteTestimonial/${id}`, { params: { url: getWebsiteRequestParams().url } }).then((r) => r.data),
+}
+export const courseService = {
+  getAll: () => dynamicApi.get('/getAllCourses', { params: { url: getWebsiteRequestParams().url } }).then((r) => r.data),
+  getById: (id) => dynamicApi.get(`/getCourseById/${id}`, { params: { url: getWebsiteRequestParams().url } }).then((r) => r.data),
+  create: (values, image) => {
+    const form = new FormData()
+    form.append('course', JSON.stringify(values))
+    form.append('url', getWebsiteRequestParams().url)
+    form.append('courseImage', image)
+    return dynamicApiUpload.post('/createCourse', form).then((r) => r.data)
+  },
+  update: (id, values, image) => {
+    const form = new FormData()
+    form.append('course', JSON.stringify(values))
+    form.append('url', getWebsiteRequestParams().url)
+    if (image) form.append('courseImage', image)
+    return dynamicApiUpload.put(`/updateCourse/${id}`, form).then((r) => r.data)
+  },
+  remove: (id) => dynamicApi.delete(`/deleteCourse/${id}`, { params: { url: getWebsiteRequestParams().url } }).then((r) => r.data),
+}
 export const downloadService = makeCrudService('/downloads')
 export const footerService = {
   get: () => dynamicApi.get('/website/footer').then((r) => r.data),
@@ -133,6 +205,7 @@ export const visionMissionService = {
   update: (payload) => dynamicApi.put('/website/vision-mission', payload).then((r) => r.data),
 }
 export const contactService = makeCrudService('/contacts')
+export const notificationService = makeDynamicCrudService('/notifications')
 
 const getWebsiteRequestParams = (user = {}) => ({
   url: import.meta.env.VITE_DYNAMIC_PROFILE_URL?.trim() || import.meta.env.VITE_WEBSITE_URL?.trim() || window.location.origin,

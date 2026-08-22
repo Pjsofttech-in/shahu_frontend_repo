@@ -1,12 +1,12 @@
-import React, { useState } from 'react'
+import React, { useCallback, useEffect, useState } from 'react'
 import { FiPlus, FiEdit2, FiTrash2, FiSave, FiArrowLeft } from 'react-icons/fi'
+import { testimonialService } from '../../api/services'
 
 const EMPTY_FORM = {
-  name:        '',
+  testimonialName: '',
   exam:        '',
   rank:        '',
   description: '',
-  imageUrl:    '',
 }
 
 export default function Testimonials() {
@@ -17,12 +17,38 @@ export default function Testimonials() {
   const [preview, setPreview] = useState(null)
   const [formError, setFormError] = useState('')
   const [deleteTarget, setDeleteTarget] = useState(null)
+  const [imageFile, setImageFile] = useState(null)
+  const [loading, setLoading] = useState(true)
+  const [saving, setSaving] = useState(false)
+  const [pageError, setPageError] = useState('')
+
+  const getErrorMessage = (error, fallback) => {
+    const data = error?.response?.data
+    if (typeof data === 'string' && data.trim()) return data
+    return data?.message || data?.error || error?.message || fallback
+  }
+
+  const loadTestimonials = useCallback(async () => {
+    setLoading(true)
+    try {
+      const data = await testimonialService.getAll()
+      setRows(Array.isArray(data) ? data : data?.content || [])
+      setPageError('')
+    } catch (error) {
+      setPageError(getErrorMessage(error, 'Could not load testimonials.'))
+    } finally {
+      setLoading(false)
+    }
+  }, [])
+
+  useEffect(() => { loadTestimonials() }, [loadTestimonials])
 
   // ── navigation ────────────────────────────────────────────────────────────
   const openAdd = () => {
     setEditing(null)
     setForm(EMPTY_FORM)
     setPreview(null)
+    setImageFile(null)
     setFormError('')
     setView('add')
   }
@@ -30,13 +56,13 @@ export default function Testimonials() {
   const openEdit = (row) => {
     setEditing(row)
     setForm({
-      name:        row.name        ?? '',
+      testimonialName: row.testimonialName ?? '',
       exam:        row.exam        ?? '',
       rank:        row.rank        ?? '',
       description: row.description ?? '',
-      imageUrl:    row.imageUrl    ?? '',
     })
-    setPreview(row.imageUrl || null)
+    setPreview(row.testimonialImage || null)
+    setImageFile(null)
     setFormError('')
     setView('edit')
   }
@@ -46,6 +72,7 @@ export default function Testimonials() {
     setEditing(null)
     setForm(EMPTY_FORM)
     setPreview(null)
+    setImageFile(null)
     setFormError('')
   }
 
@@ -60,32 +87,47 @@ export default function Testimonials() {
     if (file) {
       const url = URL.createObjectURL(file)
       setPreview(url)
-      setForm((prev) => ({ ...prev, imageUrl: url }))
+      setImageFile(file)
     } else {
-      setPreview(editing?.imageUrl || null)
-      setForm((prev) => ({ ...prev, imageUrl: editing?.imageUrl || '' }))
+      setPreview(editing?.testimonialImage || null)
+      setImageFile(null)
     }
   }
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault()
-    if (!form.name.trim()) { setFormError('Name is required.'); return }
+    if (!form.testimonialName.trim()) { setFormError('Name is required.'); return }
+    if (!editing && !imageFile) { setFormError('Testimonial image is required.'); return }
 
-    if (editing) {
-      setRows((prev) =>
-        prev.map((r) => r.id === editing.id ? { ...editing, ...form } : r)
-      )
-    } else {
-      const newId = rows.length ? Math.max(...rows.map((r) => r.id)) + 1 : 1
-      setRows((prev) => [...prev, { id: newId, ...form }])
+    setSaving(true)
+    setFormError('')
+    try {
+      const values = { ...form }
+      if (editing?.testimonialImage && !imageFile) values.testimonialImage = editing.testimonialImage
+      const saved = editing
+        ? await testimonialService.update(editing.testimonialId, values, imageFile)
+        : await testimonialService.create(values, imageFile)
+      setRows((prev) => editing
+        ? prev.map((row) => row.testimonialId === editing.testimonialId ? saved : row)
+        : [...prev, saved])
+      goBack()
+      setPageError('')
+    } catch (error) {
+      setFormError(getErrorMessage(error, 'Could not save testimonial.'))
+    } finally {
+      setSaving(false)
     }
-    goBack()
   }
 
   // ── delete ────────────────────────────────────────────────────────────────
-  const handleDelete = () => {
-    setRows((prev) => prev.filter((r) => r.id !== deleteTarget.id))
-    setDeleteTarget(null)
+  const handleDelete = async () => {
+    try {
+      await testimonialService.remove(deleteTarget.testimonialId)
+      setRows((prev) => prev.filter((r) => r.testimonialId !== deleteTarget.testimonialId))
+      setDeleteTarget(null)
+    } catch (error) {
+      setPageError(getErrorMessage(error, 'Could not delete testimonial.'))
+    }
   }
 
   // ── render: form view ─────────────────────────────────────────────────────
@@ -155,10 +197,10 @@ export default function Testimonials() {
                   <label htmlFor="tm-name">Name</label>
                   <input
                     id="tm-name"
-                    name="name"
+                    name="testimonialName"
                     type="text"
                     placeholder="Enter Name"
-                    value={form.name}
+                    value={form.testimonialName}
                     onChange={handleField}
                     required
                   />
@@ -205,8 +247,8 @@ export default function Testimonials() {
 
                 {/* Buttons */}
                 <div style={{ display: 'flex', gap: 10, marginTop: 4 }}>
-                  <button type="submit" className="btn btn-primary">
-                    <FiSave /> {view === 'edit' ? 'Update Testimonial' : 'Save Testimonial'}
+                  <button type="submit" className="btn btn-primary" disabled={saving}>
+                    <FiSave /> {saving ? 'Saving...' : view === 'edit' ? 'Update Testimonial' : 'Save Testimonial'}
                   </button>
                   <button type="button" className="btn btn-outline" onClick={goBack}>
                     Cancel
@@ -234,6 +276,8 @@ export default function Testimonials() {
         </button>
       </div>
 
+      {pageError && <div className="login-alert" style={{ marginBottom: 14 }}>{pageError}</div>}
+
       {/* Table */}
       <div className="card" style={{ padding: 0 }}>
         <div className="table-wrap">
@@ -250,22 +294,26 @@ export default function Testimonials() {
               </tr>
             </thead>
             <tbody>
-              {rows.length === 0 ? (
+              {loading ? (
+                <tr>
+                  <td colSpan={7} className="empty-row">Loading testimonials...</td>
+                </tr>
+              ) : rows.length === 0 ? (
                 <tr>
                   <td colSpan={7} className="empty-row">No testimonials available</td>
                 </tr>
               ) : (
                 rows.map((row) => (
-                  <tr key={row.id}>
-                    <td>{row.id}</td>
-                    <td>{row.name || '—'}</td>
+                  <tr key={row.testimonialId}>
+                    <td>{row.testimonialId}</td>
+                    <td>{row.testimonialName || '—'}</td>
                     <td>{row.exam || '—'}</td>
                     <td>{row.rank || '—'}</td>
                     <td>
-                      {row.imageUrl ? (
+                      {row.testimonialImage ? (
                         <img
-                          src={row.imageUrl}
-                          alt={row.name}
+                          src={row.testimonialImage}
+                          alt={row.testimonialName}
                           style={{ width: 42, height: 42, borderRadius: '50%', objectFit: 'cover' }}
                         />
                       ) : (
@@ -305,7 +353,7 @@ export default function Testimonials() {
             </div>
             <div className="modal-body">
               <p style={{ margin: 0, color: 'var(--text-600)', fontSize: 13.5 }}>
-                Are you sure you want to delete the testimonial from <strong>{deleteTarget.name}</strong>? This action cannot be undone.
+                Are you sure you want to delete the testimonial from <strong>{deleteTarget.testimonialName}</strong>? This action cannot be undone.
               </p>
             </div>
             <div className="modal-footer">

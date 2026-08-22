@@ -16,6 +16,7 @@ import Downloads from './Downloads.jsx'
 import ContactUs from './ContactUs.jsx'
 import ContactForm from './ContactForm.jsx'
 import AboutUs from './AboutUs.jsx'
+import Notifications from './Notifications.jsx'
 
 export default function WebsiteSection() {
   return (
@@ -44,7 +45,7 @@ export default function WebsiteSection() {
         <Route path="/downloads" element={<Downloads />} />
         <Route path="/contact-us" element={<ContactUs />} />
         <Route path="/contact-form" element={<ContactForm />} />
-        <Route path="/notifications" element={<ModulePlaceholder title="Notifications" />} />
+        <Route path="/notifications" element={<Notifications />} />
         <Route path="/*" element={<Navigate to="/website/home" replace />} />
       </Routes>
     </Layout>
