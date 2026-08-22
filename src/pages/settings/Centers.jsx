@@ -61,7 +61,6 @@ export default function Centers() {
           { name: 'districtId', label: 'District', type: 'select', required: true, options: loadDistrictOptions },
           { name: 'talukaId', label: 'Taluka', type: 'select', required: true, dependsOn: 'districtId', options: loadTalukaOptions },
           { name: 'pincode', label: 'Pincode', type: 'text', required: false },
-          { name: 'schoolName', label: 'School Name', type: 'text', required: true },
           { name: 'centerName', label: 'Exam Center', type: 'text', required: true },
           { name: 'centerCode', label: 'Center Code', type: 'text', required: true },
           { name: 'address', label: 'Address', type: 'text', required: true },
@@ -71,7 +70,6 @@ export default function Centers() {
         transformSubmit={async (fv, editing) => {
           const districtId = Number(fv.districtId ?? fv.district_id ?? location.state?.districtId ?? 0)
           const talukaId = Number(fv.talukaId ?? fv.taluka_id ?? location.state?.talukaId ?? 0)
-          const schoolName = String(fv.schoolName ?? '').trim()
           const centerName = String(fv.centerName ?? fv.name ?? '').trim()
           const centerCode = String(fv.centerCode ?? '').trim()
           const address = String(fv.address ?? '').trim()
@@ -91,10 +89,6 @@ export default function Centers() {
             throw new Error('Center name is required')
           }
 
-          if (!schoolName) {
-            throw new Error('School name is required')
-          }
-
           if (!centerCode) {
             throw new Error('Center code is required')
           }
@@ -104,7 +98,6 @@ export default function Centers() {
           }
 
           const payload = {
-            schoolName,
             centerName,
             centerCode,
             address,

@@ -22,6 +22,7 @@ const loadDistrictOptions = async () => {
 export default function Talukas() {
   const navigate = useNavigate()
   const location = useLocation()
+  const selectedDistrictId = location.state?.districtId
 
   useEffect(() => {
     if (!location.state?.districtId) return
@@ -48,6 +49,12 @@ export default function Talukas() {
         showEditAction={false}
         searchKeys={['talukaName']}
         searchPlaceholder="Search talukas…"
+        filterFn={(row) => {
+          if (selectedDistrictId === undefined || selectedDistrictId === null || selectedDistrictId === '') return true
+
+          const rowDistrictId = row?.districtId ?? row?.district_id ?? row?.district?.id ?? row?.district?.districtId
+          return String(rowDistrictId) === String(selectedDistrictId)
+        }}
         columns={[
           { key: 'id', label: 'ID', width: 70 },
           { key: 'talukaName', label: 'Taluka Name', render: (r) => r.talukaName || r.name || r.taluka?.name || r.talukaId || '' },
