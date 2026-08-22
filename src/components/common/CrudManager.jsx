@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState, useCallback } from 'react'
-import { FiPlus, FiEdit2, FiTrash2, FiSearch } from 'react-icons/fi'
+import { FiPlus, FiEdit2, FiTrash2, FiSearch, FiRotateCcw } from 'react-icons/fi'
 import DataTable from './DataTable.jsx'
 import Modal from './Modal.jsx'
 import FormField from './FormField.jsx'
@@ -27,6 +27,7 @@ export default function CrudManager({
   showEditAction = true,
   showDeleteAction = true,
   initialFormValues = {},
+  onResetFilters,
 }) {
   const [rows, setRows] = useState([])
   const [loading, setLoading] = useState(true)
@@ -274,6 +275,11 @@ export default function CrudManager({
     }
   }
 
+  const resetFilters = () => {
+    setSearch('')
+    onResetFilters?.()
+  }
+
   const filteredRows = useMemo(() => {
     let result = rows
     if (search && searchKeys.length > 0) {
@@ -329,6 +335,11 @@ export default function CrudManager({
             <input placeholder={searchPlaceholder} value={search} onChange={(e) => setSearch(e.target.value)} />
           </div>
           {extraToolbar}
+          {onResetFilters && (
+            <button type="button" className="btn btn-outline reset-filters-btn" onClick={resetFilters}>
+              <FiRotateCcw /> Reset Filters
+            </button>
+          )}
         </div>
       )}
 

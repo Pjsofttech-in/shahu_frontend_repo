@@ -21,7 +21,6 @@ const paymentModeOptions = [
 
 const paymentStatusOptions = [
   { label: 'Pending', value: 'PENDING' },
-  { label: 'Completed', value: 'COMPLETED' },
 ]
 
 const loadUserOptions = async () => {
@@ -203,6 +202,7 @@ export default function Students() {
           { label: 'Active', value: 'ACTIVE' },
           { label: 'Inactive', value: 'INACTIVE' },
         ] },
+        { name: 'amount', label: 'Payment Amount', type: 'number', required: true, default: '0', placeholder: 'Enter amount' },
         { name: 'paymentMode', label: 'Payment Mode', type: 'select', default: 'CASH', options: paymentModeOptions },
         { name: 'paymentStatus', label: 'Payment Status', type: 'select', default: 'PENDING', options: paymentStatusOptions },
       ]}
@@ -231,7 +231,10 @@ export default function Students() {
           throw new Error('Pincode must be a 6-digit number')
         }
 
-        const paymentStatus = (fv.paymentStatus || 'PENDING').toUpperCase()
+        const amount = Number(fv.amount)
+        if (!Number.isFinite(amount) || amount < 0) throw new Error('Payment Amount must be zero or greater')
+
+        const paymentStatus = 'PENDING'
         const paymentMode = (fv.paymentMode || 'CASH').toUpperCase()
 
         const payload = {
@@ -254,9 +257,10 @@ export default function Students() {
           talukaId,
           centerId,
           coordinatorId,
+          amount,
           paymentMode,
           paymentStatus,
-          paymentDone: paymentStatus === 'COMPLETED',
+          paymentDone: false,
         }
 
         if (editing?.userId !== undefined && editing?.userId !== null && editing.userId !== '') {
@@ -317,6 +321,14 @@ export default function Students() {
           </div>
         </>
       )}
+      onResetFilters={() => {
+        setClassFilter('')
+        setDistrictFilter('')
+        setTalukaFilter('')
+        setCenterFilter('')
+        setCoordinatorFilter('')
+        setPaymentStatusFilter('')
+      }}
       filterFn={(row) => (
         (!classFilter || (row.studentClass || row.standard || '') === classFilter) &&
         matchesFilter(row, districtFilter, ['districtId', 'district.id'], ['districtName', 'district.name', 'district.districtName']) &&

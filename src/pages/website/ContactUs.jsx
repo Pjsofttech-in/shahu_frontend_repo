@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useCallback } from 'react'
-import { FiEdit2, FiSave } from 'react-icons/fi'
+import { FiEdit2, FiPlus, FiSave } from 'react-icons/fi'
 import Modal from '../../components/common/Modal.jsx'
 import { contactService } from '../../api/services.js'
 
@@ -42,6 +42,13 @@ export default function ContactUs({ title = 'Contact Us' }) {
 
   useEffect(() => { load() }, [load])
 
+  const openAdd = () => {
+    setEditing(null)
+    setForm({ address: '', contactNo: '', email: '', mapLink: '' })
+    setFormError('')
+    setShowEditModal(true)
+  }
+
   const openEdit = (row) => {
     setEditing(row)
     setForm({
@@ -66,7 +73,7 @@ export default function ContactUs({ title = 'Contact Us' }) {
     setForm((current) => ({ ...current, [name]: type === 'checkbox' ? checked : value }))
   }
 
-  const handleEditContact = async (event) => {
+  const handleSaveContact = async (event) => {
     event.preventDefault()
     const address = form.address.trim()
     const contactNo = form.contactNo.trim()
@@ -81,7 +88,9 @@ export default function ContactUs({ title = 'Contact Us' }) {
     setSaving(true)
     setFormError('')
     try {
-      await contactService.update(editing.id, { address, contactNo, email, mapLink })
+      const payload = { address, contactNo, email, mapLink }
+      if (editing) await contactService.update(editing.id, payload)
+      else await contactService.create(payload)
       closeEditModal()
       await load()
     } catch (e) {
@@ -99,6 +108,7 @@ export default function ContactUs({ title = 'Contact Us' }) {
           <h1>{title}</h1>
           <p>Manage contact details displayed on the public website.</p>
         </div>
+        <button className="btn btn-primary" onClick={openAdd}><FiPlus /> Add Contact</button>
       </div>
 
       {/* Table */}
@@ -161,7 +171,7 @@ export default function ContactUs({ title = 'Contact Us' }) {
 
       {showEditModal && (
         <Modal
-          title="Edit Contact"
+          title={editing ? 'Edit Contact' : 'Add Contact'}
           onClose={closeEditModal}
           maxWidth={620}
           footer={(
@@ -173,7 +183,7 @@ export default function ContactUs({ title = 'Contact Us' }) {
             </>
           )}
         >
-          <form id="edit-contact-form" onSubmit={handleEditContact}>
+          <form id="edit-contact-form" onSubmit={handleSaveContact}>
             {formError && <div className="login-alert">{formError}</div>}
             <div className="form-row">
               <div className="form-group"><label htmlFor="contact-address">Address</label><textarea id="contact-address" name="address" value={form.address} onChange={handleField} rows={3} required /></div>

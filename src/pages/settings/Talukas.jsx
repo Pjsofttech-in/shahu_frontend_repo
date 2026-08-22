@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react'
+import React, { useEffect, useRef } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { FiHome } from 'react-icons/fi'
 import CrudManager from '../../components/common/CrudManager.jsx'
@@ -22,15 +22,18 @@ const loadDistrictOptions = async () => {
 export default function Talukas() {
   const navigate = useNavigate()
   const location = useLocation()
+  const openedFromDistrict = useRef(false)
   const selectedDistrictId = location.state?.districtId
 
   useEffect(() => {
-    if (!location.state?.districtId) return
+    if (!location.state?.districtId || openedFromDistrict.current) return
+    openedFromDistrict.current = true
     const openCreate = document.querySelector('[data-open-create]')
     if (openCreate) {
       openCreate.click()
     }
-  }, [location.state])
+    navigate(location.pathname, { replace: true, state: null })
+  }, [location.pathname, location.state, navigate])
 
   const initialFormValues = {
     districtId:
