@@ -7,10 +7,10 @@ import { aboutUsService } from '../../api/services.js'
 const EMPTY_FORM = {
   aboutUsTitle: '',
   aboutUsDescription: '',
-  yearsCount: '',
-  examCenterCount: '',
-  facultyCount: '',
-  studentCount: '',
+  totalYearsOfExcellence: '',
+  totalExamCenters: '',
+  totalFaculties: '',
+  totalStudents: '',
 }
 
 const getError = (error) => error?.response?.data?.message || error?.response?.data?.error || error?.message || 'Something went wrong.'
@@ -54,10 +54,10 @@ export default function AboutUs() {
     setForm({
       aboutUsTitle: row.aboutUsTitle ?? '',
       aboutUsDescription: row.aboutUsDescription ?? '',
-      yearsCount: row.yearsCount ?? '',
-      examCenterCount: row.examCenterCount ?? row.centersCount ?? '',
-      facultyCount: row.facultyCount ?? '',
-      studentCount: row.studentCount ?? '',
+      totalYearsOfExcellence: row.totalYearsOfExcellence ?? '',
+      totalExamCenters: row.totalExamCenters ?? '',
+      totalFaculties: row.totalFaculties ?? '',
+      totalStudents: row.totalStudents ?? '',
     })
     setImage(null)
     setError('')
@@ -89,10 +89,10 @@ export default function AboutUs() {
     const values = {
       aboutUsTitle: form.aboutUsTitle.trim(),
       aboutUsDescription: form.aboutUsDescription.trim(),
-      yearsCount: Number(form.yearsCount) || 0,
-      examCenterCount: Number(form.examCenterCount) || 0,
-      facultyCount: Number(form.facultyCount) || 0,
-      studentCount: Number(form.studentCount) || 0,
+      totalYearsOfExcellence: form.totalYearsOfExcellence.trim(),
+      totalExamCenters: form.totalExamCenters.trim(),
+      totalFaculties: form.totalFaculties.trim(),
+      totalStudents: form.totalStudents.trim(),
     }
 
     setSaving(true)
@@ -137,7 +137,7 @@ export default function AboutUs() {
                   <td>{row.aboutUsImage ? <img className="about-us-thumb" src={row.aboutUsImage} alt="" /> : <FiImage />}</td>
                   <td>{row.aboutUsTitle || '—'}</td>
                   <td className="about-us-description">{row.aboutUsDescription || '—'}</td>
-                  <td>{row.yearsCount ?? '—'}</td><td>{row.examCenterCount ?? row.centersCount ?? '—'}</td><td>{row.facultyCount ?? '—'}</td><td>{row.studentCount ?? '—'}</td>
+                  <td>{row.totalYearsOfExcellence ?? '—'}</td><td>{row.totalExamCenters ?? '—'}</td><td>{row.totalFaculties ?? '—'}</td><td>{row.totalStudents ?? '—'}</td>
                   <td><div className="table-actions"><button className="btn btn-outline btn-sm" onClick={() => openEdit(row)} title="Edit"><FiEdit2 /></button><button className="btn btn-danger btn-sm" onClick={() => handleDelete(row)} title="Delete"><FiTrash2 /></button></div></td>
                 </tr>
               ))}
@@ -155,12 +155,12 @@ export default function AboutUs() {
           </div>
           <div className="form-group"><label htmlFor="about-description">Description</label><textarea id="about-description" name="aboutUsDescription" rows={4} value={form.aboutUsDescription} onChange={handleChange} required /></div>
           <div className="form-row">
-            <div className="form-group"><label htmlFor="about-years">Years Count</label><input id="about-years" name="yearsCount" type="number" min="0" value={form.yearsCount} onChange={handleChange} /></div>
-            <div className="form-group"><label htmlFor="about-centers">Exam Center Count</label><input id="about-centers" name="examCenterCount" type="number" min="0" value={form.examCenterCount} onChange={handleChange} /></div>
+            <div className="form-group"><label htmlFor="about-years">Years of Excellence</label><input id="about-years" name="totalYearsOfExcellence" type="text" value={form.totalYearsOfExcellence} onChange={handleChange} /></div>
+            <div className="form-group"><label htmlFor="about-centers">Total Exam Centers</label><input id="about-centers" name="totalExamCenters" type="text" value={form.totalExamCenters} onChange={handleChange} /></div>
           </div>
           <div className="form-row">
-            <div className="form-group"><label htmlFor="about-faculty">Faculty Count</label><input id="about-faculty" name="facultyCount" type="number" min="0" value={form.facultyCount} onChange={handleChange} /></div>
-            <div className="form-group"><label htmlFor="about-students">Student Count</label><input id="about-students" name="studentCount" type="number" min="0" value={form.studentCount} onChange={handleChange} /></div>
+            <div className="form-group"><label htmlFor="about-faculty">Total Faculties</label><input id="about-faculty" name="totalFaculties" type="text" value={form.totalFaculties} onChange={handleChange} /></div>
+            <div className="form-group"><label htmlFor="about-students">Total Students</label><input id="about-students" name="totalStudents" type="text" value={form.totalStudents} onChange={handleChange} /></div>
           </div>
         </form>
       </Modal>}

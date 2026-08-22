@@ -17,6 +17,7 @@ import ContactUs from './ContactUs.jsx'
 import ContactForm from './ContactForm.jsx'
 import AboutUs from './AboutUs.jsx'
 import Notifications from './Notifications.jsx'
+import WebsiteUrl from './WebsiteUrl.jsx'
 
 export default function WebsiteSection() {
   return (
@@ -26,9 +27,9 @@ export default function WebsiteSection() {
     >
       <Routes>
         <Route path="/home" element={<Home />} />
-        <Route path="/url" element={<ModulePlaceholder title="Website URL" />} />
-        <Route path="/sidebar" element={<ModulePlaceholder title="Sidebar" />} />
-        <Route path="/settings" element={<ModulePlaceholder title="Website Settings" />} />
+        <Route path="/url" element={<WebsiteUrl />} />
+        {/* <Route path="/sidebar" element={<ModulePlaceholder title="Sidebar" />} />
+        <Route path="/settings" element={<ModulePlaceholder title="Website Settings" />} /> */}
         <Route path="/hero" element={<ModulePlaceholder title="Hero Section" />} />
         <Route path="/services" element={<ModulePlaceholder title="Services" />} />
         <Route path="/sankalp-features" element={<ModulePlaceholder title="Sankalp Features" />} />

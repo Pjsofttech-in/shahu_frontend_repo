@@ -31,8 +31,8 @@ export const settingsLinks = [
 export const websiteLinks = [
   { to: '/website/home', label: 'Home', icon: <FiHome /> },
   { to: '/website/url', label: 'Website URL', icon: <FiPhone /> },
-  { to: '/website/sidebar', label: 'Sidebar', icon: <FiLayers /> },
-  { to: '/website/settings', label: 'Website Settings', icon: <FiTarget /> },
+  // { to: '/website/sidebar', label: 'Sidebar', icon: <FiLayers /> },
+  // { to: '/website/settings', label: 'Website Settings', icon: <FiTarget /> },
   { to: '/website/hero', label: 'Hero Section', icon: <FiImage /> },
   { to: '/website/services', label: 'Services', icon: <FiLayers /> },
   { to: '/website/sankalp-features', label: 'Sankalp Features', icon: <FiBook /> },
