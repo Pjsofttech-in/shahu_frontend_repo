@@ -13,6 +13,7 @@ export const makeCrudService = (basePath) => ({
   remove: (id) => api.delete(`${basePath}/${id}`).then((r) => r.data),
 })
 
+
 const getResponseData = (response) => response?.data ?? {}
 
 const extractToken = (payload, response) => {
@@ -126,7 +127,7 @@ export const visionMissionService = {
 export const contactService = makeCrudService('/contacts')
 
 const getWebsiteRequestParams = (user = {}) => ({
-  url: import.meta.env.VITE_WEBSITE_URL?.trim() || window.location.origin,
+  url: import.meta.env.VITE_DYNAMIC_PROFILE_URL?.trim() || import.meta.env.VITE_WEBSITE_URL?.trim() || window.location.origin,
   role: user?.role || 'ADMIN',
   email: user?.email || '',
 })
