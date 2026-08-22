@@ -1,8 +1,9 @@
 import React from 'react'
+import { createPortal } from 'react-dom'
 import { FiX } from 'react-icons/fi'
 
 export default function Modal({ title, onClose, children, footer, maxWidth }) {
-  return (
+  const modal = (
     <div className="modal-overlay" onMouseDown={(e) => e.target === e.currentTarget && onClose()}>
       <div className="modal-box" style={maxWidth ? { maxWidth } : undefined}>
         <div className="modal-header">
@@ -14,4 +15,6 @@ export default function Modal({ title, onClose, children, footer, maxWidth }) {
       </div>
     </div>
   )
+
+  return createPortal(modal, document.body)
 }

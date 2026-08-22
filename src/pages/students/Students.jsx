@@ -136,12 +136,14 @@ export default function Students() {
       subtitle="All students registered under Sankalp centers. Add students manually or review registrations."
       service={studentService}
       addLabel="Add Student"
-      searchKeys={['studentName', 'schoolName', 'mobile', 'email']}
+      searchKeys={['studentName', 'fatherName', 'lastName', 'school', 'schoolName', 'mobile', 'email']}
       searchPlaceholder="Search by name, school, mobile, email…"
       columns={[
         { key: 'id', label: 'ID', width: 60 },
         { key: 'studentName', label: 'Student Name', render: (r) => r.studentName || r.name || r.fullName || r.student?.name || '' },
-        { key: 'schoolName', label: 'School Name', render: (r) => r.schoolName || r.school?.schoolName || r.school?.name || r.school_name || r.schoolName || '' },
+        { key: 'fatherName', label: 'Father Name', render: (r) => r.fatherName || r.father_name || r.father?.name || r.student?.fatherName || '' },
+        { key: 'lastName', label: 'Last Name', render: (r) => r.lastName || r.last_name || r.student?.lastName || '' },
+        { key: 'school', label: 'School Name', render: (r) => r.school || r.schoolName || r.school_name || r.school?.schoolName || r.school?.name || '' },
         { key: 'studentClass', label: 'Class', render: (r) => r.studentClass || r.standard || r.std || '' },
         { key: 'mobile', label: 'Mobile', render: (r) => r.mobile || r.phone || r.phoneNumber || r.contact || '' },
         { key: 'districtName', label: 'District', render: (r) => r.districtName || r.district?.name || r.district?.districtName || r.districtId || '' },
@@ -159,13 +161,13 @@ export default function Students() {
         {
           key: 'paymentMode',
           label: 'Payment Mode',
-          render: (r) => r.paymentMode || r.payment_mode || '—',
+          render: (r) => r.paymentMode || r.payment_mode || r.payment?.paymentMode || r.payment?.payment_mode || r.payment?.mode || r.payment?.paymentType || '—',
         },
         {
           key: 'paymentDone',
           label: 'Payment Status',
           render: (r) => {
-            const paymentStatus = r.paymentStatus || r.payment_status || (r.paymentDone ?? r.isPaymentDone ? 'COMPLETED' : 'PENDING')
+            const paymentStatus = r.paymentStatus || r.payment_status || r.payment?.paymentStatus || r.payment?.payment_status || r.payment?.status || (r.paymentDone ?? r.isPaymentDone ? 'COMPLETED' : 'PENDING')
             const isCompleted = String(paymentStatus).toUpperCase() === 'COMPLETED' || !!(r.paymentDone ?? r.isPaymentDone)
             return <span className={`badge ${isCompleted ? 'badge-active' : 'badge-inactive'}`}>{isCompleted ? 'Completed' : 'Pending'}</span>
           },
@@ -173,6 +175,8 @@ export default function Students() {
       ]}
       fields={[
         { name: 'studentName', label: 'Student Full Name', type: 'text', required: true },
+        { name: 'fatherName', label: 'Father Name', type: 'text', required: true },
+        { name: 'lastName', label: 'Last Name', type: 'text', required: true },
         { name: 'schoolName', label: 'School Name', type: 'text', required: true },
         { name: 'mobile', label: 'Mobile Number', type: 'tel', required: true },
         { name: 'email', label: 'Email', type: 'email' },
@@ -215,6 +219,8 @@ export default function Students() {
         const schoolName = String(fv.schoolName ?? '').trim()
 
         if (!fv.studentName || !fv.studentName.trim()) throw new Error('Student Full Name is required')
+        if (!fv.fatherName || !fv.fatherName.trim()) throw new Error('Father Name is required')
+        if (!fv.lastName || !fv.lastName.trim()) throw new Error('Last Name is required')
         if (!schoolName) throw new Error('School Name is required')
         if (!fv.mobile || !isValidIndianMobile(fv.mobile)) throw new Error('Please enter a valid Indian mobile number')
         if (!fv.gender) throw new Error('Gender is required')
@@ -239,6 +245,9 @@ export default function Students() {
 
         const payload = {
           studentName: fv.studentName?.trim(),
+          fatherName: fv.fatherName?.trim(),
+          lastName: fv.lastName?.trim(),
+          school: schoolName,
           schoolName,
           mobile: fv.mobile?.trim(),
           email: fv.email?.trim() || null,
