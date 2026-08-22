@@ -10,7 +10,7 @@ import axios from 'axios'
 */
 
 const envBaseUrl = import.meta.env.VITE_API_BASE_URL?.trim()
-const API_BASE_URL = envBaseUrl || '/api'
+const API_BASE_URL = (envBaseUrl || '/api').replace(/\/$/, '')
 const USE_COOKIES = (import.meta.env.VITE_API_USE_COOKIES || '').toString() === 'true'
 const PUBLIC_AUTH_ENDPOINTS = [/^\/auth\/login(?:\/)?$/i, /^\/auth\/register(?:\/)?$/i, /^\/auth\/refresh(?:\/)?$/i]
 
