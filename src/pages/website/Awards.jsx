@@ -1,29 +1,46 @@
-import React, { useState } from 'react'
+import React, { useCallback, useEffect, useState } from 'react'
 import { FiPlus, FiEdit2, FiTrash2, FiSave } from 'react-icons/fi'
-
-// No mock data — table starts empty until backend is connected
+import { awardService } from '../../api/services.js'
 
 const EMPTY_FORM = {
-  title: '',
-  imageUrl: '',
-  description: '',
+  awardName: '',
   awardedBy: '',
-  awardedTo: '',
+  awardTo: '',
   year: '',
 }
 
 export default function Awards() {
   const [rows, setRows] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState('')
   const [showModal, setShowModal] = useState(false)
   const [editing, setEditing] = useState(null)
   const [form, setForm] = useState(EMPTY_FORM)
   const [formError, setFormError] = useState('')
   const [deleteTarget, setDeleteTarget] = useState(null)
+  const [image, setImage] = useState(null)
+  const [saving, setSaving] = useState(false)
+
+  const load = useCallback(async () => {
+    setLoading(true)
+    setError('')
+    try {
+      const data = await awardService.getAll()
+      setRows(Array.isArray(data) ? data : data?.content || [])
+    } catch (loadError) {
+      setError(loadError?.response?.data?.message || loadError?.response?.data?.error || loadError?.message || 'Could not load awards.')
+    } finally {
+      setLoading(false)
+    }
+  }, [])
+
+  useEffect(() => { load() }, [load])
 
   // ── modal open / close ────────────────────────────────────────────────────
   const openAdd = () => {
     setEditing(null)
     setForm(EMPTY_FORM)
+    setImage(null)
     setFormError('')
     setShowModal(true)
   }
@@ -31,13 +48,12 @@ export default function Awards() {
   const openEdit = (row) => {
     setEditing(row)
     setForm({
-      title:       row.title       ?? '',
-      imageUrl:    row.imageUrl    ?? '',
-      description: row.description ?? '',
+      awardName:   row.awardName   ?? '',
       awardedBy:   row.awardedBy   ?? '',
-      awardedTo:   row.awardedTo   ?? '',
+      awardTo:     row.awardTo     ?? '',
       year:        row.year        ?? '',
     })
+    setImage(null)
     setFormError('')
     setShowModal(true)
   }
@@ -47,6 +63,7 @@ export default function Awards() {
     setEditing(null)
     setForm(EMPTY_FORM)
     setFormError('')
+    setImage(null)
   }
 
   // ── form handlers ─────────────────────────────────────────────────────────
@@ -55,24 +72,43 @@ export default function Awards() {
     setForm((prev) => ({ ...prev, [name]: value }))
   }
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault()
-    if (!form.title.trim()) { setFormError('Award title is required.'); return }
-    if (editing) {
-      setRows((prev) =>
-        prev.map((r) => r.id === editing.id ? { ...editing, ...form, year: form.year ? parseInt(form.year, 10) : null } : r)
-      )
-    } else {
-      const newId = rows.length ? Math.max(...rows.map((r) => r.id)) + 1 : 1
-      setRows((prev) => [...prev, { id: newId, ...form, year: form.year ? parseInt(form.year, 10) : null }])
+    if (!form.awardName.trim() || !form.awardedBy.trim() || !form.awardTo.trim() || !form.year) {
+      setFormError('Award title, awarded by, awarded to, and year are required.')
+      return
     }
-    closeModal()
+    if (!editing && !image) { setFormError('An award image is required.'); return }
+    setSaving(true)
+    setFormError('')
+    try {
+      const payload = {
+        awardName: form.awardName.trim(),
+        awardedBy: form.awardedBy.trim(),
+        awardTo: form.awardTo.trim(),
+        year: Number(form.year),
+      }
+      if (editing) await awardService.update(editing.id, payload, image)
+      else await awardService.create(payload, image)
+      closeModal()
+      await load()
+    } catch (saveError) {
+      setFormError(saveError?.response?.data?.message || saveError?.response?.data?.error || saveError?.message || 'Save failed.')
+    } finally {
+      setSaving(false)
+    }
   }
 
   // ── delete ────────────────────────────────────────────────────────────────
-  const handleDelete = () => {
-    setRows((prev) => prev.filter((r) => r.id !== deleteTarget.id))
-    setDeleteTarget(null)
+  const handleDelete = async () => {
+    if (!deleteTarget) return
+    try {
+      await awardService.remove(deleteTarget.id)
+      setDeleteTarget(null)
+      await load()
+    } catch (deleteError) {
+      setError(deleteError?.response?.data?.message || deleteError?.response?.data?.error || deleteError?.message || 'Delete failed.')
+    }
   }
 
   // ── render ────────────────────────────────────────────────────────────────
@@ -88,6 +124,7 @@ export default function Awards() {
           <FiPlus /> Add Award
         </button>
       </div>
+      {error && !showModal && <div className="login-alert">{error}</div>}
 
       {/* Table */}
       <div className="card" style={{ padding: 0 }}>
@@ -105,7 +142,9 @@ export default function Awards() {
               </tr>
             </thead>
             <tbody>
-              {rows.length === 0 ? (
+              {loading ? (
+                <tr><td colSpan={7} className="empty-row">Loading…</td></tr>
+              ) : rows.length === 0 ? (
                 <tr>
                   <td colSpan={7} className="empty-row">No awards found</td>
                 </tr>
@@ -114,19 +153,19 @@ export default function Awards() {
                   <tr key={row.id}>
                     <td>{row.id}</td>
                     <td>
-                      {row.imageUrl ? (
+                      {row.awardImage ? (
                         <img
-                          src={row.imageUrl}
-                          alt={row.title}
+                          src={row.awardImage}
+                          alt={row.awardName}
                           style={{ width: 56, height: 40, objectFit: 'cover', borderRadius: 6 }}
                         />
                       ) : (
                         <span style={{ color: 'var(--text-400)', fontSize: 12 }}>—</span>
                       )}
                     </td>
-                    <td>{row.title || '—'}</td>
+                    <td>{row.awardName || '—'}</td>
                     <td>{row.awardedBy || '—'}</td>
-                    <td>{row.awardedTo || '—'}</td>
+                    <td>{row.awardTo || '—'}</td>
                     <td>{row.year || '—'}</td>
                     <td>
                       <div className="table-actions">
@@ -162,16 +201,15 @@ export default function Awards() {
                 )}
 
                 <div className="form-row">
-                  {/* Left — image URL + preview */}
+                  {/* Left — image upload + preview */}
                   <div className="form-group">
-                    <label htmlFor="a-imageUrl">Award Image</label>
+                    <label htmlFor="a-image">Award Image</label>
                     <input
-                      id="a-imageUrl"
-                      name="imageUrl"
-                      type="url"
-                      placeholder="https://example.com/award.jpg"
-                      value={form.imageUrl}
-                      onChange={handleField}
+                      id="a-image"
+                      type="file"
+                      accept="image/*"
+                      required={!editing}
+                      onChange={(e) => setImage(e.target.files?.[0] || null)}
                     />
                     <div
                       style={{
@@ -186,9 +224,9 @@ export default function Awards() {
                         overflow: 'hidden',
                       }}
                     >
-                      {form.imageUrl ? (
+                      {image ? (
                         <img
-                          src={form.imageUrl}
+                          src={URL.createObjectURL(image)}
                           alt="Preview"
                           style={{ width: '100%', maxHeight: 170, objectFit: 'contain', borderRadius: 6 }}
                           onError={(e) => { e.target.style.display = 'none' }}
@@ -205,23 +243,12 @@ export default function Awards() {
                       <label htmlFor="a-title">Award Title</label>
                       <input
                         id="a-title"
-                        name="title"
+                        name="awardName"
                         type="text"
                         placeholder="Award title"
-                        value={form.title}
+                        value={form.awardName}
                         onChange={handleField}
                         required
-                      />
-                    </div>
-                    <div className="form-group">
-                      <label htmlFor="a-description">Description</label>
-                      <textarea
-                        id="a-description"
-                        name="description"
-                        placeholder="Brief description"
-                        value={form.description}
-                        onChange={handleField}
-                        rows={3}
                       />
                     </div>
                     <div className="form-group">
@@ -239,10 +266,10 @@ export default function Awards() {
                       <label htmlFor="a-awardedTo">Awarded To</label>
                       <input
                         id="a-awardedTo"
-                        name="awardedTo"
+                        name="awardTo"
                         type="text"
                         placeholder="Recipient name"
-                        value={form.awardedTo}
+                        value={form.awardTo}
                         onChange={handleField}
                       />
                     </div>
@@ -286,7 +313,7 @@ export default function Awards() {
             </div>
             <div className="modal-body">
               <p style={{ margin: 0, color: 'var(--text-600)', fontSize: 13.5 }}>
-                Are you sure you want to delete <strong>{deleteTarget.title}</strong>? This action cannot be undone.
+                Are you sure you want to delete <strong>{deleteTarget.awardName}</strong>? This action cannot be undone.
               </p>
             </div>
             <div className="modal-footer">

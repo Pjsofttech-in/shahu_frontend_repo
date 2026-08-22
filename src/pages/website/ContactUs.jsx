@@ -1,14 +1,22 @@
 import React, { useEffect, useState, useCallback } from 'react'
-import { FiTrash2, FiCheckCircle, FiCircle } from 'react-icons/fi'
+import { FiTrash2, FiEdit2, FiSave } from 'react-icons/fi'
+import Modal from '../../components/common/Modal.jsx'
 import { contactService } from '../../api/services.js'
 
-export default function ContactUs() {
+export default function ContactUs({ title = 'Contact Us' }) {
   const [rows, setRows] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
 
   const [deleteTarget, setDeleteTarget] = useState(null)
   const [deleting, setDeleting] = useState(false)
+  const [showEditModal, setShowEditModal] = useState(false)
+  const [editing, setEditing] = useState(null)
+  const [saving, setSaving] = useState(false)
+  const [formError, setFormError] = useState('')
+  const [form, setForm] = useState({
+    name: '', email: '', mobile: '', message: '',
+  })
 
   // ── helpers ───────────────────────────────────────────────────────────────
   const getErrMsg = (e, fallback = 'Something went wrong') => {
@@ -18,15 +26,6 @@ export default function ContactUs() {
     if (typeof d?.message === 'string') return d.message
     if (typeof d?.error === 'string') return d.error
     return e?.message || fallback
-  }
-
-  const formatDate = (val) => {
-    if (!val) return '—'
-    try {
-      return new Date(val).toLocaleDateString('en-IN', {
-        day: '2-digit', month: 'short', year: 'numeric',
-      })
-    } catch { return val }
   }
 
   // ── load ──────────────────────────────────────────────────────────────────
@@ -45,16 +44,6 @@ export default function ContactUs() {
 
   useEffect(() => { load() }, [load])
 
-  // ── quick toggle replied ──────────────────────────────────────────────────
-  const toggleReplied = async (row) => {
-    try {
-      await contactService.update(row.id, { ...row, replied: !row.replied })
-      await load()
-    } catch (e) {
-      alert(getErrMsg(e, 'Could not update status.'))
-    }
-  }
-
   // ── delete ────────────────────────────────────────────────────────────────
   const handleDelete = async () => {
     if (!deleteTarget) return
@@ -70,13 +59,61 @@ export default function ContactUs() {
     }
   }
 
+  const openEdit = (row) => {
+    setEditing(row)
+    setForm({
+      name: row.name ?? '',
+      email: row.email ?? '',
+      mobile: row.mobile ?? '',
+      message: row.message ?? row.description ?? '',
+    })
+    setFormError('')
+    setShowEditModal(true)
+  }
+
+  const closeEditModal = () => {
+    setShowEditModal(false)
+    setEditing(null)
+    setFormError('')
+    setForm({ name: '', email: '', mobile: '', message: '' })
+  }
+
+  const handleField = (event) => {
+    const { name, value, type, checked } = event.target
+    setForm((current) => ({ ...current, [name]: type === 'checkbox' ? checked : value }))
+  }
+
+  const handleEditContact = async (event) => {
+    event.preventDefault()
+    const name = form.name.trim()
+    const email = form.email.trim()
+    const mobile = form.mobile.trim()
+    const message = form.message.trim()
+
+    if (!name || !email || !mobile) {
+      setFormError('Please complete all contact fields.')
+      return
+    }
+
+    setSaving(true)
+    setFormError('')
+    try {
+      await contactService.update(editing.id, { name, email, mobile, message })
+      closeEditModal()
+      await load()
+    } catch (e) {
+      setFormError(getErrMsg(e, 'Could not update contact.'))
+    } finally {
+      setSaving(false)
+    }
+  }
+
   // ── render ────────────────────────────────────────────────────────────────
   return (
     <>
-      {/* Page header — no Add button */}
       <div className="page-header">
         <div>
-          <h1>Contact Us</h1>
+          <h1>{title}</h1>
           <p>Contact messages submitted from the public website.</p>
         </div>
       </div>
@@ -87,7 +124,7 @@ export default function ContactUs() {
           <div style={{ padding: '14px 20px', color: 'var(--danger)', fontSize: 13 }}>{error}</div>
         )}
         <div className="table-wrap">
-          <table className="data-table">
+          <table className="data-table contact-table">
             <thead>
               <tr>
                 <th style={{ width: 60 }}>ID</th>
@@ -95,21 +132,19 @@ export default function ContactUs() {
                 <th>Email</th>
                 <th>Mobile</th>
                 <th>Message</th>
-                <th style={{ width: 110 }}>Replied</th>
-                <th style={{ width: 110 }}>Date</th>
                 <th style={{ width: 80 }}>Action</th>
               </tr>
             </thead>
             <tbody>
               {loading ? (
                 <tr>
-                  <td colSpan={8} style={{ padding: 34, textAlign: 'center', color: 'var(--text-400)' }}>
+                  <td colSpan={6} style={{ padding: 34, textAlign: 'center', color: 'var(--text-400)' }}>
                     Loading…
                   </td>
                 </tr>
               ) : rows.length === 0 ? (
                 <tr>
-                  <td colSpan={8} className="empty-row">No contact messages found</td>
+                  <td colSpan={6} className="empty-row">No contact messages found</td>
                 </tr>
               ) : (
                 rows.map((row) => (
@@ -127,25 +162,14 @@ export default function ContactUs() {
                       </span>
                     </td>
                     <td>
-                      <button
-                        className="btn btn-ghost btn-sm"
-                        onClick={() => toggleReplied(row)}
-                        title={row.replied ? 'Mark as not replied' : 'Mark as replied'}
-                        style={{ gap: 5, padding: 0 }}
-                      >
-                        {row.replied
-                          ? <><FiCheckCircle style={{ color: 'var(--success)' }} /><span className="badge badge-active" style={{ marginLeft: 4 }}>Replied</span></>
-                          : <><FiCircle style={{ color: 'var(--text-400)' }} /><span className="badge badge-inactive" style={{ marginLeft: 4 }}>Pending</span></>
-                        }
-                      </button>
-                    </td>
-                    <td style={{ fontSize: 12, color: 'var(--text-600)' }}>
-                      {formatDate(row.createdAt || row.created_at)}
-                    </td>
-                    <td>
-                      <button className="btn btn-danger btn-sm" onClick={() => setDeleteTarget(row)}>
-                        <FiTrash2 />
-                      </button>
+                      <div className="table-actions">
+                        <button className="btn btn-outline btn-sm" onClick={() => openEdit(row)} title="Edit contact">
+                          <FiEdit2 />
+                        </button>
+                        <button className="btn btn-danger btn-sm" onClick={() => setDeleteTarget(row)} title="Delete contact">
+                          <FiTrash2 />
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))
@@ -179,6 +203,34 @@ export default function ContactUs() {
             </div>
           </div>
         </div>
+      )}
+
+      {showEditModal && (
+        <Modal
+          title="Edit Contact"
+          onClose={closeEditModal}
+          maxWidth={620}
+          footer={(
+            <>
+              <button className="btn btn-outline" onClick={closeEditModal} disabled={saving}>Cancel</button>
+              <button className="btn btn-primary" form="edit-contact-form" disabled={saving}>
+                <FiSave /> {saving ? 'Saving…' : 'Save Changes'}
+              </button>
+            </>
+          )}
+        >
+          <form id="edit-contact-form" onSubmit={handleEditContact}>
+            {formError && <div className="login-alert">{formError}</div>}
+            <div className="form-row">
+              <div className="form-group"><label htmlFor="contact-name">Name</label><input id="contact-name" name="name" value={form.name} onChange={handleField} /></div>
+              <div className="form-group"><label htmlFor="contact-email">Email</label><input id="contact-email" name="email" type="email" value={form.email} onChange={handleField} /></div>
+            </div>
+            <div className="form-row">
+              <div className="form-group"><label htmlFor="contact-mobile">Mobile</label><input id="contact-mobile" name="mobile" type="tel" value={form.mobile} onChange={handleField} /></div>
+            </div>
+            <div className="form-group"><label htmlFor="contact-message">Message</label><textarea id="contact-message" name="message" value={form.message} onChange={handleField} /></div>
+          </form>
+        </Modal>
       )}
     </>
   )

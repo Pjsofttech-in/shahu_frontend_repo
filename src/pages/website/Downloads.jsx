@@ -1,13 +1,11 @@
 import React, { useEffect, useState, useCallback } from 'react'
-import { FiPlus, FiEdit2, FiTrash2, FiSave, FiExternalLink } from 'react-icons/fi'
+import { FiPlus, FiEdit2, FiTrash2, FiSave, FiExternalLink, FiFile, FiImage } from 'react-icons/fi'
 import { downloadService } from '../../api/services.js'
 
 const EMPTY_FORM = {
   title:       '',
-  description: '',
   fileName:    '',
   filePath:    '',
-  active:      true,
 }
 
 export default function Downloads() {
@@ -62,10 +60,8 @@ export default function Downloads() {
     setEditing(row)
     setForm({
       title:       row.title       ?? '',
-      description: row.description ?? '',
       fileName:    row.fileName    ?? '',
       filePath:    row.filePath    ?? '',
-      active:      row.active      ?? true,
     })
     setFormError('')
     setShowModal(true)
@@ -87,16 +83,17 @@ export default function Downloads() {
   const handleSubmit = async (e) => {
     e.preventDefault()
     if (!form.title.trim()) { setFormError('Title is required.'); return }
+    if (!form.fileName.trim()) { setFormError('File name is required.'); return }
+    if (!form.filePath.trim()) { setFormError('File link or path is required.'); return }
 
     setSaving(true)
     setFormError('')
     try {
       const payload = {
         title:       form.title.trim(),
-        description: form.description.trim() || null,
-        fileName:    form.fileName.trim()    || null,
-        filePath:    form.filePath.trim()    || null,
-        active:      form.active,
+        fileName:    form.fileName.trim(),
+        filePath:    form.filePath.trim(),
+        active:      true,
       }
       if (editing) {
         await downloadService.update(editing.id, payload)
@@ -152,51 +149,36 @@ export default function Downloads() {
               <tr>
                 <th style={{ width: 60 }}>ID</th>
                 <th>Title</th>
-                <th>Description</th>
-                <th>File Name</th>
-                <th style={{ width: 120 }}>File Path</th>
-                <th style={{ width: 90 }}>Status</th>
+                <th>Link / PDF / Image</th>
                 <th style={{ width: 110 }}>Action</th>
               </tr>
             </thead>
             <tbody>
               {loading ? (
                 <tr>
-                  <td colSpan={7} style={{ padding: 34, textAlign: 'center', color: 'var(--text-400)' }}>
+                  <td colSpan={4} style={{ padding: 34, textAlign: 'center', color: 'var(--text-400)' }}>
                     Loading…
                   </td>
                 </tr>
               ) : rows.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="empty-row">No downloads found</td>
+                  <td colSpan={4} className="empty-row">No downloads found</td>
                 </tr>
               ) : (
                 rows.map((row) => (
                   <tr key={row.id}>
                     <td>{row.id}</td>
                     <td>{row.title || '—'}</td>
-                    <td style={{ maxWidth: 180 }}>
-                      <span style={{ display: 'block', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: 180 }}>
-                        {row.description || '—'}
-                      </span>
-                    </td>
-                    <td>{row.fileName || '—'}</td>
                     <td>
                       {row.filePath ? (
-                        <a
-                          href={row.filePath}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="btn btn-outline btn-sm"
-                        >
-                          <FiExternalLink /> Open
-                        </a>
+                        <div className="download-file-cell">
+                          {(/\.(png|jpe?g|gif|webp|svg)$/i.test(row.fileName || row.filePath)) ? <FiImage /> : <FiFile />}
+                          <span title={row.fileName || row.filePath}>{row.fileName || 'Open file'}</span>
+                          <a href={row.filePath} target="_blank" rel="noopener noreferrer" className="btn btn-outline btn-sm" title="Open file">
+                            <FiExternalLink />
+                          </a>
+                        </div>
                       ) : '—'}
-                    </td>
-                    <td>
-                      <span className={`badge ${row.active === false ? 'badge-inactive' : 'badge-active'}`}>
-                        {row.active === false ? 'Inactive' : 'Active'}
-                      </span>
                     </td>
                     <td>
                       <div className="table-actions">
@@ -231,7 +213,7 @@ export default function Downloads() {
                   <div className="login-alert" style={{ marginBottom: 14 }}>{formError}</div>
                 )}
 
-                {/* Title + File Name */}
+                {/* Backend-required title and file metadata */}
                 <div className="form-row">
                   <div className="form-group">
                     <label htmlFor="d-title">Title</label>
@@ -258,44 +240,18 @@ export default function Downloads() {
                   </div>
                 </div>
 
-                {/* File Path */}
                 <div className="form-group">
-                  <label htmlFor="d-filePath">File Path / URL</label>
+                  <label htmlFor="d-filePath">Link / File Path</label>
                   <input
                     id="d-filePath"
                     name="filePath"
-                    type="url"
+                    type="text"
                     placeholder="https://example.com/files/admission-form.pdf"
                     value={form.filePath}
                     onChange={handleField}
                   />
                 </div>
 
-                {/* Description */}
-                <div className="form-group">
-                  <label htmlFor="d-description">Description</label>
-                  <textarea
-                    id="d-description"
-                    name="description"
-                    placeholder="Brief description of the file"
-                    value={form.description}
-                    onChange={handleField}
-                    rows={3}
-                  />
-                </div>
-
-                {/* Active */}
-                <div className="form-group" style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
-                  <input
-                    id="d-active"
-                    name="active"
-                    type="checkbox"
-                    checked={form.active}
-                    onChange={handleField}
-                    style={{ width: 16, height: 16, cursor: 'pointer' }}
-                  />
-                  <label htmlFor="d-active" style={{ margin: 0, cursor: 'pointer' }}>Active</label>
-                </div>
               </div>
 
               <div className="modal-footer">

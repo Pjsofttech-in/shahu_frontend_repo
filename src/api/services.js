@@ -113,8 +113,6 @@ export const studentService = makeCrudService('/students')
 export const galleryService = makeCrudService('/gallery')
 export const topperService = makeCrudService('/toppers')
 export const testimonialService = makeCrudService('/testimonials')
-export const facultyService = makeCrudService('/faculty')
-export const awardService = makeCrudService('/awards')
 export const courseService = makeCrudService('/courses')
 export const downloadService = makeCrudService('/downloads')
 export const footerService = {
@@ -126,6 +124,91 @@ export const visionMissionService = {
   update: (payload) => api.put('/website/vision-mission', payload).then((r) => r.data),
 }
 export const contactService = makeCrudService('/contacts')
+
+const getWebsiteRequestParams = (user = {}) => ({
+  url: import.meta.env.VITE_WEBSITE_URL?.trim() || window.location.origin,
+  role: user?.role || 'ADMIN',
+  email: user?.email || '',
+})
+
+export const aboutUsService = {
+  getAll: (user) => api.get('/getAllAboutUs', { params: { url: getWebsiteRequestParams(user).url } }).then((r) => r.data),
+  create: (values, image, user) => {
+    const form = new FormData()
+    form.append('aboutUs', JSON.stringify(values))
+    form.append('url', getWebsiteRequestParams(user).url)
+    if (image) form.append('aboutUsImageName', image)
+    return apiUpload.post('/createAboutUs', form).then((r) => r.data)
+  },
+  update: (id, values, image, user) => {
+    const form = new FormData()
+    form.append('aboutUs', JSON.stringify(values))
+    const params = getWebsiteRequestParams(user)
+    form.append('role', params.role)
+    form.append('email', params.email)
+    form.append('url', params.url)
+    if (image) form.append('aboutUsImage', image)
+    return apiUpload.put(`/updateAboutUs/${id}`, form).then((r) => r.data)
+  },
+  remove: (id, user) => api.delete(`/deleteAboutUs/${id}`, { params: getWebsiteRequestParams(user) }).then((r) => r.data),
+}
+
+export const visionMissionDynamicService = {
+  getAll: () => api.get('/getAllVisionMissions', { params: { url: getWebsiteRequestParams().url } }).then((r) => r.data),
+  create: (values, image) => {
+    const form = new FormData()
+    form.append('vm', JSON.stringify(values))
+    form.append('url', getWebsiteRequestParams().url)
+    if (image) form.append('directorImage', image)
+    return apiUpload.post('/createVisionMission', form).then((r) => r.data)
+  },
+  update: (id, values, image) => {
+    const form = new FormData()
+    form.append('vm', JSON.stringify(values))
+    form.append('url', getWebsiteRequestParams().url)
+    if (image) form.append('directorImage', image)
+    return apiUpload.put(`/updateVisionMission/${id}`, form).then((r) => r.data)
+  },
+  remove: (id) => api.delete(`/deleteVisionMission/${id}`, { params: { url: getWebsiteRequestParams().url } }).then((r) => r.data),
+}
+
+export const awardService = {
+  getAll: () => api.get('/getAllAwards', { params: { url: getWebsiteRequestParams().url } }).then((r) => r.data),
+  create: (values, image) => {
+    const form = new FormData()
+    form.append('award', JSON.stringify(values))
+    form.append('url', getWebsiteRequestParams().url)
+    form.append('awardImageName', image)
+    return apiUpload.post('/createAward', form).then((r) => r.data)
+  },
+  update: (id, values, image) => {
+    const form = new FormData()
+    form.append('award', JSON.stringify(values))
+    form.append('url', getWebsiteRequestParams().url)
+    if (image) form.append('awardImage', image)
+    return apiUpload.put(`/updateAward/${id}`, form).then((r) => r.data)
+  },
+  remove: (id) => api.delete(`/deleteAward/${id}`, { params: { url: getWebsiteRequestParams().url } }).then((r) => r.data),
+}
+
+export const facultyService = {
+  getAll: () => api.get('/getAllFacilities', { params: { url: getWebsiteRequestParams().url } }).then((r) => r.data),
+  create: (values, image) => {
+    const form = new FormData()
+    form.append('facility', JSON.stringify(values))
+    form.append('url', getWebsiteRequestParams().url)
+    form.append('facilityImageName', image)
+    return apiUpload.post('/createFacility', form).then((r) => r.data)
+  },
+  update: (id, values, image) => {
+    const form = new FormData()
+    form.append('facility', JSON.stringify(values))
+    form.append('url', getWebsiteRequestParams().url)
+    if (image) form.append('facilityImage', image)
+    return apiUpload.put(`/updateFacility/${id}`, form).then((r) => r.data)
+  },
+  remove: (id) => api.delete(`/deleteFacility/${id}`, { params: { url: getWebsiteRequestParams().url } }).then((r) => r.data),
+}
 
 // ---------------- Sankalp Exam ----------------
 export const syllabusService = makeCrudService('/sankalp/syllabus')

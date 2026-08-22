@@ -1,13 +1,13 @@
-import React, { useState } from 'react'
+import React, { useCallback, useEffect, useState } from 'react'
 import { FiPlus, FiEdit2, FiTrash2, FiSave, FiArrowLeft } from 'react-icons/fi'
+import { facultyService } from '../../api/services.js'
 
 const EMPTY_FORM = {
-  name:        '',
-  experience:  '',
+  facilityName: '',
+  experienceInYear: '',
   subject:     '',
-  education:   '',
+  facilityEducation: '',
   description: '',
-  imageUrl:    '',
 }
 
 export default function Faculty() {
@@ -18,12 +18,32 @@ export default function Faculty() {
   const [preview, setPreview] = useState(null)
   const [formError, setFormError] = useState('')
   const [deleteTarget, setDeleteTarget] = useState(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState('')
+  const [image, setImage] = useState(null)
+  const [saving, setSaving] = useState(false)
+
+  const load = useCallback(async () => {
+    setLoading(true)
+    setError('')
+    try {
+      const data = await facultyService.getAll()
+      setRows(Array.isArray(data) ? data : data?.content || [])
+    } catch (loadError) {
+      setError(loadError?.response?.data?.message || loadError?.response?.data?.error || loadError?.message || 'Could not load faculty.')
+    } finally {
+      setLoading(false)
+    }
+  }, [])
+
+  useEffect(() => { load() }, [load])
 
   // ── navigation ────────────────────────────────────────────────────────────
   const openAdd = () => {
     setEditing(null)
     setForm(EMPTY_FORM)
     setPreview(null)
+    setImage(null)
     setFormError('')
     setView('add')
   }
@@ -31,14 +51,14 @@ export default function Faculty() {
   const openEdit = (row) => {
     setEditing(row)
     setForm({
-      name:        row.name        ?? '',
-      experience:  row.experience  ?? '',
+      facilityName: row.facilityName ?? '',
+      experienceInYear: row.experienceInYear ?? '',
       subject:     row.subject     ?? '',
-      education:   row.education   ?? '',
+      facilityEducation: row.facilityEducation ?? '',
       description: row.description ?? '',
-      imageUrl:    row.imageUrl    ?? '',
     })
-    setPreview(row.imageUrl || null)
+    setPreview(row.facilityImage || null)
+    setImage(null)
     setFormError('')
     setView('edit')
   }
@@ -49,6 +69,7 @@ export default function Faculty() {
     setForm(EMPTY_FORM)
     setPreview(null)
     setFormError('')
+    setImage(null)
   }
 
   // ── form handlers ─────────────────────────────────────────────────────────
@@ -62,32 +83,49 @@ export default function Faculty() {
     if (file) {
       const url = URL.createObjectURL(file)
       setPreview(url)
-      setForm((prev) => ({ ...prev, imageUrl: url }))
+      setImage(file)
+      setForm((prev) => ({ ...prev }))
     } else {
-      setPreview(editing?.imageUrl || null)
-      setForm((prev) => ({ ...prev, imageUrl: editing?.imageUrl || '' }))
+      setPreview(editing?.facilityImage || null)
+      setImage(null)
     }
   }
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault()
-    if (!form.name.trim()) { setFormError('Faculty name is required.'); return }
-
-    if (editing) {
-      setRows((prev) =>
-        prev.map((r) => r.id === editing.id ? { ...editing, ...form } : r)
-      )
-    } else {
-      const newId = rows.length ? Math.max(...rows.map((r) => r.id)) + 1 : 1
-      setRows((prev) => [...prev, { id: newId, ...form }])
+    if (!form.facilityName.trim()) { setFormError('Faculty name is required.'); return }
+    if (!editing && !image) { setFormError('A faculty image is required.'); return }
+    setSaving(true)
+    setFormError('')
+    try {
+      const payload = {
+        facilityName: form.facilityName.trim(),
+        experienceInYear: Number(form.experienceInYear) || 0,
+        subject: form.subject.trim(),
+        facilityEducation: form.facilityEducation.trim(),
+        description: form.description.trim(),
+      }
+      if (editing) await facultyService.update(editing.id, payload, image)
+      else await facultyService.create(payload, image)
+      goBack()
+      await load()
+    } catch (saveError) {
+      setFormError(saveError?.response?.data?.message || saveError?.response?.data?.error || saveError?.message || 'Save failed.')
+    } finally {
+      setSaving(false)
     }
-    goBack()
   }
 
   // ── delete ────────────────────────────────────────────────────────────────
-  const handleDelete = () => {
-    setRows((prev) => prev.filter((r) => r.id !== deleteTarget.id))
-    setDeleteTarget(null)
+  const handleDelete = async () => {
+    if (!deleteTarget) return
+    try {
+      await facultyService.remove(deleteTarget.id)
+      setDeleteTarget(null)
+      await load()
+    } catch (deleteError) {
+      setError(deleteError?.response?.data?.message || deleteError?.response?.data?.error || deleteError?.message || 'Delete failed.')
+    }
   }
 
   // ── render: form view ─────────────────────────────────────────────────────
@@ -115,7 +153,7 @@ export default function Faculty() {
             <div className="form-row">
               {/* Left — photo upload + preview */}
               <div className="form-group">
-                <label style={{ fontWeight: 700, fontSize: 13 }}>Faculty Photo</label>
+                    <label style={{ fontWeight: 700, fontSize: 13 }}>Faculty Image</label>
                 <span style={{ fontSize: 11.5, color: 'var(--text-400)', marginBottom: 6, display: 'block' }}>
                   Upload faculty profile image
                 </span>
@@ -157,10 +195,10 @@ export default function Faculty() {
                   <label htmlFor="f-name">Faculty Name</label>
                   <input
                     id="f-name"
-                    name="name"
+                    name="facilityName"
                     type="text"
                     placeholder="Faculty Name"
-                    value={form.name}
+                    value={form.facilityName}
                     onChange={handleField}
                     required
                   />
@@ -171,10 +209,10 @@ export default function Faculty() {
                   <label htmlFor="f-experience">Experience</label>
                   <input
                     id="f-experience"
-                    name="experience"
-                    type="text"
-                    placeholder="10 Years"
-                    value={form.experience}
+                    name="experienceInYear"
+                    type="number"
+                    placeholder="10"
+                    value={form.experienceInYear}
                     onChange={handleField}
                   />
                 </div>
@@ -197,10 +235,10 @@ export default function Faculty() {
                   <label htmlFor="f-education">Education</label>
                   <input
                     id="f-education"
-                    name="education"
+                    name="facilityEducation"
                     type="text"
                     placeholder="Education"
-                    value={form.education}
+                    value={form.facilityEducation}
                     onChange={handleField}
                   />
                 </div>
@@ -248,6 +286,7 @@ export default function Faculty() {
           <FiPlus /> Add Faculty
         </button>
       </div>
+      {error && <div className="login-alert">{error}</div>}
 
       {/* Table */}
       <div className="card" style={{ padding: 0 }}>
@@ -266,7 +305,9 @@ export default function Faculty() {
               </tr>
             </thead>
             <tbody>
-              {rows.length === 0 ? (
+              {loading ? (
+                <tr><td colSpan={8} className="empty-row">Loading…</td></tr>
+              ) : rows.length === 0 ? (
                 <tr>
                   <td colSpan={8} className="empty-row">No faculty found</td>
                 </tr>
@@ -275,20 +316,20 @@ export default function Faculty() {
                   <tr key={row.id}>
                     <td>{row.id}</td>
                     <td>
-                      {row.imageUrl ? (
+                      {row.facilityImage ? (
                         <img
-                          src={row.imageUrl}
-                          alt={row.name}
+                          src={row.facilityImage}
+                          alt={row.facilityName}
                           style={{ width: 42, height: 42, borderRadius: '50%', objectFit: 'cover' }}
                         />
                       ) : (
                         <span style={{ color: 'var(--text-400)', fontSize: 12 }}>—</span>
                       )}
                     </td>
-                    <td>{row.name || '—'}</td>
-                    <td>{row.experience || '—'}</td>
+                    <td>{row.facilityName || '—'}</td>
+                    <td>{row.experienceInYear ?? '—'}</td>
                     <td>{row.subject || '—'}</td>
-                    <td>{row.education || '—'}</td>
+                    <td>{row.facilityEducation || '—'}</td>
                     <td style={{ maxWidth: 200 }}>
                       <span style={{ display: 'block', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: 200 }}>
                         {row.description || '—'}
@@ -322,7 +363,7 @@ export default function Faculty() {
             </div>
             <div className="modal-body">
               <p style={{ margin: 0, color: 'var(--text-600)', fontSize: 13.5 }}>
-                Are you sure you want to delete <strong>{deleteTarget.name}</strong>? This action cannot be undone.
+                Are you sure you want to delete <strong>{deleteTarget.facilityName}</strong>? This action cannot be undone.
               </p>
             </div>
             <div className="modal-footer">
