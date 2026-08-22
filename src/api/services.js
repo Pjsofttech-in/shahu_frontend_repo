@@ -1,4 +1,4 @@
-import api, { apiUpload } from './axiosConfig'
+import api, { apiUpload, dynamicApi, dynamicApiUpload } from './axiosConfig'
 
 // ---------------------------------------------------------------------
 // Generic CRUD factory — matches the pattern used across your Spring Boot
@@ -11,6 +11,14 @@ export const makeCrudService = (basePath) => ({
   create: (payload) => api.post(basePath, payload).then((r) => r.data),
   update: (id, payload) => api.put(`${basePath}/${id}`, payload).then((r) => r.data),
   remove: (id) => api.delete(`${basePath}/${id}`).then((r) => r.data),
+})
+
+export const makeDynamicCrudService = (basePath) => ({
+  getAll: (params) => dynamicApi.get(basePath, { params }).then((r) => r.data),
+  getById: (id) => dynamicApi.get(`${basePath}/${id}`).then((r) => r.data),
+  create: (payload) => dynamicApi.post(basePath, payload).then((r) => r.data),
+  update: (id, payload) => dynamicApi.put(`${basePath}/${id}`, payload).then((r) => r.data),
+  remove: (id) => dynamicApi.delete(`${basePath}/${id}`).then((r) => r.data),
 })
 
 
@@ -111,18 +119,18 @@ export const userService = makeCrudService('/users')
 export const studentService = makeCrudService('/students')
 
 // ---------------- Website management ----------------
-export const galleryService = makeCrudService('/gallery')
-export const topperService = makeCrudService('/toppers')
-export const testimonialService = makeCrudService('/testimonials')
-export const courseService = makeCrudService('/courses')
+export const galleryService = makeDynamicCrudService('/gallery')
+export const topperService = makeDynamicCrudService('/toppers')
+export const testimonialService = makeDynamicCrudService('/testimonials')
+export const courseService = makeDynamicCrudService('/courses')
 export const downloadService = makeCrudService('/downloads')
 export const footerService = {
-  get: () => api.get('/website/footer').then((r) => r.data),
-  update: (payload) => api.put('/website/footer', payload).then((r) => r.data),
+  get: () => dynamicApi.get('/website/footer').then((r) => r.data),
+  update: (payload) => dynamicApi.put('/website/footer', payload).then((r) => r.data),
 }
 export const visionMissionService = {
-  get: () => api.get('/website/vision-mission').then((r) => r.data),
-  update: (payload) => api.put('/website/vision-mission', payload).then((r) => r.data),
+  get: () => dynamicApi.get('/website/vision-mission').then((r) => r.data),
+  update: (payload) => dynamicApi.put('/website/vision-mission', payload).then((r) => r.data),
 }
 export const contactService = makeCrudService('/contacts')
 
@@ -133,13 +141,13 @@ const getWebsiteRequestParams = (user = {}) => ({
 })
 
 export const aboutUsService = {
-  getAll: (user) => api.get('/getAllAboutUs', { params: { url: getWebsiteRequestParams(user).url } }).then((r) => r.data),
+  getAll: (user) => dynamicApi.get('/getAllAboutUs', { params: { url: getWebsiteRequestParams(user).url } }).then((r) => r.data),
   create: (values, image, user) => {
     const form = new FormData()
     form.append('aboutUs', JSON.stringify(values))
     form.append('url', getWebsiteRequestParams(user).url)
     if (image) form.append('aboutUsImageName', image)
-    return apiUpload.post('/createAboutUs', form).then((r) => r.data)
+    return dynamicApiUpload.post('/createAboutUs', form).then((r) => r.data)
   },
   update: (id, values, image, user) => {
     const form = new FormData()
@@ -149,66 +157,66 @@ export const aboutUsService = {
     form.append('email', params.email)
     form.append('url', params.url)
     if (image) form.append('aboutUsImage', image)
-    return apiUpload.put(`/updateAboutUs/${id}`, form).then((r) => r.data)
+    return dynamicApiUpload.put(`/updateAboutUs/${id}`, form).then((r) => r.data)
   },
-  remove: (id, user) => api.delete(`/deleteAboutUs/${id}`, { params: getWebsiteRequestParams(user) }).then((r) => r.data),
+  remove: (id, user) => dynamicApi.delete(`/deleteAboutUs/${id}`, { params: getWebsiteRequestParams(user) }).then((r) => r.data),
 }
 
 export const visionMissionDynamicService = {
-  getAll: () => api.get('/getAllVisionMissions', { params: { url: getWebsiteRequestParams().url } }).then((r) => r.data),
+  getAll: () => dynamicApi.get('/getAllVisionMissions', { params: { url: getWebsiteRequestParams().url } }).then((r) => r.data),
   create: (values, image) => {
     const form = new FormData()
     form.append('vm', JSON.stringify(values))
     form.append('url', getWebsiteRequestParams().url)
     if (image) form.append('directorImage', image)
-    return apiUpload.post('/createVisionMission', form).then((r) => r.data)
+    return dynamicApiUpload.post('/createVisionMission', form).then((r) => r.data)
   },
   update: (id, values, image) => {
     const form = new FormData()
     form.append('vm', JSON.stringify(values))
     form.append('url', getWebsiteRequestParams().url)
     if (image) form.append('directorImage', image)
-    return apiUpload.put(`/updateVisionMission/${id}`, form).then((r) => r.data)
+    return dynamicApiUpload.put(`/updateVisionMission/${id}`, form).then((r) => r.data)
   },
-  remove: (id) => api.delete(`/deleteVisionMission/${id}`, { params: { url: getWebsiteRequestParams().url } }).then((r) => r.data),
+  remove: (id) => dynamicApi.delete(`/deleteVisionMission/${id}`, { params: { url: getWebsiteRequestParams().url } }).then((r) => r.data),
 }
 
 export const awardService = {
-  getAll: () => api.get('/getAllAwards', { params: { url: getWebsiteRequestParams().url } }).then((r) => r.data),
+  getAll: () => dynamicApi.get('/getAllAwards', { params: { url: getWebsiteRequestParams().url } }).then((r) => r.data),
   create: (values, image) => {
     const form = new FormData()
     form.append('award', JSON.stringify(values))
     form.append('url', getWebsiteRequestParams().url)
     form.append('awardImageName', image)
-    return apiUpload.post('/createAward', form).then((r) => r.data)
+    return dynamicApiUpload.post('/createAward', form).then((r) => r.data)
   },
   update: (id, values, image) => {
     const form = new FormData()
     form.append('award', JSON.stringify(values))
     form.append('url', getWebsiteRequestParams().url)
     if (image) form.append('awardImage', image)
-    return apiUpload.put(`/updateAward/${id}`, form).then((r) => r.data)
+    return dynamicApiUpload.put(`/updateAward/${id}`, form).then((r) => r.data)
   },
-  remove: (id) => api.delete(`/deleteAward/${id}`, { params: { url: getWebsiteRequestParams().url } }).then((r) => r.data),
+  remove: (id) => dynamicApi.delete(`/deleteAward/${id}`, { params: { url: getWebsiteRequestParams().url } }).then((r) => r.data),
 }
 
 export const facultyService = {
-  getAll: () => api.get('/getAllFacilities', { params: { url: getWebsiteRequestParams().url } }).then((r) => r.data),
+  getAll: () => dynamicApi.get('/getAllFacilities', { params: { url: getWebsiteRequestParams().url } }).then((r) => r.data),
   create: (values, image) => {
     const form = new FormData()
     form.append('facility', JSON.stringify(values))
     form.append('url', getWebsiteRequestParams().url)
     form.append('facilityImageName', image)
-    return apiUpload.post('/createFacility', form).then((r) => r.data)
+    return dynamicApiUpload.post('/createFacility', form).then((r) => r.data)
   },
   update: (id, values, image) => {
     const form = new FormData()
     form.append('facility', JSON.stringify(values))
     form.append('url', getWebsiteRequestParams().url)
     if (image) form.append('facilityImage', image)
-    return apiUpload.put(`/updateFacility/${id}`, form).then((r) => r.data)
+    return dynamicApiUpload.put(`/updateFacility/${id}`, form).then((r) => r.data)
   },
-  remove: (id) => api.delete(`/deleteFacility/${id}`, { params: { url: getWebsiteRequestParams().url } }).then((r) => r.data),
+  remove: (id) => dynamicApi.delete(`/deleteFacility/${id}`, { params: { url: getWebsiteRequestParams().url } }).then((r) => r.data),
 }
 
 // ---------------- Sankalp Exam ----------------

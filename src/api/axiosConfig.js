@@ -11,6 +11,8 @@ import axios from 'axios'
 
 const envBaseUrl = import.meta.env.VITE_API_BASE_URL?.trim()
 const API_BASE_URL = (envBaseUrl || '/api').replace(/\/$/, '')
+const dynamicEnvBaseUrl = import.meta.env.VITE_DYNAMIC_PROFILE_API_BASE_URL?.trim()
+const DYNAMIC_PROFILE_API_BASE_URL = (dynamicEnvBaseUrl || '/api2').replace(/\/$/, '')
 const USE_COOKIES = (import.meta.env.VITE_API_USE_COOKIES || '').toString() === 'true'
 const PUBLIC_AUTH_ENDPOINTS = [/^\/auth\/login(?:\/)?$/i, /^\/auth\/register(?:\/)?$/i, /^\/auth\/refresh(?:\/)?$/i]
 
@@ -22,6 +24,11 @@ const api = axios.create({
   headers: {
     'Content-Type': 'application/json',
   }
+})
+
+export const dynamicApi = axios.create({
+  baseURL: DYNAMIC_PROFILE_API_BASE_URL,
+  headers: { 'Content-Type': 'application/json' },
 })
 
 if (USE_COOKIES) {
@@ -168,6 +175,22 @@ export const apiUpload = axios.create({
   baseURL: API_BASE_URL
 })
 
+export const dynamicApiUpload = axios.create({
+  baseURL: DYNAMIC_PROFILE_API_BASE_URL
+})
+
+const addDynamicAuthHeader = (config) => {
+  const token = tokenStore.get()
+  if (token && !shouldSkipAuthHeader(config?.url || '')) {
+    config.headers = config.headers || {}
+    config.headers.Authorization = 'Bearer ' + token
+  }
+  return config
+}
+
+dynamicApi.interceptors.request.use(addDynamicAuthHeader)
+dynamicApiUpload.interceptors.request.use(addDynamicAuthHeader)
+
 if (USE_COOKIES) {
   apiUpload.defaults.withCredentials = true
 }
@@ -185,6 +208,22 @@ apiUpload.interceptors.request.use((config) => {
 
   return config
 })
+
+const handleSharedResponseError = (error) => {
+  if (error.response?.status === 401) {
+    const isDev = import.meta.env.MODE === 'development' || import.meta.env.VITE_APP_ENV === 'development'
+    if (!isDev) {
+      tokenStore.clear()
+      const currentPath = window.location.pathname
+      if (currentPath !== '/login' && currentPath !== '/401') window.location.href = '/401'
+    }
+  }
+  return Promise.reject(error)
+}
+
+apiUpload.interceptors.response.use((response) => response, handleSharedResponseError)
+dynamicApi.interceptors.response.use((response) => response, handleSharedResponseError)
+dynamicApiUpload.interceptors.response.use((response) => response, handleSharedResponseError)
 
 export default api
 

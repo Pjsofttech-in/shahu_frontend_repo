@@ -26,6 +26,9 @@ export default function Login() {
       navigate(redirectTo, { replace: true })
     } catch (err) {
       const message =
+        err?.response?.status === 401
+          ? 'Invalid live admin email or password.'
+          :
         err?.response?.data?.message ||
         err?.response?.data?.error ||
         err?.response?.data ||
