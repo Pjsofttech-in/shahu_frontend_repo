@@ -205,8 +205,11 @@ export const visionMissionService = {
   update: (payload) => dynamicApi.put('/website/vision-mission', payload).then((r) => r.data),
 }
 export const contactService = {
-  get: () => dynamicApi.get('/website/contact').then((r) => r.data),
-  update: (payload) => dynamicApi.put('/website/contact', payload).then((r) => r.data),
+  get: () => dynamicApi.get('/contact-us', { skipAuth: true }).then((r) => r.data),
+  update: (payload) => dynamicApi.put('/contact-us', payload, { skipAuth: true }).then((r) => r.data),
+}
+export const contactFormService = {
+  getAll: () => dynamicApi.get('/getAllContactForms', { params: { url: getWebsiteRequestParams().url } }).then((r) => r.data),
 }
 export const notificationService = makeDynamicCrudService('/notifications')
 

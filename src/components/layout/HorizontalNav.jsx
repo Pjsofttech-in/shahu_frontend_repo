@@ -28,26 +28,25 @@ export const settingsLinks = [
 ]
 
 // Website Management Submenu
-export const websiteLinks = [
-  { to: '/website/home', label: 'Home', icon: <FiHome /> },
+export const homeLinks = [
   { to: '/website/url', label: 'Website URL', icon: <FiPhone /> },
-  // { to: '/website/sidebar', label: 'Sidebar', icon: <FiLayers /> },
-  // { to: '/website/settings', label: 'Website Settings', icon: <FiTarget /> },
   { to: '/website/hero', label: 'Hero Section', icon: <FiImage /> },
-  { to: '/website/services', label: 'Services', icon: <FiLayers /> },
-  { to: '/website/sankalp-features', label: 'Sankalp Features', icon: <FiBook /> },
-  { to: '/website/about', label: 'About', icon: <FiFileText /> },
+  { to: '/website/about', label: 'About Us', icon: <FiFileText /> },
   { to: '/website/features', label: 'Features', icon: <FiTarget /> },
   { to: '/website/footer', label: 'Footer', icon: <FiLayers /> },
-  { to: '/website/gallery', label: 'Gallery', icon: <FiImage /> },
-  { to: '/website/toppers', label: 'Toppers', icon: <FiAward /> },
-  { to: '/website/testimonials', label: 'Testimonials', icon: <FiStar /> },
-  { to: '/website/faculty', label: 'Faculty', icon: <FiUser /> },
-  { to: '/website/awards', label: 'Awards', icon: <FiAward /> },
-  { to: '/website/vision-mission', label: 'Vision & Mission', icon: <FiTarget /> },
-  { to: '/website/courses', label: 'Courses', icon: <FiBook /> },
   { to: '/website/contact-us', label: 'Contact Us', icon: <FiPhone /> },
-  { to: '/website/contact-form', label: 'Contact Form', icon: <FiPhone /> },
+]
+
+export const websiteLinks = [
+  { to: '/website/courses', label: 'Courses', icon: <FiBook /> },
+  { to: '/website/awards', label: 'Awards', icon: <FiAward /> },
+  { to: '/website/toppers', label: 'Toppers', icon: <FiAward /> },
+  { to: '/website/gallery', label: 'Gallery', icon: <FiImage /> },
+  { to: '/website/faculty', label: 'Faculty', icon: <FiUser /> },
+  { to: '/website/testimonials', label: 'Testimonials', icon: <FiStar /> },
+  { to: '/website/contact-us', label: 'Contact Us', icon: <FiPhone /> },
+  { to: '/website/about', label: 'About Us', icon: <FiFileText /> },
+  { to: '/website/vision-mission', label: 'Vision & Mission', icon: <FiTarget /> },
   { to: '/website/downloads', label: 'Downloads', icon: <FiDownload /> },
   { to: '/website/notifications', label: 'Notifications', icon: <FiFileText /> },
 ]

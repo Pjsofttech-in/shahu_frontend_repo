@@ -180,6 +180,11 @@ export const dynamicApiUpload = axios.create({
 })
 
 const addDynamicAuthHeader = (config) => {
+  if (config?.skipAuth) {
+    if (config.headers?.Authorization) delete config.headers.Authorization
+    return config
+  }
+
   const token = tokenStore.get()
   if (token && !shouldSkipAuthHeader(config?.url || '')) {
     config.headers = config.headers || {}

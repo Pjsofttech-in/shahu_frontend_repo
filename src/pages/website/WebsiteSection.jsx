@@ -1,7 +1,7 @@
 import React from 'react'
-import { Routes, Route, Navigate } from 'react-router-dom'
+import { Routes, Route, Navigate, useLocation } from 'react-router-dom'
 import Layout from '../../components/layout/Layout.jsx'
-import { VerticalNav, websiteLinks } from '../../components/layout/HorizontalNav.jsx'
+import { VerticalNav, homeLinks, websiteLinks } from '../../components/layout/HorizontalNav.jsx'
 import Home from './Home.jsx'
 import ModulePlaceholder from './ModulePlaceholder.jsx'
 import Footer from './Footer.jsx'
@@ -20,10 +20,15 @@ import Notifications from './Notifications.jsx'
 import WebsiteUrl from './WebsiteUrl.jsx'
 
 export default function WebsiteSection() {
+  const location = useLocation()
+  const homePaths = homeLinks.map((link) => link.to)
+  const isHomeGroup = location.pathname === '/website/home' || homePaths.includes(location.pathname)
+  const isContactForm = location.pathname === '/website/contact-form'
+
   return (
     <Layout
       title="Website Management"
-      verticalNav={<VerticalNav links={websiteLinks} title="Website Management" />}
+      verticalNav={isContactForm ? null : <VerticalNav links={isHomeGroup ? homeLinks : websiteLinks} title={isHomeGroup ? 'Home' : 'Website Management'} />}
     >
       <Routes>
         <Route path="/home" element={<Home />} />

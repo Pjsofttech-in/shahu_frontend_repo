@@ -1,7 +1,7 @@
 import React from 'react'
 import { NavLink, useLocation } from 'react-router-dom'
 import {
-  FiGrid, FiUsers, FiFileText, FiSettings, FiGlobe
+  FiGrid, FiUsers, FiFileText, FiSettings, FiGlobe, FiHome, FiPhone
 } from 'react-icons/fi'
 
 export default function Sidebar() {
@@ -12,6 +12,8 @@ export default function Sidebar() {
   const isSankalpActive = location.pathname.startsWith('/sankalp-exam')
   const isSettingsActive = location.pathname.startsWith('/settings')
   const isWebsiteActive = location.pathname.startsWith('/website')
+  const isWebsiteHomeActive = location.pathname === '/website/home'
+  const isContactFormActive = location.pathname === '/website/contact-form'
   const isDashboardActive = location.pathname === '/dashboard'
 
   return (
@@ -56,9 +58,25 @@ export default function Sidebar() {
         {/* Website Management */}
         <NavLink 
           to="/website/footer" 
-          className={`sidebar-link ${isWebsiteActive ? 'active' : ''}`}
+          className={`sidebar-link ${isWebsiteActive && !isWebsiteHomeActive && !isContactFormActive ? 'active' : ''}`}
         >
           <FiGlobe /> Website Management
+        </NavLink>
+
+        {/* Website Home */}
+        <NavLink
+          to="/website/home"
+          className={`sidebar-link ${isWebsiteHomeActive ? 'active' : ''}`}
+        >
+          <FiHome /> Home
+        </NavLink>
+
+        {/* Contact Form */}
+        <NavLink
+          to="/website/contact-form"
+          className={`sidebar-link ${isContactFormActive ? 'active' : ''}`}
+        >
+          <FiPhone /> Contact Form
         </NavLink>
       </nav>
     </aside>

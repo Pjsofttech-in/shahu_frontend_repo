@@ -26,6 +26,7 @@ export default function CrudManager({
   filterFn,
   showEditAction = true,
   showDeleteAction = true,
+  showCreateAction = true,
   initialFormValues = {},
   onResetFilters,
 }) {
@@ -325,7 +326,7 @@ export default function CrudManager({
           <h1>{title}</h1>
           {subtitle && <p>{subtitle}</p>}
         </div>
-        <button className="btn btn-primary" data-open-create onClick={openCreate}><FiPlus /> {addLabel}</button>
+        {showCreateAction && <button className="btn btn-primary" data-open-create onClick={openCreate}><FiPlus /> {addLabel}</button>}
       </div>
 
       {searchKeys.length > 0 && (

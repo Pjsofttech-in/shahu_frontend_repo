@@ -1,14 +1,14 @@
 import React from 'react'
 import { NavLink } from 'react-router-dom'
-import { FiImage, FiGrid, FiBookOpen, FiInfo, FiPhone, FiFileText } from 'react-icons/fi'
+import { FiImage, FiTarget, FiInfo, FiPhone, FiFileText, FiGlobe } from 'react-icons/fi'
 
 const homeModules = [
+  { to: '/website/url', label: 'Website URL', description: 'Manage website URL', icon: FiGlobe },
   { to: '/website/hero', label: 'Hero Section', description: 'Manage hero banner', icon: FiImage },
-  { to: '/website/services', label: 'Services', description: 'Manage website services', icon: FiGrid },
-  { to: '/website/sankalp-features', label: 'Sankalp Features', description: 'Manage Sankalp Features section', icon: FiBookOpen },
-  { to: '/website/about', label: 'About', description: 'Manage about content', icon: FiInfo },
-  { to: '/website/features', label: 'Features', description: 'Manage features & highlights', icon: FiPhone },
+  { to: '/website/features', label: 'Features', description: 'Manage features & highlights', icon: FiTarget },
   { to: '/website/footer', label: 'Footer', description: 'Manage footer section', icon: FiFileText },
+  { to: '/website/about', label: 'About Us', description: 'Manage about content', icon: FiInfo },
+  { to: '/website/contact-us', label: 'Contact Us', description: 'Manage contact details', icon: FiPhone },
 ]
 
 export default function Home() {
