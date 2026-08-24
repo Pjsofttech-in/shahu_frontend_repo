@@ -22,7 +22,7 @@ export default function Home() {
       </div>
       <div className="website-home-grid">
         {homeModules.map(({ to, label, description, icon: Icon }) => (
-          <NavLink key={to} to={to} className="website-home-card">
+          <NavLink key={to} to={to} state={{ websiteNavGroup: 'home' }} className="website-home-card">
             <Icon className="website-home-card-icon" />
             <h2>{label}</h2>
             <p>{description}</p>

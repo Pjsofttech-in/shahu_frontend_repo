@@ -21,8 +21,8 @@ import WebsiteUrl from './WebsiteUrl.jsx'
 
 export default function WebsiteSection() {
   const location = useLocation()
-  const homePaths = homeLinks.map((link) => link.to)
-  const isHomeGroup = location.pathname === '/website/home' || homePaths.includes(location.pathname)
+  const isHomeGroup = location.state?.websiteNavGroup === 'home'
+    || (!location.state?.websiteNavGroup && location.pathname === '/website/home')
   const isContactForm = location.pathname === '/website/contact-form'
 
   return (

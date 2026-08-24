@@ -197,16 +197,26 @@ export const courseService = {
 }
 export const downloadService = makeCrudService('/downloads')
 export const footerService = {
-  get: () => dynamicApi.get('/website/footer').then((r) => r.data),
-  update: (payload) => dynamicApi.put('/website/footer', payload).then((r) => r.data),
+  get: async () => {
+    const response = await dynamicApi.get('/getAllFooters', {
+      params: { url: getWebsiteRequestParams().url },
+      skipAuth: true,
+    })
+    const rows = Array.isArray(response.data) ? response.data : response.data?.content || []
+    return rows[0] || {}
+  },
+  update: (payload) => dynamicApi.put(`/updateFooter/${payload.id}`, payload, {
+    params: { url: getWebsiteRequestParams().url },
+    skipAuth: true,
+  }).then((r) => r.data),
 }
 export const visionMissionService = {
   get: () => dynamicApi.get('/website/vision-mission').then((r) => r.data),
   update: (payload) => dynamicApi.put('/website/vision-mission', payload).then((r) => r.data),
 }
 export const contactService = {
-  get: () => dynamicApi.get('/contact-us', { skipAuth: true }).then((r) => r.data),
-  update: (payload) => dynamicApi.put('/contact-us', payload, { skipAuth: true }).then((r) => r.data),
+  get: async () => ({}),
+  update: (payload) => dynamicApi.post('/contact-us', payload, { skipAuth: true }).then((r) => r.data),
 }
 export const contactFormService = {
   getAll: () => dynamicApi.get('/getAllContactForms', { params: { url: getWebsiteRequestParams().url } }).then((r) => r.data),

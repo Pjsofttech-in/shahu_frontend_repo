@@ -57,7 +57,7 @@ export default function Sidebar() {
 
         {/* Website Management */}
         <NavLink 
-          to="/website/footer" 
+          to="/website/courses" 
           className={`sidebar-link ${isWebsiteActive && !isWebsiteHomeActive && !isContactFormActive ? 'active' : ''}`}
         >
           <FiGlobe /> Website Management

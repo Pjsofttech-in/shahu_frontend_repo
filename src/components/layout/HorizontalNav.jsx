@@ -29,26 +29,26 @@ export const settingsLinks = [
 
 // Website Management Submenu
 export const homeLinks = [
-  { to: '/website/url', label: 'Website URL', icon: <FiPhone /> },
-  { to: '/website/hero', label: 'Hero Section', icon: <FiImage /> },
-  { to: '/website/about', label: 'About Us', icon: <FiFileText /> },
-  { to: '/website/features', label: 'Features', icon: <FiTarget /> },
-  { to: '/website/footer', label: 'Footer', icon: <FiLayers /> },
-  { to: '/website/contact-us', label: 'Contact Us', icon: <FiPhone /> },
+  { to: '/website/url', label: 'Website URL', icon: <FiPhone />, group: 'home' },
+  { to: '/website/hero', label: 'Hero Section', icon: <FiImage />, group: 'home' },
+  { to: '/website/about', label: 'About Us', icon: <FiFileText />, group: 'home' },
+  { to: '/website/features', label: 'Features', icon: <FiTarget />, group: 'home' },
+  { to: '/website/footer', label: 'Footer', icon: <FiLayers />, group: 'home' },
+  { to: '/website/contact-us', label: 'Contact Us', icon: <FiPhone />, group: 'home' },
 ]
 
 export const websiteLinks = [
-  { to: '/website/courses', label: 'Courses', icon: <FiBook /> },
-  { to: '/website/awards', label: 'Awards', icon: <FiAward /> },
-  { to: '/website/toppers', label: 'Toppers', icon: <FiAward /> },
-  { to: '/website/gallery', label: 'Gallery', icon: <FiImage /> },
-  { to: '/website/faculty', label: 'Faculty', icon: <FiUser /> },
-  { to: '/website/testimonials', label: 'Testimonials', icon: <FiStar /> },
-  { to: '/website/contact-us', label: 'Contact Us', icon: <FiPhone /> },
-  { to: '/website/about', label: 'About Us', icon: <FiFileText /> },
-  { to: '/website/vision-mission', label: 'Vision & Mission', icon: <FiTarget /> },
-  { to: '/website/downloads', label: 'Downloads', icon: <FiDownload /> },
-  { to: '/website/notifications', label: 'Notifications', icon: <FiFileText /> },
+  { to: '/website/courses', label: 'Courses', icon: <FiBook />, group: 'management' },
+  { to: '/website/awards', label: 'Awards', icon: <FiAward />, group: 'management' },
+  { to: '/website/toppers', label: 'Toppers', icon: <FiAward />, group: 'management' },
+  { to: '/website/gallery', label: 'Gallery', icon: <FiImage />, group: 'management' },
+  { to: '/website/faculty', label: 'Faculty', icon: <FiUser />, group: 'management' },
+  { to: '/website/testimonials', label: 'Testimonials', icon: <FiStar />, group: 'management' },
+  { to: '/website/contact-us', label: 'Contact Us', icon: <FiPhone />, group: 'management' },
+  { to: '/website/about', label: 'About Us', icon: <FiFileText />, group: 'management' },
+  { to: '/website/vision-mission', label: 'Vision & Mission', icon: <FiTarget />, group: 'management' },
+  { to: '/website/downloads', label: 'Downloads', icon: <FiDownload />, group: 'management' },
+  { to: '/website/notifications', label: 'Notifications', icon: <FiFileText />, group: 'management' },
 ]
 
 /**
@@ -64,6 +64,7 @@ export default function HorizontalNav({ links, title }) {
           <NavLink
             key={link.to}
             to={link.to}
+            state={{ websiteNavGroup: link.group }}
             className={({ isActive }) => `horizontal-nav-link ${isActive ? 'active' : ''}`}
           >
             {link.icon && <span className="nav-icon">{link.icon}</span>}
@@ -84,6 +85,7 @@ export function VerticalNav({ links, title }) {
           <NavLink
             key={link.to}
             to={link.to}
+            state={{ websiteNavGroup: link.group }}
             className={({ isActive }) => `vertical-nav-link ${isActive ? 'active' : ''}`}
           >
             {link.icon && <span className="nav-icon">{link.icon}</span>}
