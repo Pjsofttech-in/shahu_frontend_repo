@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react'
-import { FiPlus, FiEdit2, FiTrash2, FiSave, FiArrowLeft } from 'react-icons/fi'
+import { FiPlus, FiTrash2, FiSave, FiArrowLeft } from 'react-icons/fi'
 import { topperService } from '../../api/services'
 
 // No mock data — table starts empty until backend is connected
@@ -321,7 +321,7 @@ export default function Toppers() {
                 </tr>
               ) : (
                 rows.map((row) => (
-                  <tr key={row.topperId}>
+                  <tr key={row.topperId} className="is-clickable" onClick={() => openEdit(row)}>
                     <td>{row.topperId}</td>
                     <td>{row.name || '—'}</td>
                     <td>{row.totalMarks || '—'}</td>
@@ -341,10 +341,7 @@ export default function Toppers() {
                     </td>
                     <td>
                       <div className="table-actions">
-                        <button className="btn btn-outline btn-sm" onClick={() => openEdit(row)}>
-                          <FiEdit2 />
-                        </button>
-                        <button className="btn btn-danger btn-sm" onClick={() => setDeleteTarget(row)}>
+                        <button className="btn btn-danger btn-sm" onClick={(event) => { event.stopPropagation(); setDeleteTarget(row) }}>
                           <FiTrash2 />
                         </button>
                       </div>

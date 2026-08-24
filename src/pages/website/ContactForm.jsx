@@ -21,6 +21,7 @@ export default function ContactForm() {
       showCreateAction={false}
       showEditAction={false}
       showDeleteAction={false}
+      rowClickEdit={false}
     />
   )
 }

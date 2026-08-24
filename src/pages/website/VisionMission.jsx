@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useState } from 'react'
-import { FiEdit2, FiImage, FiPlus, FiSave, FiTrash2 } from 'react-icons/fi'
+import { FiImage, FiPlus, FiSave, FiTrash2 } from 'react-icons/fi'
 import Modal from '../../components/common/Modal.jsx'
 import { visionMissionDynamicService } from '../../api/services.js'
 
@@ -100,11 +100,11 @@ export default function VisionMission() {
           <thead><tr><th>ID</th><th>Director Image</th><th>Director Name</th><th>Director Message</th><th>Description</th><th>Vision</th><th>Mission</th><th>Actions</th></tr></thead>
           <tbody>
             {loading ? <tr><td colSpan={8} className="empty-row">Loading…</td></tr> : rows.length === 0 ? <tr><td colSpan={8} className="empty-row">No Vision & Mission records found</td></tr> : rows.map((row) => (
-              <tr key={row.id}>
+              <tr key={row.id} className="is-clickable" onClick={() => openEdit(row)}>
                 <td>{row.id}</td>
                 <td>{row.directorImage ? <img className="about-us-thumb" src={row.directorImage} alt="" /> : <FiImage />}</td>
                 <td>{row.directorName || '—'}</td><td className="about-us-description">{row.directorMessage || '—'}</td><td className="about-us-description">{row.description || '—'}</td><td className="about-us-description">{row.vision || '—'}</td><td className="about-us-description">{row.mission || '—'}</td>
-                <td><div className="table-actions"><button className="btn btn-outline btn-sm" onClick={() => openEdit(row)} title="Edit"><FiEdit2 /></button><button className="btn btn-danger btn-sm" onClick={() => handleDelete(row)} title="Delete"><FiTrash2 /></button></div></td>
+                <td><div className="table-actions"><button className="btn btn-danger btn-sm" onClick={(event) => { event.stopPropagation(); handleDelete(row) }} title="Delete"><FiTrash2 /></button></div></td>
               </tr>
             ))}
           </tbody>

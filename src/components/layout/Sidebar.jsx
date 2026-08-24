@@ -1,11 +1,13 @@
 import React from 'react'
 import { NavLink, useLocation } from 'react-router-dom'
+import { useState } from 'react'
 import {
-  FiGrid, FiUsers, FiFileText, FiSettings, FiGlobe, FiHome, FiPhone
+  FiGrid, FiUsers, FiFileText, FiSettings, FiGlobe, FiHome, FiPhone, FiChevronsLeft, FiChevronsRight
 } from 'react-icons/fi'
 
 export default function Sidebar() {
   const location = useLocation()
+  const [collapsed, setCollapsed] = useState(() => localStorage.getItem('sidebar-collapsed') === 'true')
 
   // Check if current path matches a section
   const isStudentsActive = location.pathname.startsWith('/students')
@@ -14,21 +16,30 @@ export default function Sidebar() {
   const isWebsiteActive = location.pathname.startsWith('/website')
   const isWebsiteHomeActive = location.pathname === '/website/home'
   const isContactFormActive = location.pathname === '/website/contact-form'
-  const isDashboardActive = location.pathname === '/dashboard'
+
+  const toggleSidebar = () => {
+    setCollapsed((current) => {
+      localStorage.setItem('sidebar-collapsed', String(!current))
+      return !current
+    })
+  }
 
   return (
-    <aside className="sidebar">
+    <aside className={`sidebar ${collapsed ? 'collapsed' : ''}`}>
       <div className="sidebar-brand">
         <div className="name">Shri Shahu Prabodhini</div>
         <div className="sub">Admin Panel</div>
       </div>
+      <button className="sidebar-collapse-btn" type="button" onClick={toggleSidebar} aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}>
+        {collapsed ? <FiChevronsRight /> : <FiChevronsLeft />}
+      </button>
       <nav className="sidebar-nav">
         {/* Dashboard */}
         <NavLink 
           to="/dashboard" 
           className={({ isActive }) => `sidebar-link ${isActive ? 'active' : ''}`}
         >
-          <FiGrid /> Dashboard
+          <FiGrid /> <span>Dashboard</span>
         </NavLink>
 
         {/* Students */}
@@ -36,7 +47,7 @@ export default function Sidebar() {
           to="/students" 
           className={`sidebar-link ${isStudentsActive ? 'active' : ''}`}
         >
-          <FiUsers /> Students
+          <FiUsers /> <span>Students</span>
         </NavLink>
 
         {/* Sankalp Exam */}
@@ -44,15 +55,7 @@ export default function Sidebar() {
           to="/sankalp-exam/syllabus" 
           className={`sidebar-link ${isSankalpActive ? 'active' : ''}`}
         >
-          <FiFileText /> Sankalp Exam
-        </NavLink>
-
-        {/* Settings */}
-        <NavLink 
-          to="/settings/districts" 
-          className={`sidebar-link ${isSettingsActive ? 'active' : ''}`}
-        >
-          <FiSettings /> Settings
+          <FiFileText /> <span>Sankalp Exam</span>
         </NavLink>
 
         {/* Website Management */}
@@ -60,7 +63,7 @@ export default function Sidebar() {
           to="/website/courses" 
           className={`sidebar-link ${isWebsiteActive && !isWebsiteHomeActive && !isContactFormActive ? 'active' : ''}`}
         >
-          <FiGlobe /> Website Management
+          <FiGlobe /> <span>Website Management</span>
         </NavLink>
 
         {/* Website Home */}
@@ -68,7 +71,7 @@ export default function Sidebar() {
           to="/website/home"
           className={`sidebar-link ${isWebsiteHomeActive ? 'active' : ''}`}
         >
-          <FiHome /> Home
+          <FiHome /> <span>Home</span>
         </NavLink>
 
         {/* Contact Form */}
@@ -76,7 +79,15 @@ export default function Sidebar() {
           to="/website/contact-form"
           className={`sidebar-link ${isContactFormActive ? 'active' : ''}`}
         >
-          <FiPhone /> Contact Form
+          <FiPhone /> <span>Contact Form</span>
+        </NavLink>
+
+        {/* Settings */}
+        <NavLink
+          to="/settings/districts"
+          className={`sidebar-link ${isSettingsActive ? 'active' : ''}`}
+        >
+          <FiSettings /> <span>Settings</span>
         </NavLink>
       </nav>
     </aside>

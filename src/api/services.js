@@ -1,4 +1,4 @@
-import api, { apiUpload, dynamicApi, dynamicApiUpload } from './axiosConfig'
+import api, { apiUpload, dynamicApi, dynamicApiUpload, publicDynamicApi, publicDynamicApiUpload } from './axiosConfig'
 
 // ---------------------------------------------------------------------
 // Generic CRUD factory — matches the pattern used across your Spring Boot
@@ -222,6 +222,47 @@ export const contactFormService = {
   getAll: () => dynamicApi.get('/getAllContactForms', { params: { url: getWebsiteRequestParams().url } }).then((r) => r.data),
 }
 export const notificationService = makeDynamicCrudService('/notifications')
+
+const dynamicMediaService = ({ listPath, createPath, updatePath, deletePath, jsonField, imageField }) => ({
+  getAll: () => publicDynamicApi.get(listPath, {
+    params: { url: getWebsiteRequestParams().url },
+  }).then((r) => r.data),
+  create: (values, image) => {
+    const form = new FormData()
+    form.append(jsonField, JSON.stringify(values))
+    form.append('url', getWebsiteRequestParams().url)
+    if (image) form.append(imageField, image)
+    return publicDynamicApiUpload.post(createPath, form).then((r) => r.data)
+  },
+  update: (id, values, image) => {
+    const form = new FormData()
+    form.append(jsonField, JSON.stringify(values))
+    form.append('url', getWebsiteRequestParams().url)
+    if (image) form.append(imageField, image)
+    return publicDynamicApiUpload.put(`${updatePath}/${id}`, form).then((r) => r.data)
+  },
+  remove: (id) => publicDynamicApi.delete(`${deletePath}/${id}`, {
+    params: { url: getWebsiteRequestParams().url },
+  }).then((r) => r.data),
+})
+
+export const heroSectionService = dynamicMediaService({
+  listPath: '/getAllHeroSections',
+  createPath: '/createHeroSection',
+  updatePath: '/updateHeroSection',
+  deletePath: '/deleteHeroSection',
+  jsonField: 'heroSection',
+  imageField: 'heroSectionImage',
+})
+
+export const featureService = dynamicMediaService({
+  listPath: '/getAllFeatures',
+  createPath: '/createFeature',
+  updatePath: '/updateFeature',
+  deletePath: '/deleteFeature',
+  jsonField: 'feature',
+  imageField: 'featureImage',
+})
 
 const getWebsiteRequestParams = (user = {}) => ({
   url: import.meta.env.VITE_DYNAMIC_PROFILE_URL?.trim() || import.meta.env.VITE_WEBSITE_URL?.trim() || window.location.origin,

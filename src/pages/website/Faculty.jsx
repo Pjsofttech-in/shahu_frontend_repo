@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useState } from 'react'
-import { FiPlus, FiEdit2, FiTrash2, FiSave, FiArrowLeft } from 'react-icons/fi'
+import { FiPlus, FiTrash2, FiSave, FiArrowLeft } from 'react-icons/fi'
 import { facultyService } from '../../api/services.js'
 
 const EMPTY_FORM = {
@@ -313,7 +313,7 @@ export default function Faculty() {
                 </tr>
               ) : (
                 rows.map((row) => (
-                  <tr key={row.id}>
+                  <tr key={row.id} className="is-clickable" onClick={() => openEdit(row)}>
                     <td>{row.id}</td>
                     <td>
                       {row.facilityImage ? (
@@ -337,10 +337,7 @@ export default function Faculty() {
                     </td>
                     <td>
                       <div className="table-actions">
-                        <button className="btn btn-outline btn-sm" onClick={() => openEdit(row)}>
-                          <FiEdit2 />
-                        </button>
-                        <button className="btn btn-danger btn-sm" onClick={() => setDeleteTarget(row)}>
+                        <button className="btn btn-danger btn-sm" onClick={(event) => { event.stopPropagation(); setDeleteTarget(row) }}>
                           <FiTrash2 />
                         </button>
                       </div>

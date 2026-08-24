@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useCallback } from 'react'
-import { FiPlus, FiEdit2, FiTrash2, FiSave } from 'react-icons/fi'
+import { FiPlus, FiTrash2, FiSave } from 'react-icons/fi'
 import { galleryService } from '../../api/services.js'
 
 const EMPTY_FORM = {
@@ -174,7 +174,7 @@ export default function Gallery() {
                 </tr>
               ) : (
                 rows.map((row) => (
-                  <tr key={row.galleryId}>
+                  <tr key={row.galleryId} className="is-clickable" onClick={() => openEdit(row)}>
                     <td>{row.galleryId}</td>
                     <td>
                       {row.galleryImages?.[0] ? (
@@ -191,10 +191,7 @@ export default function Gallery() {
                     <td>{row.link || '—'}</td>
                     <td>
                       <div className="table-actions">
-                        <button className="btn btn-outline btn-sm" onClick={() => openEdit(row)}>
-                          <FiEdit2 />
-                        </button>
-                        <button className="btn btn-danger btn-sm" onClick={() => setDeleteTarget(row)}>
+                        <button className="btn btn-danger btn-sm" onClick={(event) => { event.stopPropagation(); setDeleteTarget(row) }}>
                           <FiTrash2 />
                         </button>
                       </div>

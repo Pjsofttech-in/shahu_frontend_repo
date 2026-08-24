@@ -1,6 +1,6 @@
 import React from 'react'
 
-export default function DataTable({ columns, rows, rowKey = 'id', loading, emptyText = 'No records found.' }) {
+export default function DataTable({ columns, rows, rowKey = 'id', loading, emptyText = 'No records found.', onRowClick }) {
   return (
     <div className="table-wrap">
       <table className="data-table">
@@ -19,7 +19,7 @@ export default function DataTable({ columns, rows, rowKey = 'id', loading, empty
             <tr className="empty-row"><td colSpan={columns.length}>{emptyText}</td></tr>
           )}
           {!loading && rows.map((row) => (
-            <tr key={row[rowKey]}>
+            <tr key={row[rowKey]} className={onRowClick ? 'is-clickable' : ''} onClick={() => onRowClick?.(row)}>
               {columns.map((c) => (
                 <td key={c.key}>{c.render ? c.render(row) : row[c.key]}</td>
               ))}

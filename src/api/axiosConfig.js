@@ -31,6 +31,15 @@ export const dynamicApi = axios.create({
   headers: { 'Content-Type': 'application/json' },
 })
 
+export const publicDynamicApi = axios.create({
+  baseURL: DYNAMIC_PROFILE_API_BASE_URL,
+  headers: { 'Content-Type': 'application/json' },
+})
+
+export const publicDynamicApiUpload = axios.create({
+  baseURL: DYNAMIC_PROFILE_API_BASE_URL,
+})
+
 if (USE_COOKIES) {
   api.defaults.withCredentials = true
 }

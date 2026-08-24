@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useState } from 'react'
-import { FiPlus, FiEdit2, FiTrash2, FiSave, FiArrowLeft } from 'react-icons/fi'
+import { FiPlus, FiTrash2, FiSave, FiArrowLeft } from 'react-icons/fi'
 import { testimonialService } from '../../api/services'
 
 const EMPTY_FORM = {
@@ -304,7 +304,7 @@ export default function Testimonials() {
                 </tr>
               ) : (
                 rows.map((row) => (
-                  <tr key={row.testimonialId}>
+                  <tr key={row.testimonialId} className="is-clickable" onClick={() => openEdit(row)}>
                     <td>{row.testimonialId}</td>
                     <td>{row.testimonialName || '—'}</td>
                     <td>{row.exam || '—'}</td>
@@ -327,10 +327,7 @@ export default function Testimonials() {
                     </td>
                     <td>
                       <div className="table-actions">
-                        <button className="btn btn-outline btn-sm" onClick={() => openEdit(row)}>
-                          <FiEdit2 />
-                        </button>
-                        <button className="btn btn-danger btn-sm" onClick={() => setDeleteTarget(row)}>
+                        <button className="btn btn-danger btn-sm" onClick={(event) => { event.stopPropagation(); setDeleteTarget(row) }}>
                           <FiTrash2 />
                         </button>
                       </div>

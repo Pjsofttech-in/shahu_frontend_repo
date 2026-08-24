@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useState } from 'react'
-import { FiEdit2, FiImage, FiPlus, FiSave, FiTrash2 } from 'react-icons/fi'
+import { FiImage, FiPlus, FiSave, FiTrash2 } from 'react-icons/fi'
 import Modal from '../../components/common/Modal.jsx'
 import { useAuth } from '../../context/AuthContext.jsx'
 import { aboutUsService } from '../../api/services.js'
@@ -132,13 +132,13 @@ export default function AboutUs() {
             <thead><tr><th>ID</th><th>Image</th><th>Title</th><th>Description</th><th>Years</th><th>Exam Centers</th><th>Faculty</th><th>Students</th><th>Actions</th></tr></thead>
             <tbody>
               {loading ? <tr><td colSpan={9} className="empty-row">Loading…</td></tr> : rows.length === 0 ? <tr><td colSpan={9} className="empty-row">No About Us records found</td></tr> : rows.map((row) => (
-                <tr key={row.id}>
+                <tr key={row.id} className="is-clickable" onClick={() => openEdit(row)}>
                   <td>{row.id}</td>
                   <td>{row.aboutUsImage ? <img className="about-us-thumb" src={row.aboutUsImage} alt="" /> : <FiImage />}</td>
                   <td>{row.aboutUsTitle || '—'}</td>
                   <td className="about-us-description">{row.aboutUsDescription || '—'}</td>
                   <td>{row.totalYearsOfExcellence ?? '—'}</td><td>{row.totalExamCenters ?? '—'}</td><td>{row.totalFaculties ?? '—'}</td><td>{row.totalStudents ?? '—'}</td>
-                  <td><div className="table-actions"><button className="btn btn-outline btn-sm" onClick={() => openEdit(row)} title="Edit"><FiEdit2 /></button><button className="btn btn-danger btn-sm" onClick={() => handleDelete(row)} title="Delete"><FiTrash2 /></button></div></td>
+                  <td><div className="table-actions"><button className="btn btn-danger btn-sm" onClick={(event) => { event.stopPropagation(); handleDelete(row) }} title="Delete"><FiTrash2 /></button></div></td>
                 </tr>
               ))}
             </tbody>

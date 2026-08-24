@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useCallback } from 'react'
-import { FiPlus, FiEdit2, FiTrash2, FiSave, FiExternalLink, FiFile, FiImage } from 'react-icons/fi'
+import { FiPlus, FiTrash2, FiSave, FiExternalLink, FiFile, FiImage } from 'react-icons/fi'
 import { downloadService } from '../../api/services.js'
 
 const EMPTY_FORM = {
@@ -166,7 +166,7 @@ export default function Downloads() {
                 </tr>
               ) : (
                 rows.map((row) => (
-                  <tr key={row.id}>
+                  <tr key={row.id} className="is-clickable" onClick={() => openEdit(row)}>
                     <td>{row.id}</td>
                     <td>{row.title || '—'}</td>
                     <td>
@@ -174,7 +174,7 @@ export default function Downloads() {
                         <div className="download-file-cell">
                           {(/\.(png|jpe?g|gif|webp|svg)$/i.test(row.fileName || row.filePath)) ? <FiImage /> : <FiFile />}
                           <span title={row.fileName || row.filePath}>{row.fileName || 'Open file'}</span>
-                          <a href={row.filePath} target="_blank" rel="noopener noreferrer" className="btn btn-outline btn-sm" title="Open file">
+                          <a href={row.filePath} target="_blank" rel="noopener noreferrer" className="btn btn-outline btn-sm" title="Open file" onClick={(event) => event.stopPropagation()}>
                             <FiExternalLink />
                           </a>
                         </div>
@@ -182,10 +182,7 @@ export default function Downloads() {
                     </td>
                     <td>
                       <div className="table-actions">
-                        <button className="btn btn-outline btn-sm" onClick={() => openEdit(row)}>
-                          <FiEdit2 />
-                        </button>
-                        <button className="btn btn-danger btn-sm" onClick={() => setDeleteTarget(row)}>
+                        <button className="btn btn-danger btn-sm" onClick={(event) => { event.stopPropagation(); setDeleteTarget(row) }}>
                           <FiTrash2 />
                         </button>
                       </div>

@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState, useCallback } from 'react'
-import { FiPlus, FiEdit2, FiTrash2, FiSearch, FiRotateCcw } from 'react-icons/fi'
+import { FiPlus, FiTrash2, FiSearch, FiRotateCcw } from 'react-icons/fi'
 import DataTable from './DataTable.jsx'
 import Modal from './Modal.jsx'
 import FormField from './FormField.jsx'
@@ -26,6 +26,7 @@ export default function CrudManager({
   filterFn,
   showEditAction = true,
   showDeleteAction = true,
+  rowClickEdit = true,
   showCreateAction = true,
   initialFormValues = {},
   onResetFilters,
@@ -299,7 +300,8 @@ export default function CrudManager({
     return groups
   }, [fields])
 
-  const tableColumns = [
+  const hasActions = showDeleteAction || extraRowAction
+  const tableColumns = hasActions ? [
     ...columns,
     {
       key: '__actions',
@@ -307,17 +309,16 @@ export default function CrudManager({
       width: 150,
       render: (row) => (
         <div className="table-actions">
-          {showEditAction && <button className="btn btn-outline btn-sm" onClick={() => openEdit(row)}><FiEdit2 /></button>}
-          {showDeleteAction && <button className="btn btn-danger btn-sm" onClick={() => handleDelete(row)}><FiTrash2 /></button>}
+          {showDeleteAction && <button className="btn btn-danger btn-sm" onClick={(event) => { event.stopPropagation(); handleDelete(row) }}><FiTrash2 /></button>}
           {extraRowAction && (
-            <button className="btn btn-gold btn-sm" onClick={() => extraRowAction.onClick(row)}>
+            <button className="btn btn-gold btn-sm" onClick={(event) => { event.stopPropagation(); extraRowAction.onClick(row) }}>
               {extraRowAction.icon} {extraRowAction.label}
             </button>
           )}
         </div>
       ),
     },
-  ]
+  ] : columns
 
   return (
     <div>
@@ -346,7 +347,7 @@ export default function CrudManager({
 
       {error && !showModal && <div className="login-alert" style={{ marginBottom: 14 }}>{error}</div>}
 
-      <DataTable columns={tableColumns} rows={filteredRows} loading={loading} />
+      <DataTable columns={tableColumns} rows={filteredRows} loading={loading} onRowClick={rowClickEdit ? openEdit : undefined} />
 
       {showModal && (
         <Modal

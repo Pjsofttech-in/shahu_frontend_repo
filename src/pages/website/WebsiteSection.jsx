@@ -18,6 +18,8 @@ import ContactForm from './ContactForm.jsx'
 import AboutUs from './AboutUs.jsx'
 import Notifications from './Notifications.jsx'
 import WebsiteUrl from './WebsiteUrl.jsx'
+import DynamicMediaManager from './DynamicMediaManager.jsx'
+import { heroSectionService, featureService } from '../../api/services.js'
 
 export default function WebsiteSection() {
   const location = useLocation()
@@ -35,11 +37,11 @@ export default function WebsiteSection() {
         <Route path="/url" element={<WebsiteUrl />} />
         {/* <Route path="/sidebar" element={<ModulePlaceholder title="Sidebar" />} />
         <Route path="/settings" element={<ModulePlaceholder title="Website Settings" />} /> */}
-        <Route path="/hero" element={<ModulePlaceholder title="Hero Section" />} />
+        <Route path="/hero" element={<DynamicMediaManager title="Hero Section" subtitle="Manage the three rotating hero sections shown on the website." service={heroSectionService} maxRecords={3} recordLabel="Hero Section" imageLabel="Hero Image" priority />} />
         <Route path="/services" element={<ModulePlaceholder title="Services" />} />
         <Route path="/sankalp-features" element={<ModulePlaceholder title="Sankalp Features" />} />
         <Route path="/about" element={<AboutUs />} />
-        <Route path="/features" element={<ModulePlaceholder title="Features" />} />
+        <Route path="/features" element={<DynamicMediaManager title="Features" subtitle="Manage the four feature cards shown on the website." service={featureService} maxRecords={4} recordLabel="Feature" imageLabel="Feature Image" />} />
         <Route path="/footer" element={<Footer />} />
         <Route path="/gallery" element={<Gallery />} />
         <Route path="/toppers" element={<Toppers />} />
