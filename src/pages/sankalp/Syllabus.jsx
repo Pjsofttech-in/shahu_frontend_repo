@@ -1,7 +1,7 @@
 import React from 'react'
 import { FiFileText } from 'react-icons/fi'
 import CrudManager from '../../components/common/CrudManager.jsx'
-import { syllabusService } from '../../api/services.js'
+import { syllabusService, uploadFile } from '../../api/services.js'
 
 export default function Syllabus() {
   return (
@@ -26,6 +26,7 @@ export default function Syllabus() {
         fields={[
           { name: 'title', label: 'Title', type: 'text', required: true },
           { name: 'link', label: 'Link', type: 'url', placeholder: 'https://example.com/syllabus.pdf' },
+          { name: 'file', label: 'PDF File', type: 'file', accept: 'application/pdf' },
         ]}
         transformSubmit={async (values) => {
           const title = (values.title ?? '').trim()
@@ -34,7 +35,16 @@ export default function Syllabus() {
           if (!title) {
             throw new Error('Title is required')
           }
-          return { title, link: link || null }
+          let savedLink = link
+          if (!savedLink && values.file instanceof File) {
+            savedLink = (await uploadFile(values.file, 'sankalp/syllabus')).url
+          }
+
+          if (!savedLink) {
+            throw new Error('Please provide either a PDF file or a link')
+          }
+
+          return { title, link: savedLink }
         }}
       />
   )
