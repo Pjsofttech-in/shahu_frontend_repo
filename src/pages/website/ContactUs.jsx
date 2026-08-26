@@ -16,10 +16,15 @@ export default function ContactUs({ title = 'Contact Us' }) {
       ]}
       transformSubmit={(values) => {
         const payload = {
+          id: values.id,
           address: String(values.address ?? '').trim(),
           contactNo: String(values.contactNo ?? '').trim(),
           email: String(values.email ?? '').trim(),
           mapLink: String(values.mapLink ?? '').trim(),
+        }
+
+        if (!payload.id) {
+          throw new Error('Contact details could not be loaded. Please refresh and try again.')
         }
 
         if (!payload.address || !payload.contactNo || !payload.email) {
