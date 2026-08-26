@@ -5,6 +5,8 @@ import { answerKeyService } from '../../api/services.js'
 const EMPTY_FORM = {
   title: '',
   link: '',
+  examId: '',
+  active: true,
   pdf: null,
   description: '',
 }
@@ -62,6 +64,8 @@ export default function AnswerKey() {
     setForm({
       title:       row.title       ?? '',
       link:        row.link        ?? '',
+      examId:      row.examId      ?? '',
+      active:      row.active      ?? true,
       pdf:         null,
       description: row.description ?? '',
     })
@@ -91,6 +95,7 @@ export default function AnswerKey() {
   const handleSubmit = async (e) => {
     e.preventDefault()
     if (!form.title.trim()) { setFormError('Title is required.'); return }
+    if (!Number.isInteger(Number(form.examId)) || Number(form.examId) <= 0) { setFormError('Exam ID is required.'); return }
     if (!editing && !form.pdf) { setFormError('PDF file is required.'); return }
 
     setSaving(true)
@@ -100,12 +105,16 @@ export default function AnswerKey() {
         await answerKeyService.update(editing.id, {
           title: form.title.trim(),
           link:  form.link.trim() || null,
+          examId: Number(form.examId),
+          active: form.active,
           pdf:   form.pdf || null,
         })
       } else {
         await answerKeyService.create({
           title: form.title.trim(),
           link:  form.link.trim() || null,
+          examId: Number(form.examId),
+          active: form.active,
           pdf:   form.pdf,
         })
       }
@@ -297,6 +306,25 @@ export default function AnswerKey() {
                       Selected: {form.pdf.name}
                     </span>
                   )}
+                </div>
+
+                <div className="form-group">
+                  <label htmlFor="ak-exam-id">Exam ID</label>
+                  <input
+                    id="ak-exam-id"
+                    name="examId"
+                    type="number"
+                    min="1"
+                    placeholder="Enter exam ID"
+                    value={form.examId}
+                    onChange={handleField}
+                    required
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label htmlFor="ak-active">Active</label>
+                  <input id="ak-active" name="active" type="checkbox" checked={form.active} onChange={handleField} style={{ width: 18, height: 18 }} />
                 </div>
 
                 {/* Description */}

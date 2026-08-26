@@ -210,6 +210,7 @@ const addDynamicAuthHeader = (config) => {
 
 dynamicApi.interceptors.request.use(addDynamicAuthHeader)
 dynamicApiUpload.interceptors.request.use(addDynamicAuthHeader)
+apiUpload.interceptors.request.use(addDynamicAuthHeader)
 
 if (USE_COOKIES) {
   apiUpload.defaults.withCredentials = true
