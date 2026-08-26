@@ -200,14 +200,12 @@ export const footerService = {
   get: async () => {
     const response = await dynamicApi.get('/getAllFooters', {
       params: { url: getWebsiteRequestParams().url },
-      skipAuth: true,
     })
     const rows = Array.isArray(response.data) ? response.data : response.data?.content || []
     return rows[0] || {}
   },
   update: (payload) => dynamicApi.put(`/updateFooter/${payload.id}`, payload, {
     params: { url: getWebsiteRequestParams().url },
-    skipAuth: true,
   }).then((r) => r.data),
 }
 export const visionMissionService = {
