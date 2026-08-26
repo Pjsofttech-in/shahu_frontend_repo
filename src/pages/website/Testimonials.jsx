@@ -20,6 +20,7 @@ export default function Testimonials() {
   const [imageFile, setImageFile] = useState(null)
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
+  const [deleting, setDeleting] = useState(false)
   const [pageError, setPageError] = useState('')
 
   const getErrorMessage = (error, fallback) => {
@@ -121,12 +122,22 @@ export default function Testimonials() {
 
   // ── delete ────────────────────────────────────────────────────────────────
   const handleDelete = async () => {
+    const testimonialId = deleteTarget?.testimonialId ?? deleteTarget?.id
+    if (!testimonialId) {
+      setPageError('Cannot delete this testimonial because its ID is missing.')
+      setDeleteTarget(null)
+      return
+    }
+
+    setDeleting(true)
     try {
-      await testimonialService.remove(deleteTarget.testimonialId)
-      setRows((prev) => prev.filter((r) => r.testimonialId !== deleteTarget.testimonialId))
+      await testimonialService.remove(testimonialId)
+      await loadTestimonials()
       setDeleteTarget(null)
     } catch (error) {
       setPageError(getErrorMessage(error, 'Could not delete testimonial.'))
+    } finally {
+      setDeleting(false)
     }
   }
 
@@ -354,11 +365,11 @@ export default function Testimonials() {
               </p>
             </div>
             <div className="modal-footer">
-              <button className="btn btn-outline" onClick={() => setDeleteTarget(null)}>
+              <button className="btn btn-outline" onClick={() => setDeleteTarget(null)} disabled={deleting}>
                 Cancel
               </button>
-              <button className="btn btn-danger" onClick={handleDelete}>
-                <FiTrash2 /> Delete
+              <button className="btn btn-danger" onClick={handleDelete} disabled={deleting}>
+                <FiTrash2 /> {deleting ? 'Deleting...' : 'Delete'}
               </button>
             </div>
           </div>

@@ -347,7 +347,7 @@ export const facultyService = {
     const form = new FormData()
     form.append('facility', JSON.stringify(values))
     form.append('url', getWebsiteRequestParams().url)
-    if (image) form.append('facilityImage', image)
+    if (image) form.append('facilityImageName', image)
     return dynamicApiUpload.put(`/updateFacility/${id}`, form).then((r) => r.data)
   },
   remove: (id) => dynamicApi.delete(`/deleteFacility/${id}`, { params: { url: getWebsiteRequestParams().url } }).then((r) => r.data),

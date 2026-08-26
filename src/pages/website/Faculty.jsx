@@ -22,6 +22,7 @@ export default function Faculty() {
   const [error, setError] = useState('')
   const [image, setImage] = useState(null)
   const [saving, setSaving] = useState(false)
+  const [deleting, setDeleting] = useState(false)
 
   const load = useCallback(async () => {
     setLoading(true)
@@ -119,12 +120,15 @@ export default function Faculty() {
   // ── delete ────────────────────────────────────────────────────────────────
   const handleDelete = async () => {
     if (!deleteTarget) return
+    setDeleting(true)
     try {
       await facultyService.remove(deleteTarget.id)
       setDeleteTarget(null)
       await load()
     } catch (deleteError) {
       setError(deleteError?.response?.data?.message || deleteError?.response?.data?.error || deleteError?.message || 'Delete failed.')
+    } finally {
+      setDeleting(false)
     }
   }
 
@@ -258,7 +262,7 @@ export default function Faculty() {
 
                 {/* Buttons */}
                 <div style={{ display: 'flex', gap: 10, marginTop: 4 }}>
-                  <button type="submit" className="btn btn-primary">
+                  <button type="submit" className="btn btn-primary" disabled={saving}>
                     <FiSave /> {view === 'edit' ? 'Update Faculty' : 'Save Faculty'}
                   </button>
                   <button type="button" className="btn btn-outline" onClick={goBack}>
@@ -364,11 +368,11 @@ export default function Faculty() {
               </p>
             </div>
             <div className="modal-footer">
-              <button className="btn btn-outline" onClick={() => setDeleteTarget(null)}>
+              <button className="btn btn-outline" onClick={() => setDeleteTarget(null)} disabled={deleting}>
                 Cancel
               </button>
-              <button className="btn btn-danger" onClick={handleDelete}>
-                <FiTrash2 /> Delete
+              <button className="btn btn-danger" onClick={handleDelete} disabled={deleting}>
+                <FiTrash2 /> {deleting ? 'Deleting...' : 'Delete'}
               </button>
             </div>
           </div>
