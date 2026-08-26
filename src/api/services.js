@@ -204,9 +204,17 @@ export const footerService = {
     const rows = Array.isArray(response.data) ? response.data : response.data?.content || []
     return rows[0] || {}
   },
-  update: (payload) => dynamicApi.put(`/updateFooter/${payload.id}`, payload, {
-    params: { url: getWebsiteRequestParams().url },
-  }).then((r) => r.data),
+  update: (payload) => {
+    const request = payload?.id
+      ? dynamicApi.put(`/updateFooter/${payload.id}`, payload, {
+        params: { url: getWebsiteRequestParams().url },
+      })
+      : dynamicApi.post('/createFooter', payload, {
+        params: { url: getWebsiteRequestParams().url },
+      })
+
+    return request.then((r) => r.data)
+  },
 }
 export const visionMissionService = {
   get: () => dynamicApi.get('/website/vision-mission').then((r) => r.data),
