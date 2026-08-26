@@ -539,6 +539,7 @@ table.data-table tr.is-clickable:hover td:not(:last-child) { color: var(--blue-7
   max-height: min(86vh, 900px); overflow: hidden; box-shadow: var(--shadow-md);
   display: flex; flex-direction: column;
 }
+.modal-box > form { display: flex; flex-direction: column; min-height: 0; overflow: hidden; }
 .modal-header {
   display: flex; align-items: center; justify-content: space-between;
   padding: 18px 22px; border-bottom: 1px solid var(--border);
