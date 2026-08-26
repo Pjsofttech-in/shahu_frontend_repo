@@ -128,7 +128,7 @@ export default function DynamicMediaManager({
     } catch (saveError) {
       const status = saveError?.response?.status
       setError(status === 401
-        ? 'The live backend is rejecting this public request. Allow this Hero/Feature endpoint in Spring Security.'
+        ? 'The live backend rejected the admin token. Check the Hero/Feature endpoint permissions in Spring Security.'
         : status === 413
           ? 'Image is still too large for the live server. Please choose a smaller image.'
           : getError(saveError))

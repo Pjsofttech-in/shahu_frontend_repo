@@ -1,4 +1,4 @@
-import api, { apiUpload, dynamicApi, dynamicApiUpload, publicDynamicApi, publicDynamicApiUpload, rootApi, tokenStore } from './axiosConfig'
+import api, { apiUpload, dynamicApi, dynamicApiUpload, rootApi, tokenStore } from './axiosConfig'
 
 // ---------------------------------------------------------------------
 // Generic CRUD factory — matches the pattern used across your Spring Boot
@@ -228,7 +228,7 @@ export const contactFormService = {
 export const notificationService = makeDynamicCrudService('/notifications')
 
 const dynamicMediaService = ({ listPath, createPath, updatePath, deletePath, jsonField, imageField }) => ({
-  getAll: () => publicDynamicApi.get(listPath, {
+  getAll: () => dynamicApi.get(listPath, {
     params: { url: getWebsiteRequestParams().url },
   }).then((r) => r.data),
   create: (values, image) => {
@@ -236,16 +236,16 @@ const dynamicMediaService = ({ listPath, createPath, updatePath, deletePath, jso
     form.append(jsonField, JSON.stringify(values))
     form.append('url', getWebsiteRequestParams().url)
     if (image) form.append(imageField, image)
-    return publicDynamicApiUpload.post(createPath, form).then((r) => r.data)
+    return dynamicApiUpload.post(createPath, form).then((r) => r.data)
   },
   update: (id, values, image) => {
     const form = new FormData()
     form.append(jsonField, JSON.stringify(values))
     form.append('url', getWebsiteRequestParams().url)
     if (image) form.append(imageField, image)
-    return publicDynamicApiUpload.put(`${updatePath}/${id}`, form).then((r) => r.data)
+    return dynamicApiUpload.put(`${updatePath}/${id}`, form).then((r) => r.data)
   },
-  remove: (id) => publicDynamicApi.delete(`${deletePath}/${id}`, {
+  remove: (id) => dynamicApi.delete(`${deletePath}/${id}`, {
     params: { url: getWebsiteRequestParams().url },
   }).then((r) => r.data),
 })
