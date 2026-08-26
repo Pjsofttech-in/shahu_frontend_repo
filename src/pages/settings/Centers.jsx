@@ -48,6 +48,7 @@ export default function Centers() {
         addLabel="Add Center"
         initialFormValues={initialFormValues}
         showEditAction={false}
+        uniqueFields={['centerCode']}
         searchKeys={['centerName', 'centerCode']}
         searchPlaceholder="Search centers…"
         columns={[

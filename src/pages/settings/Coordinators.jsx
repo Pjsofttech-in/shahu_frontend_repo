@@ -97,6 +97,7 @@ export default function Coordinators() {
       addLabel="Add Coordinator"
       initialFormValues={initialFormValues}
       showEditAction={false}
+      uniqueFields={['email']}
       searchKeys={['fullName', 'full_name', 'name', 'email', 'mobile']}
       searchPlaceholder="Search coordinators…"
       columns={[

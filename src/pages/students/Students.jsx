@@ -21,6 +21,7 @@ const paymentModeOptions = [
 
 const paymentStatusOptions = [
   { label: 'Pending', value: 'PENDING' },
+  { label: 'Completed', value: 'COMPLETED' },
 ]
 
 const loadUserOptions = async () => {
@@ -285,7 +286,7 @@ export default function Students() {
         return payload
       }}
       extraToolbar={(
-        <>
+        <div className="student-filters">
           <div className="form-group">
             <label>District</label>
             <select value={districtFilter} onChange={(e) => setDistrictFilter(e.target.value)}>
@@ -328,7 +329,7 @@ export default function Students() {
               {classOptions.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
             </select>
           </div>
-        </>
+        </div>
       )}
       onResetFilters={() => {
         setClassFilter('')

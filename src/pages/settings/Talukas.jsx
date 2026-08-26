@@ -50,6 +50,7 @@ export default function Talukas() {
         addLabel="Add Taluka"
         initialFormValues={initialFormValues}
         showEditAction={false}
+        uniqueFields={['talukaName', 'districtId']}
         searchKeys={['talukaName']}
         searchPlaceholder="Search talukas…"
         filterFn={(row) => {

@@ -30,6 +30,7 @@ export default function CrudManager({
   showCreateAction = true,
   initialFormValues = {},
   onResetFilters,
+  uniqueFields = [],
 }) {
   const [rows, setRows] = useState([])
   const [loading, setLoading] = useState(true)
@@ -228,6 +229,29 @@ export default function CrudManager({
       }
 
       payload = normalizeIdFields(payload)
+
+      if (uniqueFields.length > 0) {
+        const readField = (record, field) => {
+          const aliases = {
+            districtId: ['districtId', 'district_id', 'district.id'],
+            talukaId: ['talukaId', 'taluka_id', 'taluka.id'],
+            centerId: ['centerId', 'center_id', 'center.id'],
+          }
+          const keys = aliases[field] || [field]
+          return keys
+            .map((key) => key.split('.').reduce((value, part) => value?.[part], record))
+            .find((value) => value !== undefined && value !== null)
+        }
+        const normalizedValue = (value) => String(value ?? '').trim().toLowerCase()
+        const duplicate = rows.some((row) => {
+          if (editing && row.id === editing.id) return false
+          return uniqueFields.every((field) => normalizedValue(readField(payload, field)) === normalizedValue(readField(row, field)))
+        })
+
+        if (duplicate) {
+          throw new Error('This entry already exists. Please use a different value.')
+        }
+      }
 
       // Ensure all ID fields are numeric and never null/undefined for required foreign keys
       // Remove null/undefined values to avoid sending them to the backend

@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import { FiMapPin, FiHome, FiUserCheck, FiUsers, FiActivity, FiArrowUpRight } from 'react-icons/fi'
 import Layout from '../components/layout/Layout.jsx'
-import HorizontalNav, { dashboardLinks } from '../components/layout/HorizontalNav.jsx'
 import { districtService, talukaService, centerService, coordinatorService, studentService, syllabusService } from '../api/services.js'
 
 const StatCard = ({ icon, label, value, color }) => (
@@ -46,7 +45,6 @@ export default function Dashboard() {
   return (
     <Layout
       title="Dashboard"
-      horizontalNav={<HorizontalNav links={dashboardLinks} />}
     >
       <div className="page-header">
         <div>

@@ -14,6 +14,7 @@ export default function Districts() {
         service={districtService}
         addLabel="Add District"
         showEditAction={false}
+        uniqueFields={['districtName']}
         searchKeys={['districtName']}
         searchPlaceholder="Search districts…"
         columns={[
