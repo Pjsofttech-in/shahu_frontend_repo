@@ -135,7 +135,10 @@ export default function Testimonials() {
       await loadTestimonials()
       setDeleteTarget(null)
     } catch (error) {
-      setPageError(getErrorMessage(error, 'Could not delete testimonial.'))
+      const message = getErrorMessage(error, 'Could not delete testimonial.')
+      setPageError(/fileUrl.*null|startsWith.*null/i.test(message)
+        ? 'The backend cannot delete a testimonial without an image URL. Please add the backend null check for fileUrl.'
+        : message)
     } finally {
       setDeleting(false)
     }
