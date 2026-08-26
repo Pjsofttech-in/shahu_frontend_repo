@@ -12,7 +12,7 @@ import axios from 'axios'
 const envBaseUrl = import.meta.env.VITE_API_BASE_URL?.trim()
 const API_BASE_URL = (envBaseUrl || '/api').replace(/\/$/, '')
 const dynamicEnvBaseUrl = import.meta.env.VITE_DYNAMIC_PROFILE_API_BASE_URL?.trim()
-const DYNAMIC_PROFILE_API_BASE_URL = (dynamicEnvBaseUrl || '/api2').replace(/\/$/, '')
+const DYNAMIC_PROFILE_API_BASE_URL = (dynamicEnvBaseUrl || '/api/api2').replace(/\/$/, '')
 const USE_COOKIES = (import.meta.env.VITE_API_USE_COOKIES || '').toString() === 'true'
 const PUBLIC_AUTH_ENDPOINTS = [/^\/auth\/login(?:\/)?$/i, /^\/auth\/register(?:\/)?$/i, /^\/auth\/refresh(?:\/)?$/i]
 
@@ -34,6 +34,12 @@ export const dynamicApi = axios.create({
 export const publicDynamicApi = axios.create({
   baseURL: DYNAMIC_PROFILE_API_BASE_URL,
   headers: { 'Content-Type': 'application/json' },
+})
+
+publicDynamicApi.interceptors.request.use((config) => {
+  config.withCredentials = false
+  if (config.headers?.Authorization) delete config.headers.Authorization
+  return config
 })
 
 export const publicDynamicApiUpload = axios.create({
