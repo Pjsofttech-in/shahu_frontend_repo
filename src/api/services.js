@@ -1,4 +1,4 @@
-import api, { apiUpload, dynamicApi, dynamicApiUpload, publicDynamicApi, publicDynamicApiUpload, tokenStore } from './axiosConfig'
+import api, { apiUpload, dynamicApi, dynamicApiUpload, publicDynamicApi, publicDynamicApiUpload, rootApi, tokenStore } from './axiosConfig'
 
 // ---------------------------------------------------------------------
 // Generic CRUD factory — matches the pattern used across your Spring Boot
@@ -355,11 +355,11 @@ export const facultyService = {
 
 // ---------------- Sankalp Exam ----------------
 export const syllabusService = {
-  getAll: () => api.get('/getAllSyllabus').then((r) => r.data),
-  getById: (id) => api.get(`/getSyllabusById/${id}`).then((r) => r.data),
-  create: (payload) => api.post('/createSyllabus', payload).then((r) => r.data),
-  update: (id, payload) => api.put(`/updateSyllabus/${id}`, payload).then((r) => r.data),
-  remove: (id) => api.delete(`/deleteSyllabus/${id}`).then((r) => r.data),
+  getAll: () => rootApi.get('/getAllSyllabus').then((r) => r.data),
+  getById: (id) => rootApi.get(`/getSyllabusById/${id}`).then((r) => r.data),
+  create: (payload) => rootApi.post('/createSyllabus', payload).then((r) => r.data),
+  update: (id, payload) => rootApi.put(`/updateSyllabus/${id}`, payload).then((r) => r.data),
+  remove: (id) => rootApi.delete(`/deleteSyllabus/${id}`).then((r) => r.data),
 }
 export const resultCheckService = makeCrudService('/sankalp/results')
 export const resultPdfService = makeCrudService('/sankalp/result-pdfs')

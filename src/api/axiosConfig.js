@@ -11,6 +11,7 @@ import axios from 'axios'
 
 const envBaseUrl = import.meta.env.VITE_API_BASE_URL?.trim()
 const API_BASE_URL = (envBaseUrl || '/api').replace(/\/$/, '')
+const ROOT_API_BASE_URL = API_BASE_URL.replace(/\/api$/, '') || '/api'
 const dynamicEnvBaseUrl = import.meta.env.VITE_DYNAMIC_PROFILE_API_BASE_URL?.trim()
 const DYNAMIC_PROFILE_API_BASE_URL = (dynamicEnvBaseUrl || '/api/api2').replace(/\/$/, '')
 const USE_COOKIES = (import.meta.env.VITE_API_USE_COOKIES || '').toString() === 'true'
@@ -24,6 +25,13 @@ const api = axios.create({
   headers: {
     'Content-Type': 'application/json',
   }
+})
+
+export const rootApi = axios.create({
+  baseURL: ROOT_API_BASE_URL,
+  headers: {
+    'Content-Type': 'application/json',
+  },
 })
 
 export const dynamicApi = axios.create({
@@ -144,6 +152,15 @@ api.interceptors.request.use(
   },
   (error) => Promise.reject(error)
 )
+
+rootApi.interceptors.request.use((config) => {
+  const token = tokenStore.get()
+  if (token) {
+    config.headers = config.headers || {}
+    config.headers.Authorization = 'Bearer ' + token
+  }
+  return config
+})
 
 // --------------------------------------------------
 // HANDLE UNAUTHORIZED TOKEN
