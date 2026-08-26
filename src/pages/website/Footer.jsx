@@ -35,7 +35,6 @@ export default function Footer() {
         preview={FooterPreview}
         fields={[
           { name: 'title', label: 'Title', type: 'text', required: true },
-          { name: 'footerColor', label: 'Footer Color', type: 'text' },
           { name: 'address', label: 'Address', type: 'textarea' },
           { name: 'mobileNumber', label: 'Mobile Number', type: 'tel' },
           { name: 'email', label: 'Email', type: 'email' },
