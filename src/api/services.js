@@ -361,11 +361,23 @@ export const facultyService = {
 
 // ---------------- Sankalp Exam ----------------
 export const syllabusService = {
-  getAll: () => rootApi.get('/getAllSyllabus').then((r) => r.data),
-  getById: (id) => rootApi.get(`/getSyllabusById/${id}`).then((r) => r.data),
-  create: (payload) => rootApi.post('/createSyllabus', payload).then((r) => r.data),
-  update: (id, payload) => rootApi.put(`/updateSyllabus/${id}`, payload).then((r) => r.data),
-  remove: (id) => rootApi.delete(`/deleteSyllabus/${id}`).then((r) => r.data),
+  getAll: () => api.get('/getAllSyllabus').then((r) => r.data),
+  getById: (id) => api.get(`/getSyllabusById/${id}`).then((r) => r.data),
+  create: (payload) => {
+    const form = new FormData()
+    const { syllabusFile, ...syllabus } = payload
+    form.append('syllabus', JSON.stringify(syllabus))
+    form.append('syllabusFile', syllabusFile)
+    return apiUpload.post('/createSyllabus', form).then((r) => r.data)
+  },
+  update: (id, payload) => {
+    const form = new FormData()
+    const { syllabusFile, ...syllabus } = payload
+    form.append('syllabus', JSON.stringify(syllabus))
+    form.append('syllabusFile', syllabusFile)
+    return apiUpload.put(`/updateSyllabus/${id}`, form).then((r) => r.data)
+  },
+  remove: (id) => api.delete(`/deleteSyllabus/${id}`).then((r) => r.data),
 }
 export const resultCheckService = makeCrudService('/sankalp/results')
 export const resultPdfService = makeCrudService('/sankalp/result-pdfs')
@@ -374,7 +386,39 @@ export const sectionService = {
   getAll: () => rootApi.get('/sections').then((r) => r.data),
   getById: (id) => rootApi.get(`/sections/${id}`).then((r) => r.data),
   create: (payload) => rootApi.post('/sections', payload).then((r) => r.data),
+  update: (id, payload) => rootApi.put(`/sections/${id}`, payload).then((r) => r.data),
   remove: (id) => rootApi.delete(`/sections/${id}`).then((r) => r.data),
+}
+export const questionService = {
+  getAll: () => api.get('/questions').then((r) => r.data),
+  getById: (id) => api.get(`/questions/${id}`).then((r) => r.data),
+  create: (payload) => api.post('/questions', payload).then((r) => r.data),
+  update: (id, payload) => api.put(`/questions/${id}`, payload).then((r) => r.data),
+  remove: (id) => api.delete(`/questions/${id}`).then((r) => r.data),
+}
+export const examService = {
+  getAll: () => api.get('/exams').then((r) => r.data),
+  getById: (id) => api.get(`/exams/${id}`).then((r) => r.data),
+  create: (values, image) => {
+    const form = new FormData()
+    form.append('exam', JSON.stringify(values))
+    if (image) form.append('examImage', image)
+    return apiUpload.post('/exams', form).then((r) => r.data)
+  },
+  update: (id, values, image) => {
+    const form = new FormData()
+    form.append('exam', JSON.stringify(values))
+    if (image) form.append('examImage', image)
+    return apiUpload.put(`/exams/${id}`, form).then((r) => r.data)
+  },
+  remove: (id) => api.delete(`/exams/${id}`).then((r) => r.data),
+}
+export const examQuestionService = {
+  getAll: (examId) => api.get(`/exams/${examId}/questions`).then((r) => r.data),
+  add: (examId, payload) => api.post(`/exams/${examId}/questions`, payload).then((r) => r.data),
+  remove: (examId, questionId) => api.delete(`/exams/${examId}/questions/${questionId}`).then((r) => r.data),
+  updateSequence: (examId, questionId, sequence) => api.put(`/exams/${examId}/questions/${questionId}/sequence`, sequence).then((r) => r.data),
+  updateMarks: (examId, questionId, marks) => api.put(`/exams/${examId}/questions/${questionId}/marks`, marks).then((r) => r.data),
 }
 export const testSeriesService = {
   getAll: () => api.get('/test-series').then((r) => r.data),

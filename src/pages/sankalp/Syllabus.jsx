@@ -1,13 +1,13 @@
 import React from 'react'
 import { FiFileText } from 'react-icons/fi'
 import CrudManager from '../../components/common/CrudManager.jsx'
-import { syllabusService, uploadFile } from '../../api/services.js'
+import { syllabusService } from '../../api/services.js'
 
 export default function Syllabus() {
   return (
     <CrudManager
         title="Syllabus"
-        subtitle="Upload syllabus documents with a title and optional PDF or link."
+        subtitle="Manage syllabus documents from the live database."
         service={syllabusService}
         addLabel="Add Syllabus"
         searchKeys={['title', 'link']}
@@ -26,7 +26,7 @@ export default function Syllabus() {
         fields={[
           { name: 'title', label: 'Title', type: 'text', required: true },
           { name: 'link', label: 'Link', type: 'url', placeholder: 'https://example.com/syllabus.pdf' },
-          { name: 'file', label: 'PDF File', type: 'file', accept: 'application/pdf' },
+          { name: 'file', label: 'PDF File', type: 'file', accept: 'application/pdf', required: true },
         ]}
         transformSubmit={async (values) => {
           const title = (values.title ?? '').trim()
@@ -35,16 +35,15 @@ export default function Syllabus() {
           if (!title) {
             throw new Error('Title is required')
           }
-          let savedLink = link
-          if (!savedLink && values.file instanceof File) {
-            savedLink = (await uploadFile(values.file, 'sankalp/syllabus')).url
+          if (!(values.file instanceof File)) {
+            throw new Error('Please select a PDF file')
           }
 
-          if (!savedLink) {
-            throw new Error('Please provide either a PDF file or a link')
+          return {
+            title,
+            link,
+            syllabusFile: values.file,
           }
-
-          return { title, link: savedLink }
         }}
       />
   )

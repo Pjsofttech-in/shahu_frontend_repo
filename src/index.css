@@ -715,6 +715,33 @@ table.data-table tbody tr { transition: background .16s ease; }
 .test-series-add-form input { flex: 1 1 260px; min-width: 0; }
 .test-series-add-form .btn { flex: 0 0 auto; }
 .test-series-table-wrap { border-radius: 8px; }
+
+.question-bank-page { width: 100%; max-width: 1180px; margin: 0 auto; }
+.question-bank-form { display: flex; flex-direction: column; gap: 20px; }
+.question-bank-form-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px 18px; }
+.question-bank-form-grid .full-width { grid-column: 1 / -1; }
+.question-bank-form-grid .form-group { min-width: 0; }
+.question-bank-form-grid textarea,
+.question-bank-form-grid input,
+.question-bank-form-grid select { width: 100%; }
+.question-bank-actions { display: flex; gap: 12px; justify-content: flex-start; flex-wrap: wrap; }
+.question-bank-toolbar { display: flex; justify-content: space-between; align-items: center; gap: 16px; padding: 0 4px 16px; }
+.card-title-wrap { display: inline-flex; align-items: center; gap: 8px; color: var(--text-700); font-weight: 600; }
+.question-bank-list-card { padding: 18px 18px 12px; }
+.search-box { display: flex; align-items: center; gap: 10px; min-width: min(100%, 280px); border: 1px solid var(--border); background: #f9fbff; border-radius: 10px; padding: 0 12px; }
+.search-box input { border: none; background: transparent; box-shadow: none; }
+.search-box svg { color: var(--text-500); }
+.question-bank-table td:nth-child(2) { max-width: 420px; }
+.empty-state { display: flex; align-items: center; justify-content: center; flex-direction: column; gap: 8px; padding: 20px 10px; color: var(--text-500); }
+.empty-icon { font-size: 30px; opacity: .55; }
+
+@media (max-width: 760px) {
+  .question-bank-form-grid { grid-template-columns: 1fr; }
+  .question-bank-toolbar { flex-direction: column; align-items: stretch; }
+  .search-box { min-width: 0; }
+  .question-bank-actions { flex-direction: column; }
+  .question-bank-actions .btn { width: 100%; justify-content: center; }
+}
 .test-series-table th { background: #fafafa; color: var(--text-900); text-transform: none; letter-spacing: 0; font-size: 12px; }
 .test-series-table td:nth-child(2) { color: var(--blue-500); }
 .test-series-table th:first-child, .test-series-table td:first-child { width: 14%; }
