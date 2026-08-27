@@ -2,7 +2,8 @@ import React from 'react'
 import { NavLink } from 'react-router-dom'
 import {
   FiBook, FiFileText, FiMapPin, FiMap, FiHome, FiUserCheck,
-  FiLayers, FiImage, FiAward, FiStar, FiUser, FiTarget, FiDownload, FiPhone
+  FiLayers, FiImage, FiAward, FiStar, FiUser, FiTarget, FiDownload, FiPhone,
+  FiGrid, FiPlus, FiCheckSquare, FiSettings
 } from 'react-icons/fi'
 
 export const dashboardLinks = [
@@ -25,6 +26,24 @@ export const sankalpLinks = [
 // Settings Submenu
 export const settingsLinks = [
   { to: '/settings/districts', label: 'Districts', icon: <FiMapPin /> },
+  { to: '/settings/talukas', label: 'Talukas', icon: <FiMap /> },
+  { to: '/settings/centers', label: 'Centers', icon: <FiHome /> },
+  { to: '/settings/coordinators', label: 'Coordinators', icon: <FiUserCheck /> },
+]
+
+export const testSeriesLinks = [
+  { to: '/test-series', label: 'Dashboard', icon: <FiGrid />, end: true },
+  { to: '/test-series/series', label: 'Series', icon: <FiLayers /> },
+  { to: '/test-series/paper', label: 'Paper', icon: <FiFileText /> },
+  { to: '/test-series/question-bank', label: 'Question Bank', icon: <FiBook /> },
+  { to: '/test-series/add-question', label: 'Add Question', icon: <FiPlus /> },
+  { to: '/test-series/solved-paper', label: 'Solved Paper', icon: <FiCheckSquare /> },
+  { to: '/test-series/settings', label: 'Settings', icon: <FiSettings /> },
+]
+
+export const testSeriesSettingsLinks = [
+  { to: '/test-series/settings/categories', label: 'Test Categories', icon: <FiGrid /> },
+  { to: '/test-series/settings/sections', label: 'Test Sections', icon: <FiLayers /> },
 ]
 
 // Website Management Submenu
@@ -64,6 +83,7 @@ export default function HorizontalNav({ links, title }) {
           <NavLink
             key={link.to}
             to={link.to}
+            end={link.end}
             state={{ websiteNavGroup: link.group }}
             className={({ isActive }) => `horizontal-nav-link ${isActive ? 'active' : ''}`}
           >
@@ -76,9 +96,9 @@ export default function HorizontalNav({ links, title }) {
   )
 }
 
-export function VerticalNav({ links, title }) {
+export function VerticalNav({ links, title, className = '' }) {
   return (
-    <nav className="vertical-nav">
+    <nav className={`vertical-nav ${className}`.trim()}>
       {title && <div className="vertical-nav-title">{title}</div>}
       <div className="vertical-nav-links">
         {links.map((link) => (

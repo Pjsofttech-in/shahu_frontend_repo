@@ -369,6 +369,30 @@ export const syllabusService = {
 }
 export const resultCheckService = makeCrudService('/sankalp/results')
 export const resultPdfService = makeCrudService('/sankalp/result-pdfs')
+export const categoryService = makeCrudService('/categories')
+export const sectionService = {
+  getAll: () => rootApi.get('/sections').then((r) => r.data),
+  getById: (id) => rootApi.get(`/sections/${id}`).then((r) => r.data),
+  create: (payload) => rootApi.post('/sections', payload).then((r) => r.data),
+  remove: (id) => rootApi.delete(`/sections/${id}`).then((r) => r.data),
+}
+export const testSeriesService = {
+  getAll: () => api.get('/test-series').then((r) => r.data),
+  getById: (id) => api.get(`/test-series/${id}`).then((r) => r.data),
+  create: (values, image) => {
+    const form = new FormData()
+    form.append('testSeries', JSON.stringify(values))
+    if (image) form.append('testSeriesImage', image)
+    return apiUpload.post('/test-series', form).then((r) => r.data)
+  },
+  update: (id, values, image) => {
+    const form = new FormData()
+    form.append('testSeries', JSON.stringify(values))
+    if (image) form.append('testSeriesImage', image)
+    return apiUpload.put(`/test-series/${id}`, form).then((r) => r.data)
+  },
+  remove: (id) => api.delete(`/test-series/${id}`).then((r) => r.data),
+}
 
 // Answer Key — uses multipart/form-data (PDF upload) — POST/PUT /api/answerkeys
 export const answerKeyService = {

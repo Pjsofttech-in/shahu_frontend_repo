@@ -2,7 +2,7 @@ import React from 'react'
 import { NavLink, useLocation } from 'react-router-dom'
 import { useState } from 'react'
 import {
-  FiGrid, FiUsers, FiFileText, FiSettings, FiGlobe, FiHome, FiPhone, FiChevronsLeft, FiChevronsRight
+  FiGrid, FiUsers, FiFileText, FiSettings, FiGlobe, FiHome, FiPhone, FiBookOpen, FiChevronsLeft, FiChevronsRight
 } from 'react-icons/fi'
 
 export default function Sidebar() {
@@ -12,6 +12,7 @@ export default function Sidebar() {
   // Check if current path matches a section
   const isStudentsActive = location.pathname.startsWith('/students')
   const isSankalpActive = location.pathname.startsWith('/sankalp-exam')
+  const isTestSeriesActive = location.pathname.startsWith('/test-series')
   const isSettingsActive = location.pathname.startsWith('/settings')
   const isWebsiteActive = location.pathname.startsWith('/website')
   const isWebsiteHomeActive = location.pathname === '/website/home'
@@ -56,6 +57,13 @@ export default function Sidebar() {
           className={`sidebar-link ${isSankalpActive ? 'active' : ''}`}
         >
           <FiFileText /> <span>Sankalp Exam</span>
+        </NavLink>
+
+        <NavLink
+          to="/test-series"
+          className={`sidebar-link ${isTestSeriesActive ? 'active' : ''}`}
+        >
+          <FiBookOpen /> <span>Test Series</span>
         </NavLink>
 
         {/* Website Management */}

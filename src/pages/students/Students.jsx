@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react'
+import { FiChevronDown } from 'react-icons/fi'
 import CrudManager from '../../components/common/CrudManager.jsx'
 import {
   studentService,
@@ -45,7 +46,7 @@ const loadTalukaOptions = async (fv) => {
   const list = await talukasByDistrict(fv.districtId)
   return list.map((t) => ({
     label: t?.name || t?.talukaName || t?.title || t?.label || `#${t?.id}`,
-    value: t?.id,
+    value: t?.id ?? t?.talukaId ?? t?.taluka_id,
   }))
 }
 
@@ -58,7 +59,7 @@ const loadCenterOptions = async (fv) => {
     const district = c?.district?.name || c?.districtName
     const suffix = [taluka, district].filter(Boolean).join(', ')
     const label = suffix ? `${name} (${suffix})` : name
-    return { label, value: c?.id }
+    return { label, value: c?.id ?? c?.centerId ?? c?.center_id }
   })
 }
 
@@ -74,6 +75,13 @@ const isValidIndianMobile = (value) => {
   const digits = String(value ?? '').replace(/\s+/g, '').replace(/\+/g, '')
   return /^9\d{9}$|^8\d{9}$|^7\d{9}$|^6\d{9}$/.test(digits)
 }
+
+const FilterSelect = ({ children, ...props }) => (
+  <div className="filter-select-wrap">
+    <select {...props}>{children}</select>
+    <FiChevronDown className="filter-select-icon" aria-hidden="true" />
+  </div>
+)
 
 export default function Students() {
   const [classFilter, setClassFilter] = useState('')
@@ -289,45 +297,45 @@ export default function Students() {
         <div className="student-filters">
           <div className="form-group">
             <label>District</label>
-            <select value={districtFilter} onChange={(e) => setDistrictFilter(e.target.value)}>
+            <FilterSelect value={districtFilter} onChange={(e) => setDistrictFilter(e.target.value)}>
               <option value="">All Districts</option>
               {districtOptions.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
-            </select>
+            </FilterSelect>
           </div>
           <div className="form-group">
             <label>Taluka</label>
-            <select value={talukaFilter} onChange={(e) => setTalukaFilter(e.target.value)} disabled={!districtFilter}>
+            <FilterSelect value={talukaFilter} onChange={(e) => setTalukaFilter(e.target.value)} disabled={!districtFilter}>
               <option value="">All Talukas</option>
               {talukaOptions.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
-            </select>
+            </FilterSelect>
           </div>
           <div className="form-group">
             <label>Center</label>
-            <select value={centerFilter} onChange={(e) => setCenterFilter(e.target.value)} disabled={!talukaFilter}>
+            <FilterSelect value={centerFilter} onChange={(e) => setCenterFilter(e.target.value)} disabled={!talukaFilter}>
               <option value="">All Centers</option>
               {centerOptions.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
-            </select>
+            </FilterSelect>
           </div>
           <div className="form-group">
             <label>Coordinator</label>
-            <select value={coordinatorFilter} onChange={(e) => setCoordinatorFilter(e.target.value)}>
+            <FilterSelect value={coordinatorFilter} onChange={(e) => setCoordinatorFilter(e.target.value)}>
               <option value="">All Coordinators</option>
               {coordinatorOptions.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
-            </select>
+            </FilterSelect>
           </div>
           <div className="form-group">
             <label>Payment Status</label>
-            <select value={paymentStatusFilter} onChange={(e) => setPaymentStatusFilter(e.target.value)}>
+            <FilterSelect value={paymentStatusFilter} onChange={(e) => setPaymentStatusFilter(e.target.value)}>
               <option value="">All Payment Statuses</option>
               {paymentStatusOptions.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
-            </select>
+            </FilterSelect>
           </div>
           <div className="form-group">
             <label>Class</label>
-            <select value={classFilter} onChange={(e) => setClassFilter(e.target.value)}>
+            <FilterSelect value={classFilter} onChange={(e) => setClassFilter(e.target.value)}>
               <option value="">All Classes</option>
               {classOptions.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
-            </select>
+            </FilterSelect>
           </div>
         </div>
       )}
@@ -342,8 +350,8 @@ export default function Students() {
       filterFn={(row) => (
         (!classFilter || (row.studentClass || row.standard || '') === classFilter) &&
         matchesFilter(row, districtFilter, ['districtId', 'district.id'], ['districtName', 'district.name', 'district.districtName']) &&
-        matchesFilter(row, talukaFilter, ['talukaId', 'taluka.id'], ['talukaName', 'taluka.name', 'taluka.talukaName']) &&
-        matchesFilter(row, centerFilter, ['centerId', 'center.id'], ['centerName', 'center.name', 'center.centerName']) &&
+        matchesFilter(row, talukaFilter, ['talukaId', 'taluka_id', 'taluka.id', 'taluka.talukaId', 'taluka.taluka_id'], ['talukaName', 'taluka_name', 'taluka.name', 'taluka.talukaName', 'taluka.taluka_name']) &&
+        matchesFilter(row, centerFilter, ['centerId', 'center_id', 'center.id', 'center.centerId', 'center.center_id'], ['centerName', 'center_name', 'center.name', 'center.centerName', 'center.center_name']) &&
         matchesFilter(row, coordinatorFilter, ['coordinatorId', 'coordinator.id'], ['coordinatorName', 'coordinator.name', 'coordinator.fullName']) &&
         (!paymentStatusFilter || String(getPaymentStatus(row)).toUpperCase() === paymentStatusFilter)
       )}
