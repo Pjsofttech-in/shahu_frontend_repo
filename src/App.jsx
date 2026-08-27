@@ -10,7 +10,7 @@ import Profile from './pages/Profile.jsx'
 // Section wrappers with horizontal navigation
 import StudentsSection from './pages/students/StudentsSection.jsx'
 import SankalpSection from './pages/sankalp/SankalpSection.jsx'
-import TestSeriesSection from './pages/testseries/TestSeriesSection.jsx'
+import TestSeriesSection from "./pages/TestSeries/TestSeriesSection.jsx";
 import SettingsSection from './pages/settings/SettingsSection.jsx'
 import WebsiteSection from './pages/website/WebsiteSection.jsx'
 
