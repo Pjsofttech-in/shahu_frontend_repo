@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react'
-import { FiEdit2, FiImage, FiPlus, FiTrash2 } from 'react-icons/fi'
+import { FiEdit2, FiFileText, FiImage, FiPlus, FiTrash2 } from 'react-icons/fi'
 import Modal from '../../components/common/Modal.jsx'
-import { categoryService, testSeriesService } from '../../api/services.js'
+import { categoryService, examService, testSeriesService } from '../../api/services.js'
 
 const EMPTY_FORM = {
   title: '', description: '', price: '', mrp: '',
@@ -23,6 +23,10 @@ const getError = (error, fallback) => {
 }
 const getCategoryId = (row) => row.categoryId ?? row.category?.id ?? ''
 const getImageValue = (row) => row.image || row.imageUrl || row.imageName || row.testSeriesImage || row.testSeriesImageName || ''
+const getExamEntries = (row) => Array.isArray(row?.exams) ? row.exams : Array.isArray(row?.testSeriesExams) ? row.testSeriesExams : Array.isArray(row?.assignedExams) ? row.assignedExams : []
+const getExamId = (entry) => entry?.examId ?? entry?.exam?.id ?? entry?.id ?? entry?.exam_id ?? ''
+const getExamName = (entry) => entry?.exam?.examName || entry?.examName || entry?.name || `Exam #${getExamId(entry) || 'unknown'}`
+const getExamSequence = (entry) => Number(entry?.sequence ?? entry?.seq ?? 1) || 1
 const resolveImageUrl = (value) => {
   if (!value) return ''
   if (/^(data:|blob:|https?:\/\/)/i.test(value)) return value
@@ -50,6 +54,7 @@ export default function SeriesManager() {
   const [categoryFilter, setCategoryFilter] = useState('')
   const [activeFilter, setActiveFilter] = useState('')
   const [showModal, setShowModal] = useState(false)
+  const [examModal, setExamModal] = useState(null)
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
@@ -156,6 +161,83 @@ export default function SeriesManager() {
     }
   }
 
+  const openExamAssignment = async (row) => {
+    setExamModal({
+      seriesId: row.id,
+      seriesTitle: row.title || `Series #${row.id}`,
+      assigned: getExamEntries(row),
+      available: [],
+      examId: '',
+      sequence: Math.max(1, getExamEntries(row).length + 1),
+      loading: true,
+      error: '',
+    })
+
+    try {
+      const [seriesDetail, examData] = await Promise.all([testSeriesService.getById(row.id), examService.getAll()])
+      const assignedEntries = getExamEntries(seriesDetail)
+      const assignedIds = new Set(assignedEntries.map((entry) => Number(getExamId(entry))).filter((value) => Number.isFinite(value)))
+      const availableExams = getRows(examData).filter((exam) => !assignedIds.has(Number(exam.id)))
+
+      setExamModal({
+        seriesId: row.id,
+        seriesTitle: row.title || `Series #${row.id}`,
+        assigned: assignedEntries,
+        available: availableExams,
+        examId: availableExams[0]?.id ? String(availableExams[0].id) : '',
+        sequence: Math.max(1, assignedEntries.length + 1),
+        loading: false,
+        error: '',
+      })
+    } catch (modalError) {
+      setExamModal((current) => ({
+        ...(current || {
+          seriesId: row.id,
+          seriesTitle: row.title || `Series #${row.id}`,
+          assigned: [],
+          available: [],
+          examId: '',
+          sequence: 1,
+        }),
+        loading: false,
+        error: getError(modalError, 'Could not load exam assignments.'),
+      }))
+    }
+  }
+
+  const closeExamAssignment = () => setExamModal(null)
+
+  const addExamToSeries = async (event) => {
+    event.preventDefault()
+    if (!examModal?.seriesId || !examModal.examId) {
+      setExamModal((current) => ({ ...current, error: 'Please select an exam to add.' }))
+      return
+    }
+
+    try {
+      await testSeriesService.addExam(examModal.seriesId, {
+        examId: Number(examModal.examId),
+        sequence: Number(examModal.sequence) || 1,
+      })
+      await load()
+      await openExamAssignment(rows.find((row) => row.id === examModal.seriesId) || { id: examModal.seriesId, title: examModal.seriesTitle })
+    } catch (addError) {
+      setExamModal((current) => ({ ...current, error: getError(addError, 'Could not add the selected exam.') }))
+    }
+  }
+
+  const removeExamFromSeries = async (seriesId, examId) => {
+    if (!window.confirm('Remove this exam from the selected test series?')) return
+    try {
+      await testSeriesService.removeExam(seriesId, examId)
+      await load()
+      const currentRow = rows.find((row) => row.id === seriesId)
+      await openExamAssignment(currentRow || { id: seriesId, title: examModal?.seriesTitle || `Series #${seriesId}` })
+    } catch (removeError) {
+      setExamModal((current) => ({ ...current, error: getError(removeError, 'Could not remove the exam.') }))
+    }
+  }
+
   const filtered = rows.filter((row) => {
     const query = search.trim().toLowerCase()
     const matchesSearch = !query || [row.title, row.subject, row.description].some((value) => String(value || '').toLowerCase().includes(query))
@@ -195,7 +277,13 @@ export default function SeriesManager() {
                   <td><span className={`badge ${row.active === false ? 'badge-inactive' : 'badge-active'}`}>{row.active === false ? 'Inactive' : 'Active'}</span></td>
                   <td>{row.createdAt ? new Date(row.createdAt).toLocaleDateString() : '—'}</td>
                   <td><SeriesImage value={getImageValue(row)} className="series-thumb" /></td>
-                  <td><div className="table-actions"><button className="btn btn-outline btn-sm" type="button" onClick={() => openEdit(row)} aria-label={`Edit ${row.title}`}><FiEdit2 /></button><button className="btn btn-danger btn-sm" type="button" onClick={() => remove(row)} aria-label={`Delete ${row.title}`}><FiTrash2 /></button></div></td>
+                  <td>
+                    <div className="table-actions">
+                      <button className="btn btn-primary btn-sm" type="button" onClick={() => openExamAssignment(row)} aria-label={`Manage exams for ${row.title}`}><FiFileText /></button>
+                      <button className="btn btn-outline btn-sm" type="button" onClick={() => openEdit(row)} aria-label={`Edit ${row.title}`}><FiEdit2 /></button>
+                      <button className="btn btn-danger btn-sm" type="button" onClick={() => remove(row)} aria-label={`Delete ${row.title}`}><FiTrash2 /></button>
+                    </div>
+                  </td>
                 </tr>
               ))}
             </tbody>
@@ -203,7 +291,7 @@ export default function SeriesManager() {
         </div>
       </div>
 
-      {showModal && <Modal title={editing ? 'Edit Test Series' : 'Create Test Series'} onClose={closeModal} maxWidth="980px" footer={<><button className="btn btn-outline" type="button" onClick={closeModal}>Cancel</button><button className="btn btn-primary" type="submit" form="series-form" disabled={saving}>{saving ? 'Saving…' : editing ? 'Update' : 'Create'}</button></>}>
+{showModal && <Modal title={editing ? 'Edit Test Series' : 'Create Test Series'} onClose={closeModal} maxWidth="980px" footer={<><button className="btn btn-outline" type="button" onClick={closeModal}>Cancel</button><button className="btn btn-primary" type="submit" form="series-form" disabled={saving}>{saving ? 'Saving…' : editing ? 'Update' : 'Create'}</button></>}>
         {error && <div className="login-alert">{String(error)}</div>}
         <form id="series-form" onSubmit={submit} className="series-form">
           <div className="series-form-grid">
@@ -225,6 +313,50 @@ export default function SeriesManager() {
             <label className="series-active"><input name="active" type="checkbox" checked={!!form.active} onChange={change} /> Active</label>
           </div>
         </form>
+      </Modal>}
+
+      {examModal && <Modal title={`Manage Exams - ${examModal.seriesTitle}`} onClose={closeExamAssignment} maxWidth="760px" footer={<><button className="btn btn-outline" type="button" onClick={closeExamAssignment}>Close</button>{examModal.available.length > 0 && <button className="btn btn-primary" type="submit" form="exam-assign-form">Add Exam</button>}</>}>
+        {examModal.error && <div className="login-alert">{String(examModal.error)}</div>}
+        {examModal.loading ? <p>Loading exam assignments…</p> : (
+          <form id="exam-assign-form" onSubmit={addExamToSeries} className="series-form">
+            <div className="series-form-grid">
+              <div className="form-group">
+                <label>Select exam to add *</label>
+                <select value={examModal.examId} onChange={(event) => setExamModal((current) => ({ ...current, examId: event.target.value }))} disabled={examModal.available.length === 0}>
+                  <option value="">{examModal.available.length ? 'Choose an exam' : 'No exam available to add'}</option>
+                  {examModal.available.map((exam) => (
+                    <option key={exam.id} value={exam.id}>{exam.examName || `Exam #${exam.id}`}</option>
+                  ))}
+                </select>
+              </div>
+              <div className="form-group">
+                <label>Sequence</label>
+                <input type="number" min="1" value={examModal.sequence} onChange={(event) => setExamModal((current) => ({ ...current, sequence: event.target.value }))} />
+              </div>
+            </div>
+
+            <div className="form-group">
+              <label>Assigned Exams</label>
+              <div className="series-assignment-list">
+                {!examModal.assigned || examModal.assigned.length === 0 ? (
+                  <span className="muted-text">No exams assigned to this test series yet.</span>
+                ) : (
+                  examModal.assigned.map((entry) => {
+                    const examId = getExamId(entry)
+                    const examName = getExamName(entry)
+                    const sequence = getExamSequence(entry)
+                    return (
+                      <div key={`${examModal.seriesId}-${examId}`} className="series-assignment-item">
+                        <span><strong>#{sequence}</strong> {examName}</span>
+                        <button className="btn btn-danger btn-sm" type="button" onClick={() => removeExamFromSeries(examModal.seriesId, examId)}>Remove</button>
+                      </div>
+                    )
+                  })
+                )}
+              </div>
+            </div>
+          </form>
+        )}
       </Modal>}
     </section>
   )

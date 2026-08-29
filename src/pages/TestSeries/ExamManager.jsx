@@ -58,6 +58,7 @@ export default function ExamManager({ solvedOnly = false }) {
     if (!image) { setError('Exam image is required by the backend.'); return }
     const values = { ...form }
     delete values.image
+    delete values.active
     values.examName = values.examName.trim()
     values.categoryId = Number(values.categoryId)
     ;['totalMarks', 'totalQuestions', 'duration'].forEach((key) => { values[key] = Number(values[key]) })

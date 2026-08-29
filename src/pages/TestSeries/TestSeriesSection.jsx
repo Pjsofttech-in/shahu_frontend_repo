@@ -8,6 +8,7 @@ import SectionSettings from './SectionSettings.jsx'
 import ExamManager from './ExamManager.jsx'
 import QuestionManager from './QuestionManager.jsx'
 import ExamQuestionsPage from './ExamQuestionsPage.jsx'
+import TestSeriesPage from './TestSeriesPage.jsx'
 
 export default function TestSeriesSection() {
   const location = useLocation()
@@ -20,7 +21,7 @@ export default function TestSeriesSection() {
       verticalNav={isSettings ? <VerticalNav links={testSeriesSettingsLinks} title="Settings" className="test-series-settings-nav" /> : null}
     >
       <Routes>
-        <Route path="/" element={<Navigate to="/test-series/questions" replace />} />
+        <Route path="/" element={<TestSeriesPage title="Test Series" description="" />} />
         <Route path="/series" element={<SeriesManager />} />
         <Route path="/questions" element={<QuestionManager />} />
         <Route path="/exam" element={<ExamManager />} />
@@ -29,7 +30,7 @@ export default function TestSeriesSection() {
         <Route path="/settings" element={<Navigate to="/test-series/settings/categories" replace />} />
         <Route path="/settings/categories" element={<CategorySettings />} />
         <Route path="/settings/sections" element={<SectionSettings />} />
-        <Route path="/*" element={<Navigate to="/test-series/settings" replace />} />
+        <Route path="/*" element={<Navigate to="/test-series" replace />} />
       </Routes>
     </Layout>
   )

@@ -436,6 +436,8 @@ export const testSeriesService = {
     return apiUpload.put(`/test-series/${id}`, form).then((r) => r.data)
   },
   remove: (id) => api.delete(`/test-series/${id}`).then((r) => r.data),
+  addExam: (testSeriesId, payload) => api.post(`/test-series/${testSeriesId}/exams`, payload).then((r) => r.data),
+  removeExam: (testSeriesId, examId) => api.delete(`/test-series/${testSeriesId}/exams/${examId}`).then((r) => r.data),
 }
 
 // Answer Key — uses multipart/form-data (PDF upload) — POST/PUT /api/answerkeys
