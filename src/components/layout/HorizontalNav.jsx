@@ -40,6 +40,14 @@ export const testSeriesLinks = [
   { to: '/test-series/settings', label: 'Settings', icon: <FiSettings /> },
 ]
 
+export const ebookLinks = [
+  { to: '/ebook', label: 'Dashboard', icon: <FiGrid />, end: true },
+  { to: '/ebook/add-material', label: 'Add material', icon: <FiPlus /> },
+  { to: '/ebook/add-type', label: 'Add Type', icon: <FiPlus /> },
+  { to: '/ebook/material-list', label: 'Material List', icon: <FiLayers /> },
+  { to: '/ebook/order-list', label: 'Order List', icon: <FiFileText /> },
+]
+
 export const testSeriesSettingsLinks = [
   { to: '/test-series/settings/categories', label: 'Test Categories', icon: <FiGrid /> },
   { to: '/test-series/settings/sections', label: 'Test Sections', icon: <FiLayers /> },

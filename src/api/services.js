@@ -382,6 +382,156 @@ export const syllabusService = {
 export const resultCheckService = makeCrudService('/sankalp/results')
 export const resultPdfService = makeCrudService('/sankalp/result-pdfs')
 export const categoryService = makeCrudService('/categories')
+
+export const vmMaterialTypeService = {
+  getAll: async () => {
+    const response = await api.get('/vmMaterialType/AllVMMaterialTypes')
+    const payload = response?.data
+    const rows = Array.isArray(payload)
+      ? payload
+      : Array.isArray(payload?.data)
+        ? payload.data
+        : Array.isArray(payload?.content)
+          ? payload.content
+          : []
+
+    return rows.map((row) => ({
+      id: row?.id ?? row?.materialTypeId ?? row?.materialtypeId ?? row?.materialType?.id,
+      materialtype: row?.materialtype ?? row?.materialType ?? row?.name ?? row?.materialTypeName ?? row?.typeName ?? '',
+      ...row,
+    }))
+  },
+  create: async (name) => {
+    const materialtype = typeof name === 'string' ? name.trim() : name?.materialtype?.trim?.() || ''
+    if (!materialtype) throw new Error('Material type name is required')
+
+    const payload = { materialtype }
+    const response = await api.post('/vmMaterialType/createVMMaterialType', payload)
+    return response.data
+  },
+  remove: (id) => api.delete(`/vmMaterialType/deleteVMMaterialType/${id}`),
+}
+
+export const vmCategoryService = {
+  getAll: async () => {
+    const response = await api.get('/vmCategory/AllVMCategories')
+    const payload = response?.data
+    const rows = Array.isArray(payload)
+      ? payload
+      : Array.isArray(payload?.data)
+        ? payload.data
+        : Array.isArray(payload?.content)
+          ? payload.content
+          : []
+
+    return rows.map((row) => ({
+      id: row?.id ?? row?.categoryId,
+      categoryName: row?.categoryName ?? row?.name ?? row?.category_name,
+     thumbnail: row?.thumbnail ?? row?.imageUrl ?? row?.thumbnailUrl ?? '',
+      materialTypeId: row?.materialTypeId ?? row?.materialtypeId ?? row?.materialTypeId ?? row?.vmMaterialType?.id,
+      materialTypeName: row?.materialTypeName ?? row?.materialtypeName ?? row?.materialType?.materialtype ?? row?.vmMaterialType?.materialtype ?? row?.materialtype ?? '',
+      ...row,
+    }))
+  },
+  getByMaterialType: async (materialTypeName) => {
+    const value = materialTypeName?.trim()
+    if (!value) return []
+
+    const response = await api.get('/vmCategory/VMCategoriesByMaterialType', {
+      params: { materialTypeName: value },
+    })
+
+    const payload = response?.data
+    const rows = Array.isArray(payload)
+      ? payload
+      : Array.isArray(payload?.data)
+        ? payload.data
+        : Array.isArray(payload?.content)
+          ? payload.content
+          : []
+
+    return rows.map((row) => ({
+      id: row?.id ?? row?.categoryId,
+      categoryName: row?.categoryName ?? row?.name ?? row?.category_name,
+      thumbnail: row?.thumbnail ?? row?.imageUrl ?? row?.thumbnailUrl ?? '',
+      materialTypeId: row?.materialTypeId ?? row?.materialtypeId ?? row?.vmMaterialType?.id,
+      materialTypeName: row?.materialTypeName ?? row?.materialtypeName ?? row?.vmMaterialType?.materialtype ?? '',
+      ...row,
+    }))
+  },
+  create: async ({ name, materialTypeId, createdDate, thumbnailFile }) => {
+    if (!thumbnailFile) throw new Error('A category thumbnail is required')
+
+    const form = new FormData()
+    form.append('name', name?.trim())
+    form.append('createdDate', createdDate || new Date().toISOString().slice(0, 10))
+    if (materialTypeId != null) form.append('materialtype_id', String(materialTypeId))
+    form.append('thumbnail', thumbnailFile)
+
+    const response = await api.post('/vmCategory/createVMCategory', form, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    })
+    return response.data
+  },
+  remove: (id) => api.delete(`/vmCategory/deleteVMCategory/${id}`),
+}
+
+export const vmSubCategoryService = {
+  getAll: async () => {
+    const response = await api.get('/vmSubCategory/AllVMSubCategories')
+    const payload = response?.data
+    const rows = Array.isArray(payload)
+      ? payload
+      : Array.isArray(payload?.data)
+        ? payload.data
+        : Array.isArray(payload?.content)
+          ? payload.content
+          : []
+
+    return rows.map((row) => ({
+      id: row?.id ?? row?.subcategoryId,
+      subcategoryName: row?.subcategoryName ?? row?.subCategoryName ?? row?.name,
+      categoryId: row?.categoryId ?? row?.vmCategory?.id ?? row?.category?.id,
+      categoryName: row?.categoryName ?? row?.vmCategory?.categoryName ?? row?.category?.categoryName ?? '',
+      ...row,
+    }))
+  },
+  getByCategoryName: async (categoryName) => {
+    const value = categoryName?.trim()
+    if (!value) return []
+
+    const response = await api.get('/vmSubCategory/VMsubcategoryByCategory', {
+      params: { categoryName: value },
+    })
+    const payload = response?.data
+    const rows = Array.isArray(payload)
+      ? payload
+      : Array.isArray(payload?.data)
+        ? payload.data
+        : Array.isArray(payload?.content)
+          ? payload.content
+          : []
+
+    return rows.map((row) => ({
+      id: row?.id ?? row?.subcategoryId,
+      subcategoryName: row?.subcategoryName ?? row?.subCategoryName ?? row?.name,
+      categoryId: row?.categoryId ?? row?.vmCategory?.id ?? row?.category?.id,
+      categoryName: row?.categoryName ?? row?.vmCategory?.categoryName ?? row?.category?.categoryName ?? '',
+      ...row,
+    }))
+  },
+  create: async ({ categoryId, subcategoryName }) => {
+    const name = String(subcategoryName || '').trim()
+    if (!name) throw new Error('Subcategory name is required')
+    if (!categoryId) throw new Error('Category is required')
+
+    const payload = { categoryId, subcategoryName: name }
+    const response = await api.post('/vmSubCategory/createVMSubCategory', payload)
+    return response.data
+  },
+  remove: (id) => api.delete(`/vmSubCategory/deleteVMSubcategory/${id}`),
+}
+
 export const sectionService = {
   getAll: () => rootApi.get('/sections').then((r) => r.data),
   getById: (id) => rootApi.get(`/sections/${id}`).then((r) => r.data),

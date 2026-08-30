@@ -184,7 +184,7 @@ export default function Students() {
       ]}
       fields={[
         { name: 'studentName', label: 'Student Full Name', type: 'text', required: true },
-        { name: 'fatherName', label: 'Father Name', type: 'text', required: true },
+        { name: 'fatherName', label: 'Last Name', type: 'text', required: true },
         { name: 'lastName', label: 'Last Name', type: 'text', required: true },
         { name: 'schoolName', label: 'School Name', type: 'text', required: true },
         { name: 'mobile', label: 'Mobile Number', type: 'tel', required: true },
@@ -228,7 +228,7 @@ export default function Students() {
         const schoolName = String(fv.schoolName ?? '').trim()
 
         if (!fv.studentName || !fv.studentName.trim()) throw new Error('Student Full Name is required')
-        if (!fv.fatherName || !fv.fatherName.trim()) throw new Error('Father Name is required')
+        if (!fv.fatherName || !fv.fatherName.trim()) throw new Error('Last Name is required')
         if (!fv.lastName || !fv.lastName.trim()) throw new Error('Last Name is required')
         if (!schoolName) throw new Error('School Name is required')
         if (!fv.mobile || !isValidIndianMobile(fv.mobile)) throw new Error('Please enter a valid Indian mobile number')

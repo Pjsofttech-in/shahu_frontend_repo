@@ -2,17 +2,26 @@ import React from 'react'
 import { NavLink, useLocation } from 'react-router-dom'
 import { useState } from 'react'
 import {
-  FiGrid, FiUsers, FiFileText, FiSettings, FiGlobe, FiHome, FiPhone, FiBookOpen, FiChevronsLeft, FiChevronsRight
+  FiGrid,
+  FiUsers,
+  FiFileText,
+  FiSettings,
+  FiGlobe,
+  FiHome,
+  FiPhone,
+  FiBookOpen,
+  FiChevronsLeft,
+  FiChevronsRight
 } from 'react-icons/fi'
 
 export default function Sidebar() {
   const location = useLocation()
   const [collapsed, setCollapsed] = useState(() => localStorage.getItem('sidebar-collapsed') === 'true')
 
-  // Check if current path matches a section
   const isStudentsActive = location.pathname.startsWith('/students')
   const isSankalpActive = location.pathname.startsWith('/sankalp-exam')
   const isTestSeriesActive = location.pathname.startsWith('/test-series')
+  const isEbookActive = location.pathname.startsWith('/ebook')
   const isSettingsActive = location.pathname.startsWith('/settings')
   const isWebsiteActive = location.pathname.startsWith('/website')
   const isWebsiteHomeActive = location.pathname === '/website/home'
@@ -35,66 +44,39 @@ export default function Sidebar() {
         {collapsed ? <FiChevronsRight /> : <FiChevronsLeft />}
       </button>
       <nav className="sidebar-nav">
-        {/* Dashboard */}
-        <NavLink 
-          to="/dashboard" 
-          className={({ isActive }) => `sidebar-link ${isActive ? 'active' : ''}`}
-        >
+        <NavLink to="/dashboard" className={({ isActive }) => `sidebar-link ${isActive ? 'active' : ''}`}>
           <FiGrid /> <span>Dashboard</span>
         </NavLink>
 
-        {/* Students */}
-        <NavLink 
-          to="/students" 
-          className={`sidebar-link ${isStudentsActive ? 'active' : ''}`}
-        >
+        <NavLink to="/students" className={`sidebar-link ${isStudentsActive ? 'active' : ''}`}>
           <FiUsers /> <span>Students</span>
         </NavLink>
 
-        {/* Sankalp Exam */}
-        <NavLink 
-          to="/sankalp-exam/syllabus" 
-          className={`sidebar-link ${isSankalpActive ? 'active' : ''}`}
-        >
+        <NavLink to="/sankalp-exam/syllabus" className={`sidebar-link ${isSankalpActive ? 'active' : ''}`}>
           <FiFileText /> <span>Sankalp Exam</span>
         </NavLink>
 
-        <NavLink
-          to="/test-series"
-          className={`sidebar-link ${isTestSeriesActive ? 'active' : ''}`}
-        >
+        <NavLink to="/ebook" className={`sidebar-link ${isEbookActive ? 'active' : ''}`}>
+          <FiBookOpen /> <span>Ebook</span>
+        </NavLink>
+
+        <NavLink to="/test-series" className={`sidebar-link ${isTestSeriesActive ? 'active' : ''}`}>
           <FiBookOpen /> <span>Test Series</span>
         </NavLink>
 
-        {/* Website Management */}
-        <NavLink 
-          to="/website/courses" 
-          className={`sidebar-link ${isWebsiteActive && !isWebsiteHomeActive && !isContactFormActive ? 'active' : ''}`}
-        >
+        <NavLink to="/website/courses" className={`sidebar-link ${isWebsiteActive && !isWebsiteHomeActive && !isContactFormActive ? 'active' : ''}`}>
           <FiGlobe /> <span>Website Management</span>
         </NavLink>
 
-        {/* Website Home */}
-        <NavLink
-          to="/website/home"
-          className={`sidebar-link ${isWebsiteHomeActive ? 'active' : ''}`}
-        >
+        <NavLink to="/website/home" className={`sidebar-link ${isWebsiteHomeActive ? 'active' : ''}`}>
           <FiHome /> <span>Home</span>
         </NavLink>
 
-        {/* Contact Form */}
-        <NavLink
-          to="/website/contact-form"
-          className={`sidebar-link ${isContactFormActive ? 'active' : ''}`}
-        >
+        <NavLink to="/website/contact-form" className={`sidebar-link ${isContactFormActive ? 'active' : ''}`}>
           <FiPhone /> <span>Contact Form</span>
         </NavLink>
 
-        {/* Settings */}
-        <NavLink
-          to="/settings/districts"
-          className={`sidebar-link ${isSettingsActive ? 'active' : ''}`}
-        >
+        <NavLink to="/settings/districts" className={`sidebar-link ${isSettingsActive ? 'active' : ''}`}>
           <FiSettings /> <span>Settings</span>
         </NavLink>
       </nav>
