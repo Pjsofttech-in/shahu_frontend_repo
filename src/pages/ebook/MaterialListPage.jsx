@@ -1,10 +1,9 @@
 import React, { useEffect, useMemo, useState } from 'react'
-import { vmCategoryService, vmMaterialTypeService, vmSubCategoryService } from '../../api/services.js'
+import { FiDownload, FiTrash2 } from 'react-icons/fi'
+import { vmMaterialService } from '../../api/services.js'
 
 export default function MaterialListPage() {
-  const [types, setTypes] = useState([])
-  const [categories, setCategories] = useState([])
-  const [subcategories, setSubcategories] = useState([])
+  const [materials, setMaterials] = useState([])
   const [search, setSearch] = useState('')
   const [loading, setLoading] = useState(true)
 
@@ -12,20 +11,11 @@ export default function MaterialListPage() {
     const load = async () => {
       try {
         setLoading(true)
-        const [materialTypes, categoryRows, subCategoryRows] = await Promise.all([
-          vmMaterialTypeService.getAll(),
-          vmCategoryService.getAll(),
-          vmSubCategoryService.getAll(),
-        ])
-
-        setTypes(Array.isArray(materialTypes) ? materialTypes : [])
-        setCategories(Array.isArray(categoryRows) ? categoryRows : [])
-        setSubcategories(Array.isArray(subCategoryRows) ? subCategoryRows : [])
+        const materialRows = await vmMaterialService.getAll()
+        setMaterials(Array.isArray(materialRows) ? materialRows : [])
       } catch (error) {
         console.error('Failed to load material list data:', error)
-        setTypes([])
-        setCategories([])
-        setSubcategories([])
+        setMaterials([])
       } finally {
         setLoading(false)
       }
@@ -36,22 +26,28 @@ export default function MaterialListPage() {
 
   const rows = useMemo(() => {
     const value = search.trim().toLowerCase()
-    return types.map((type) => {
-      const typeCategories = categories.filter((cat) => String(cat.materialTypeId ?? cat.vmMaterialType?.id ?? cat.materialType?.id) === String(type.id))
-      const typeSubCategories = subcategories.filter((sub) => {
-        const categoryMatch = typeCategories.some((cat) => String(cat.id) === String(sub.categoryId ?? sub.vmCategory?.id ?? sub.category?.id))
-        return categoryMatch
-      })
-      const rowName = type.materialtype || type.name || type.materialType || ''
-      const matches = !value || rowName.toLowerCase().includes(value) || typeCategories.some((cat) => String(cat.categoryName || cat.name || '').toLowerCase().includes(value)) || typeSubCategories.some((sub) => String(sub.subcategoryName || sub.name || '').toLowerCase().includes(value))
-      return matches ? {
-        id: type.id,
-        materialType: rowName,
-        categories: typeCategories.length,
-        subcategories: typeSubCategories.length,
-      } : null
-    }).filter(Boolean)
-  }, [types, categories, subcategories, search])
+    return materials.filter((row) => [row.materialtype, row.chapterName, row.categoryName, row.subcategoryName, row.status]
+      .some((field) => String(field || '').toLowerCase().includes(value)))
+  }, [materials, search])
+
+  const remove = async (id) => {
+    if (!window.confirm('Delete this material?')) return
+    try {
+      await vmMaterialService.remove(id)
+      setMaterials((current) => current.filter((row) => row.id !== id))
+    } catch (error) {
+      window.alert(error?.response?.data?.message || error?.message || 'Failed to delete material')
+    }
+  }
+
+  const toggleDownload = async (id) => {
+    try {
+      const updated = await vmMaterialService.toggleDownload(id)
+      setMaterials((current) => current.map((row) => row.id === id ? { ...row, ...updated } : row))
+    } catch (error) {
+      window.alert(error?.response?.data?.message || error?.message || 'Failed to update download status')
+    }
+  }
 
   return (
     <div className="ebook-list-page" style={{ width: '100%', maxWidth: '1220px', margin: '0 auto' }}>
@@ -73,21 +69,32 @@ export default function MaterialListPage() {
             <tr>
               <th style={{ width: '120px' }}>ID</th>
               <th>Material Type</th>
-              <th style={{ width: '180px' }}>Category Count</th>
-              <th style={{ width: '200px' }}>Subcategory Count</th>
+              <th>Chapter Name</th>
+              <th>Category</th>
+              <th>Subcategory</th>
+              <th>Status</th>
+              <th>Price</th>
+              <th style={{ width: '180px' }}>Actions</th>
             </tr>
           </thead>
           <tbody>
             {loading ? (
-              <tr><td colSpan={4} style={{ textAlign: 'center', padding: '24px' }}>Loading…</td></tr>
+              <tr><td colSpan={8} style={{ textAlign: 'center', padding: '24px' }}>Loading…</td></tr>
             ) : rows.length === 0 ? (
-              <tr><td colSpan={4} style={{ textAlign: 'center', padding: '24px' }}>No material records found.</td></tr>
+              <tr><td colSpan={8} style={{ textAlign: 'center', padding: '24px' }}>No material records found.</td></tr>
             ) : rows.map((row) => (
               <tr key={row.id}>
                 <td>{row.id}</td>
-                <td style={{ color: '#1e63c9', fontWeight: 600 }}>{row.materialType}</td>
-                <td>{row.categories}</td>
-                <td>{row.subcategories}</td>
+                <td style={{ color: '#1e63c9', fontWeight: 600 }}>{row.materialtype || '—'}</td>
+                <td>{row.chapterName || '—'}</td>
+                <td>{row.categoryName || '—'}</td>
+                <td>{row.subcategoryName || '—'}</td>
+                <td>{row.status || '—'}</td>
+                <td>{row.price == null ? '—' : `₹ ${row.price}`}</td>
+                <td><div className="table-actions">
+                  <button className="btn btn-success btn-sm" onClick={() => toggleDownload(row.id)} title="Toggle download"><FiDownload /></button>
+                  <button className="btn btn-danger btn-sm" onClick={() => remove(row.id)} title="Delete"><FiTrash2 /></button>
+                </div></td>
               </tr>
             ))}
           </tbody>

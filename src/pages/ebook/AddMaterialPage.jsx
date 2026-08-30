@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import { FiFileText, FiImage, FiUpload } from 'react-icons/fi'
-import { vmCategoryService, vmMaterialTypeService, vmSubCategoryService } from '../../api/services.js'
+import { vmCategoryService, vmMaterialTypeService, vmMaterialService, vmSubCategoryService } from '../../api/services.js'
 
 const initialForm = {
   materialTypeId: '',
@@ -25,6 +25,9 @@ export default function AddMaterialPage() {
   const [subcategories, setSubcategories] = useState([])
   const [files, setFiles] = useState({ pdf: null, thumbnail: null, demoPdf: null })
   const [loadingTypes, setLoadingTypes] = useState(true)
+  const [isSaving, setIsSaving] = useState(false)
+  const [error, setError] = useState('')
+  const [success, setSuccess] = useState('')
 
   useEffect(() => {
     vmMaterialTypeService.getAll()
@@ -65,9 +68,41 @@ export default function AddMaterialPage() {
     setFiles((current) => ({ ...current, [name]: event.target.files?.[0] || null }))
   }
 
-  const submit = (event) => {
+  const submit = async (event) => {
     event.preventDefault()
-    window.alert('Material form is ready. Connect the material create endpoint to save it.')
+    const selectedType = materialTypes.find((row) => String(row.id) === String(form.materialTypeId))
+    setError('')
+    setSuccess('')
+    if (!files.pdf || !files.thumbnail || !files.demoPdf) {
+      setError('PDF, thumbnail, and demo PDF are required.')
+      return
+    }
+
+    try {
+      setIsSaving(true)
+      await vmMaterialService.create({
+        materialType: selectedType?.materialtype || selectedType?.name,
+        saveToDevice: form.saveOnPhone === 'yes',
+        status: form.status,
+        mrp: form.status === 'free' ? 0 : Number(form.mrp),
+        price: form.status === 'free' ? 0 : Number(form.price),
+        validity: Number(form.validity),
+        chapterName: form.subjectName,
+        seo: form.seoName,
+        discription: form.description,
+        subcategoryId: Number(form.subcategoryId),
+        demoPdf: files.demoPdf,
+        pdfFile: files.pdf,
+        thumbnailFile: files.thumbnail,
+      })
+      setSuccess('Material saved successfully.')
+      setForm(initialForm)
+      setFiles({ pdf: null, thumbnail: null, demoPdf: null })
+    } catch (requestError) {
+      setError(requestError?.response?.data?.message || requestError?.message || 'Failed to save material.')
+    } finally {
+      setIsSaving(false)
+    }
   }
 
   return (
@@ -99,7 +134,7 @@ export default function AddMaterialPage() {
             <select name="saveOnPhone" value={form.saveOnPhone} onChange={change} style={inputStyle} required><option value="">Select</option><option value="yes">Yes</option><option value="no">No</option></select>
           </label>
           <label><span><b>*</b> Status</span>
-            <select name="status" value={form.status} onChange={change} style={inputStyle} required><option value="">Select</option><option value="active">Active</option><option value="inactive">Inactive</option></select>
+            <select name="status" value={form.status} onChange={change} style={inputStyle} required><option value="">Select</option><option value="free">Free</option><option value="paid">Paid</option></select>
           </label>
           <label><span><b>*</b> MRP</span><input type="number" min="0" name="mrp" value={form.mrp} onChange={change} style={inputStyle} required /></label>
 
@@ -121,7 +156,9 @@ export default function AddMaterialPage() {
           <FilePicker label="Upload Thumbnail" icon={<FiImage />} file={files.thumbnail} onChange={(event) => chooseFile('thumbnail', event)} />
           <FilePicker label="Upload Demo PDF" icon={<FiFileText />} file={files.demoPdf} onChange={(event) => chooseFile('demoPdf', event)} />
         </div>
-        <button className="ebook-add-material-submit" type="submit">Add Material</button>
+        {error && <div className="field-error" role="alert" style={{ marginTop: '18px' }}>{error}</div>}
+        {success && <div style={{ color: 'var(--success)', fontSize: '12px', marginTop: '18px' }}>{success}</div>}
+        <button className="ebook-add-material-submit" type="submit" disabled={isSaving}>{isSaving ? 'Saving Material...' : 'Add Material'}</button>
       </form>
     </div>
   )

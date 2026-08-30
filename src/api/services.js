@@ -532,6 +532,41 @@ export const vmSubCategoryService = {
   remove: (id) => api.delete(`/vmSubCategory/deleteVMSubcategory/${id}`),
 }
 
+export const vmMaterialService = {
+  getAll: async () => {
+    const response = await api.get('/vmMaterial/AllVMMaterials')
+    const payload = response?.data
+    return Array.isArray(payload) ? payload : payload?.data || payload?.content || []
+  },
+  create: async ({ materialType, saveToDevice, status, mrp, price, validity, chapterName, seo, discription, subcategoryId, demoPdf, pdfFile, thumbnailFile }) => {
+    if (!materialType || subcategoryId == null || !demoPdf || !pdfFile || !thumbnailFile) {
+      throw new Error('Material type, subcategory, PDF, thumbnail, and demo PDF are required')
+    }
+
+    const form = new FormData()
+    form.append('materialtype', materialType)
+    form.append('saveToDevice', String(Boolean(saveToDevice)))
+    form.append('status', status)
+    form.append('mrp', String(mrp))
+    form.append('price', String(price))
+    form.append('validity', String(validity))
+    form.append('chapterName', chapterName)
+    if (seo) form.append('seo', seo)
+    form.append('discription', discription)
+    form.append('subcategory.id', String(subcategoryId))
+    form.append('demoPdf', demoPdf)
+    form.append('pdfFile', pdfFile)
+    form.append('thumbnailFile', thumbnailFile)
+
+    const response = await api.post('/vmMaterial/createVMMaterial', form, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    })
+    return response.data
+  },
+  remove: (id) => api.delete(`/vmMaterial/deleteVMMaterial/${id}`),
+  toggleDownload: (id) => api.put(`/vmMaterial/toggledownload/${id}`),
+}
+
 export const sectionService = {
   getAll: () => rootApi.get('/sections').then((r) => r.data),
   getById: (id) => rootApi.get(`/sections/${id}`).then((r) => r.data),
