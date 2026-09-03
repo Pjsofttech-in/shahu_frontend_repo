@@ -12,6 +12,7 @@ import ExamQuestionsPage from './ExamQuestionsPage.jsx'
 import TestSeriesPage from './TestSeriesPage.jsx'
 import OrderListPage from '../ebook/OrderListPage.jsx'
 import ExamPaperView from './ExamPaperView.jsx'
+import AddQuestionPage from './AddQuestionPage.jsx'
 
 export default function TestSeriesSection() {
   const location = useLocation()
@@ -27,7 +28,7 @@ export default function TestSeriesSection() {
         <Route path="/" element={<TestSeriesPage title="Test Series" description="" />} />
         <Route path="/series" element={<SeriesManager />} />
         <Route path="/questions" element={<QuestionManager />} />
-        <Route path="/questions/add" element={<QuestionManager />} />
+        <Route path="/questions/add" element={<AddQuestionPage />} />
         <Route path="/exam" element={<ExamManager />} />
         <Route path="/paper" element={<PaperManager />} />
         <Route path="/order-list" element={<OrderListPage />} />
