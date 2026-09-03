@@ -1,70 +1,28 @@
-import React, { useEffect, useState } from 'react'
-import { FiPlus, FiSearch, FiTrash2 } from 'react-icons/fi'
+import React, { useEffect, useMemo, useState } from 'react'
+import { FiEdit2, FiPlus, FiSearch, FiTrash2 } from 'react-icons/fi'
 import Modal from '../../components/common/Modal.jsx'
 import { questionService, sectionService } from '../../api/services.js'
 
 const EMPTY_FORM = { question: '', questionType: 'MCQ', sectionId: '', optionA: '', optionB: '', optionC: '', optionD: '', correctAnswer: 'A', answerExplanation: '', active: true }
-const rowsOf = (data) => Array.isArray(data) ? data : data?.content || []
+const rowsOf = (data) => Array.isArray(data) ? data : data?.content || data?.data || []
 const errorOf = (error) => String(error?.response?.data?.message || error?.response?.data?.error || error?.message || 'Could not complete the question request.')
+const sectionIdOf = (row) => row.sectionId ?? row.section?.id ?? row.section?.sectionId
 
 export default function QuestionManager() {
-  const [rows, setRows] = useState([])
-  const [sections, setSections] = useState([])
-  const [form, setForm] = useState(EMPTY_FORM)
-  const [editing, setEditing] = useState(null)
-  const [search, setSearch] = useState('')
-  const [showModal, setShowModal] = useState(false)
-  const [deleteTarget, setDeleteTarget] = useState(null)
-  const [loading, setLoading] = useState(true)
-  const [saving, setSaving] = useState(false)
-  const [error, setError] = useState('')
+  const [rows, setRows] = useState([]); const [sections, setSections] = useState([]); const [form, setForm] = useState(EMPTY_FORM); const [editing, setEditing] = useState(null); const [search, setSearch] = useState(''); const [typeFilter, setTypeFilter] = useState(''); const [sectionFilter, setSectionFilter] = useState(''); const [pageSize, setPageSize] = useState(20); const [page, setPage] = useState(1); const [showModal, setShowModal] = useState(false); const [deleteTarget, setDeleteTarget] = useState(null); const [loading, setLoading] = useState(true); const [saving, setSaving] = useState(false); const [error, setError] = useState('')
 
-  const load = async () => {
-    setLoading(true)
-    try {
-      const [questionData, sectionData] = await Promise.all([questionService.getAll(), sectionService.getAll()])
-      setRows(rowsOf(questionData)); setSections(rowsOf(sectionData)); setError('')
-    } catch (loadError) { setError(errorOf(loadError)) } finally { setLoading(false) }
-  }
+  const load = async () => { setLoading(true); try { const [questionData, sectionData] = await Promise.all([questionService.getAll(), sectionService.getAll()]); setRows(rowsOf(questionData)); setSections(rowsOf(sectionData)); setError('') } catch (loadError) { setError(errorOf(loadError)) } finally { setLoading(false) } }
   useEffect(() => { load() }, [])
+  useEffect(() => { setPage(1) }, [search, typeFilter, sectionFilter, pageSize])
 
-  const open = (row = null) => {
-    setEditing(row)
-    setForm(row ? { ...EMPTY_FORM, ...row, sectionId: row.sectionId ?? row.section?.id ?? '' } : EMPTY_FORM)
-    setError(''); setShowModal(true)
-  }
-  const change = (event) => {
-    const { name, value, type, checked } = event.target
-    setForm((current) => ({ ...current, [name]: type === 'checkbox' ? checked : value }))
-  }
-  const submit = async (event) => {
-    event.preventDefault()
-    if (!form.question.trim() || !form.sectionId) { setError('Question and Section are required.'); return }
-    if (form.questionType === 'MCQ' && [form.optionA, form.optionB, form.optionC, form.optionD].some((value) => !value.trim())) { setError('All four options are required for MCQ.'); return }
-    const payload = { question: form.question.trim(), questionType: form.questionType, sectionId: Number(form.sectionId), optionA: form.optionA.trim(), optionB: form.optionB.trim(), optionC: form.optionC.trim(), optionD: form.optionD.trim(), correctAnswer: form.correctAnswer, answerExplanation: form.answerExplanation.trim(), active: form.active }
-    if (form.questionType === 'DESCRIPTIVE') { payload.optionA = ''; payload.optionB = ''; payload.optionC = ''; payload.optionD = ''; payload.correctAnswer = '' }
-    setSaving(true); setError('')
-    try { if (editing) await questionService.update(editing.id, payload); else await questionService.create(payload); setShowModal(false); await load() } catch (saveError) { setError(errorOf(saveError)) } finally { setSaving(false) }
-  }
-  const remove = async (row) => {
-    setDeleteTarget(row)
-  }
-  const confirmRemove = async () => {
-    if (!deleteTarget) return
-    setSaving(true); setError('')
-    try {
-      await questionService.remove(deleteTarget.id)
-      setDeleteTarget(null)
-      await load()
-    } catch (deleteError) { setError(errorOf(deleteError)) } finally { setSaving(false) }
-  }
-  const sectionNameOf = (row) => {
-    const sectionId = row.sectionId ?? row.section?.id ?? row.section?.sectionId
-    const sectionName = row.sectionName || row.section?.name || row.section?.sectionName
-    const loadedSectionName = sections.find((section) => String(section.id) === String(sectionId))?.name
-    return sectionName || loadedSectionName || (sectionId ? `Section #${sectionId}` : 'Not assigned')
-  }
-  const filtered = rows.filter((row) => `${row.question || ''} ${row.questionType || ''}`.toLowerCase().includes(search.toLowerCase()))
+  const sectionNameOf = (row) => row.sectionName || row.section?.name || row.section?.sectionName || sections.find((section) => String(section.id) === String(sectionIdOf(row)))?.name || `Section #${sectionIdOf(row) || '-'}`
+  const filtered = useMemo(() => rows.filter((row) => { const value = `${row.question || ''} ${row.questionType || ''}`.toLowerCase(); return (!search.trim() || value.includes(search.trim().toLowerCase())) && (!typeFilter || String(row.questionType || 'MCQ') === typeFilter) && (!sectionFilter || String(sectionIdOf(row)) === sectionFilter) }), [rows, search, typeFilter, sectionFilter])
+  const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize)); const pageRows = filtered.slice((page - 1) * pageSize, page * pageSize)
 
-  return <section className="series-manager"><div className="page-header"><div><h1>Questions</h1><p>Create reusable questions before assigning them to an Exam.</p></div><button className="btn btn-primary" type="button" onClick={() => open()}><FiPlus /> Add Question</button></div>{error && !showModal && !deleteTarget && <div className="login-alert">{error}</div>}<div className="series-filters"><input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search questions..." aria-label="Search questions" /></div><div className="card series-table-card"><div className="table-wrap"><table className="data-table"><thead><tr><th>ID</th><th>Question</th><th>Type</th><th>Section</th><th>Actions</th></tr></thead><tbody>{loading && <tr className="empty-row"><td colSpan="5">Loading questions...</td></tr>}{!loading && !filtered.length && <tr className="empty-row"><td colSpan="5">No questions found.</td></tr>}{!loading && filtered.map((row) => <tr key={row.id}><td>{row.id}</td><td><button className="table-link-button" type="button" onClick={() => open(row)}>{row.question || `Question #${row.id}`}</button></td><td>{row.questionType || 'MCQ'}</td><td>{sectionNameOf(row)}</td><td><div className="table-actions"><button className="btn btn-danger btn-sm" type="button" onClick={() => remove(row)} aria-label={`Delete question ${row.id}`}><FiTrash2 /></button></div></td></tr>)}</tbody></table></div></div>{showModal && <Modal title={editing ? 'Edit Question' : 'Add Question'} onClose={() => setShowModal(false)} maxWidth="900px" footer={<><button className="btn btn-outline" type="button" onClick={() => setShowModal(false)}>Cancel</button><button className="btn btn-primary" type="submit" form="question-form" disabled={saving}>{saving ? 'Saving...' : editing ? 'Update' : 'Create'}</button></>}><form id="question-form" onSubmit={submit} className="series-form"><div className="series-form-grid"><div className="form-group"><label>Section *</label><select name="sectionId" value={form.sectionId} onChange={change} required><option value="">Select Section</option>{sections.map((section) => <option key={section.id} value={section.id}>{section.name}</option>)}</select></div><div className="form-group"><label>Question Type *</label><select name="questionType" value={form.questionType} onChange={change}><option value="MCQ">MCQ</option><option value="DESCRIPTIVE">Descriptive</option></select></div><div className="form-group full-width"><label>Question *</label><textarea name="question" rows="4" value={form.question} onChange={change} required /></div>{form.questionType === 'MCQ' && ['A', 'B', 'C', 'D'].map((option) => <div className="form-group" key={option}><label>Option {option} *</label><input name={`option${option}`} value={form[`option${option}`]} onChange={change} /></div>)}{form.questionType === 'MCQ' && <div className="form-group"><label>Correct Answer *</label><select name="correctAnswer" value={form.correctAnswer} onChange={change}>{['A', 'B', 'C', 'D'].map((option) => <option key={option}>{option}</option>)}</select></div>}<div className="form-group full-width"><label>Answer Explanation</label><textarea name="answerExplanation" rows="3" value={form.answerExplanation} onChange={change} /></div></div></form></Modal>}{deleteTarget && <Modal title="Delete Question" onClose={() => !saving && setDeleteTarget(null)} maxWidth="460px" footer={<><button className="btn btn-outline" type="button" onClick={() => setDeleteTarget(null)} disabled={saving}>Cancel</button><button className="btn btn-danger" type="button" onClick={confirmRemove} disabled={saving}>{saving ? 'Deleting...' : 'Delete Question'}</button></>}><p>Are you sure you want to permanently delete this question?</p><strong>{deleteTarget.question || `Question #${deleteTarget.id}`}</strong>{error && <div className="login-alert" style={{ marginTop: 16 }}>{error}</div>}</Modal>}</section>
+  const open = (row = null) => { setEditing(row); setForm(row ? { ...EMPTY_FORM, ...row, sectionId: sectionIdOf(row) || '' } : EMPTY_FORM); setError(''); setShowModal(true) }
+  const change = (event) => { const { name, value, type, checked } = event.target; setForm((current) => ({ ...current, [name]: type === 'checkbox' ? checked : value })) }
+  const submit = async (event) => { event.preventDefault(); if (!form.question.trim() || !form.sectionId) { setError('Question and Section are required.'); return }; if (form.questionType === 'MCQ' && [form.optionA, form.optionB, form.optionC, form.optionD].some((value) => !value.trim())) { setError('All four options are required for MCQ.'); return }; const payload = { question: form.question.trim(), questionType: form.questionType, sectionId: Number(form.sectionId), optionA: form.questionType === 'MCQ' ? form.optionA.trim() : '', optionB: form.questionType === 'MCQ' ? form.optionB.trim() : '', optionC: form.questionType === 'MCQ' ? form.optionC.trim() : '', optionD: form.questionType === 'MCQ' ? form.optionD.trim() : '', correctAnswer: form.questionType === 'MCQ' ? form.correctAnswer : '', answerExplanation: form.answerExplanation.trim(), active: form.active }; setSaving(true); setError(''); try { if (editing) await questionService.update(editing.id, payload); else await questionService.create(payload); setShowModal(false); await load() } catch (saveError) { setError(errorOf(saveError)) } finally { setSaving(false) } }
+  const remove = async () => { if (!deleteTarget) return; setSaving(true); try { await questionService.remove(deleteTarget.id); setDeleteTarget(null); await load() } catch (deleteError) { setError(errorOf(deleteError)) } finally { setSaving(false) } }
+
+  return <section className="series-manager question-bank-page"><div className="question-bank-toolbar"><div><div className="question-count">Total Que: <strong>{rows.length}</strong></div></div><button className="btn btn-primary" type="button" onClick={() => open()}><FiPlus /> Create Question</button></div>{error && !showModal && !deleteTarget && <div className="login-alert">{error}</div>}<div className="question-bank-filters"><select value={typeFilter} onChange={(event) => setTypeFilter(event.target.value)} aria-label="Filter question type"><option value="">All Types</option><option value="MCQ">MCQ</option><option value="DESCRIPTIVE">Descriptive</option></select><select value={sectionFilter} onChange={(event) => setSectionFilter(event.target.value)} aria-label="Filter question section"><option value="">All Sections</option>{sections.map((section) => <option key={section.id} value={section.id}>{section.name || section.sectionName || section.title}</option>)}</select><div className="question-bank-search"><input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search Question" aria-label="Search question" /><FiSearch /></div></div><div className="card question-bank-list-card"><div className="table-wrap"><table className="data-table question-bank-table"><thead><tr><th>Id</th><th>Question</th><th>Type</th><th>Section</th><th>Actions</th></tr></thead><tbody>{loading && <tr className="empty-row"><td colSpan="5">Loading questions...</td></tr>}{!loading && !pageRows.length && <tr className="empty-row"><td colSpan="5">No data</td></tr>}{!loading && pageRows.map((row) => <tr key={row.id}><td>{row.id}</td><td className="question-preview">{row.question || `Question #${row.id}`}</td><td>{row.questionType || 'MCQ'}</td><td>{sectionNameOf(row)}</td><td><div className="table-actions"><button className="icon-btn edit" type="button" onClick={() => open(row)} title="Edit question" aria-label={`Edit question ${row.id}`}><FiEdit2 /></button><button className="icon-btn danger" type="button" onClick={() => setDeleteTarget(row)} title="Delete question" aria-label={`Delete question ${row.id}`}><FiTrash2 /></button></div></td></tr>)}</tbody></table></div><div className="question-bank-footer"><label>Rows per page <select value={pageSize} onChange={(event) => setPageSize(Number(event.target.value))}><option value="20">20</option><option value="50">50</option><option value="100">100</option><option value="1000">1000</option></select></label><span>{filtered.length ? `${(page - 1) * pageSize + 1}-${Math.min(page * pageSize, filtered.length)} of ${filtered.length}` : '0 results'}</span><div><button className="btn btn-outline btn-sm" type="button" disabled={page <= 1} onClick={() => setPage((current) => current - 1)}>Previous</button><button className="btn btn-outline btn-sm" type="button" disabled={page >= totalPages} onClick={() => setPage((current) => current + 1)}>Next</button></div></div></div>{showModal && <Modal title={editing ? 'Edit Question' : 'Create Question'} onClose={() => setShowModal(false)} maxWidth="900px" footer={<><button className="btn btn-outline" type="button" onClick={() => setShowModal(false)}>Cancel</button><button className="btn btn-primary" type="submit" form="question-form" disabled={saving}>{saving ? 'Saving...' : editing ? 'Update' : 'Create'}</button></>}><form id="question-form" onSubmit={submit} className="question-bank-form"><div className="question-bank-form-grid"><div className="form-group full-width"><label>Question *</label><textarea name="question" rows="4" value={form.question} onChange={change} required /></div><div className="form-group"><label>Section *</label><select name="sectionId" value={form.sectionId} onChange={change} required><option value="">Select Section</option>{sections.map((section) => <option key={section.id} value={section.id}>{section.name || section.sectionName || section.title}</option>)}</select></div><div className="form-group"><label>Question Type *</label><select name="questionType" value={form.questionType} onChange={change}><option value="MCQ">MCQ</option><option value="DESCRIPTIVE">Descriptive</option></select></div>{['optionA', 'optionB', 'optionC', 'optionD'].map((field) => <div className="form-group" key={field}><label>Option {field.slice(-1)} {form.questionType === 'MCQ' && '*'}</label><input name={field} value={form[field]} onChange={change} disabled={form.questionType !== 'MCQ'} /></div>)}<div className="form-group"><label>Correct Answer</label><select name="correctAnswer" value={form.correctAnswer} onChange={change} disabled={form.questionType !== 'MCQ'}><option value="A">A</option><option value="B">B</option><option value="C">C</option><option value="D">D</option></select></div><div className="form-group"><label>Explanation</label><textarea name="answerExplanation" rows="3" value={form.answerExplanation} onChange={change} /></div></div><label className="series-active"><input name="active" type="checkbox" checked={!!form.active} onChange={change} /> Active</label></form></Modal>}{deleteTarget && <Modal title="Delete Question" onClose={() => setDeleteTarget(null)} footer={<><button className="btn btn-outline" type="button" onClick={() => setDeleteTarget(null)}>Cancel</button><button className="btn btn-danger" type="button" disabled={saving} onClick={remove}>{saving ? 'Deleting...' : 'Delete'}</button></>}><p>Delete question {deleteTarget.id}?</p></Modal>}</section>
 }

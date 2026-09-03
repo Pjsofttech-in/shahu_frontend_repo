@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react'
-import { FiEdit2, FiFileText, FiImage, FiPlus, FiTrash2 } from 'react-icons/fi'
+import { FiFileText, FiImage, FiPlus, FiTrash2 } from 'react-icons/fi'
 import Modal from '../../components/common/Modal.jsx'
 import { categoryService, examService, testSeriesService } from '../../api/services.js'
 
@@ -272,7 +272,7 @@ export default function SeriesManager() {
               {!loading && filtered.length === 0 && <tr className="empty-row"><td colSpan="13">No test series found.</td></tr>}
               {!loading && filtered.map((row) => (
                 <tr key={row.id}>
-                  <td>{row.id}</td><td>{row.title || '—'}</td><td>{row.subject || row.examType || '—'}</td><td>{row.price ?? '—'}</td><td>{row.mrp ?? '—'}</td>
+                  <td>{row.id}</td><td><button className="table-link-button series-name-link" type="button" onClick={() => openEdit(row)}>{row.title || '—'}</button></td><td>{row.subject || row.examType || '—'}</td><td>{row.price ?? '—'}</td><td>{row.mrp ?? '—'}</td>
                   <td>{row.category?.categoryName || row.category?.name || row.categoryName || getCategoryId(row) || '—'}</td><td>{[row.testFeatureOne, row.testFeatureTwo, row.testFeatureThree].filter(Boolean).join(', ') || '—'}</td><td className="series-description-cell">{row.description || '—'}</td>
                   <td><span className={`badge ${row.active === false ? 'badge-inactive' : 'badge-active'}`}>{row.active === false ? 'Inactive' : 'Active'}</span></td>
                   <td>{row.createdAt ? new Date(row.createdAt).toLocaleDateString() : '—'}</td>
@@ -280,7 +280,6 @@ export default function SeriesManager() {
                   <td>
                     <div className="table-actions">
                       <button className="btn btn-primary btn-sm" type="button" onClick={() => openExamAssignment(row)} aria-label={`Manage exams for ${row.title}`}><FiFileText /></button>
-                      <button className="btn btn-outline btn-sm" type="button" onClick={() => openEdit(row)} aria-label={`Edit ${row.title}`}><FiEdit2 /></button>
                       <button className="btn btn-danger btn-sm" type="button" onClick={() => remove(row)} aria-label={`Delete ${row.title}`}><FiTrash2 /></button>
                     </div>
                   </td>
