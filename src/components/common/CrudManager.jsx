@@ -31,6 +31,7 @@ export default function CrudManager({
   initialFormValues = {},
   onResetFilters,
   uniqueFields = [],
+  formColumns = 2,
 }) {
   const [rows, setRows] = useState([])
   const [loading, setLoading] = useState(true)
@@ -318,11 +319,11 @@ export default function CrudManager({
 
   const fieldGroups = useMemo(() => {
     const groups = []
-    for (let index = 0; index < fields.length; index += 2) {
-      groups.push(fields.slice(index, index + 2))
+    for (let index = 0; index < fields.length; index += formColumns) {
+      groups.push(fields.slice(index, index + formColumns))
     }
     return groups
-  }, [fields])
+  }, [fields, formColumns])
 
   const hasActions = showDeleteAction || extraRowAction
   const tableColumns = hasActions ? [
@@ -377,7 +378,7 @@ export default function CrudManager({
         <Modal
           title={editing ? `Edit ${title}` : `${addLabel}`}
           onClose={() => setShowModal(false)}
-          maxWidth="760px"
+          maxWidth={formColumns >= 4 ? '1100px' : '760px'}
           footer={(
             <>
               <button className="btn btn-outline" onClick={() => setShowModal(false)}>Cancel</button>
@@ -390,7 +391,7 @@ export default function CrudManager({
           {error && <div className="login-alert">{error}</div>}
           <form onSubmit={handleSubmit}>
             {fieldGroups.map((group, groupIndex) => (
-              <div className="form-row" key={`group-${groupIndex}`}>
+              <div className={`form-row form-row-${formColumns}`} key={`group-${groupIndex}`}>
                 {group.map((f) => (
                   <FormField
                     key={f.name}
