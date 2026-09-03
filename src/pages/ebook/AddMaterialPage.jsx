@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react'
-import { FiFileText, FiImage, FiUpload } from 'react-icons/fi'
+import { FiCheckCircle, FiFileText, FiImage, FiUpload } from 'react-icons/fi'
 import { vmCategoryService, vmMaterialTypeService, vmMaterialService, vmSubCategoryService } from '../../api/services.js'
+import Modal from '../../components/common/Modal.jsx'
 
 const initialForm = {
   materialTypeId: '',
@@ -28,6 +29,7 @@ export default function AddMaterialPage() {
   const [isSaving, setIsSaving] = useState(false)
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
+  const [isSuccessModalOpen, setIsSuccessModalOpen] = useState(false)
 
   useEffect(() => {
     vmMaterialTypeService.getAll()
@@ -96,6 +98,7 @@ export default function AddMaterialPage() {
         thumbnailFile: files.thumbnail,
       })
       setSuccess('Material saved successfully.')
+      setIsSuccessModalOpen(true)
       setForm(initialForm)
       setFiles({ pdf: null, thumbnail: null, demoPdf: null })
     } catch (requestError) {
@@ -160,6 +163,21 @@ export default function AddMaterialPage() {
         {success && <div style={{ color: 'var(--success)', fontSize: '12px', marginTop: '18px' }}>{success}</div>}
         <button className="ebook-add-material-submit" type="submit" disabled={isSaving}>{isSaving ? 'Saving Material...' : 'Add Material'}</button>
       </form>
+
+      {isSuccessModalOpen && (
+        <Modal
+          title="Material Added Successfully"
+          onClose={() => setIsSuccessModalOpen(false)}
+          footer={<button className="btn btn-primary" onClick={() => setIsSuccessModalOpen(false)}>Continue</button>}
+          maxWidth="450px"
+        >
+          <div className="ebook-success-modal">
+            <div className="ebook-success-icon"><FiCheckCircle /></div>
+            <h3>Your material is now live</h3>
+            <p>The material and uploaded files were saved successfully to the database.</p>
+          </div>
+        </Modal>
+      )}
     </div>
   )
 }

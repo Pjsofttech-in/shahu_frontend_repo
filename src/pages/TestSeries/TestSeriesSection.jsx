@@ -6,9 +6,12 @@ import SeriesManager from './SeriesManager.jsx'
 import CategorySettings from './CategorySettings.jsx'
 import SectionSettings from './SectionSettings.jsx'
 import ExamManager from './ExamManager.jsx'
+import PaperManager from './PaperManager.jsx'
 import QuestionManager from './QuestionManager.jsx'
 import ExamQuestionsPage from './ExamQuestionsPage.jsx'
 import TestSeriesPage from './TestSeriesPage.jsx'
+import OrderListPage from '../ebook/OrderListPage.jsx'
+import ExamPaperView from './ExamPaperView.jsx'
 
 export default function TestSeriesSection() {
   const location = useLocation()
@@ -24,8 +27,14 @@ export default function TestSeriesSection() {
         <Route path="/" element={<TestSeriesPage title="Test Series" description="" />} />
         <Route path="/series" element={<SeriesManager />} />
         <Route path="/questions" element={<QuestionManager />} />
+        <Route path="/questions/add" element={<QuestionManager />} />
         <Route path="/exam" element={<ExamManager />} />
+        <Route path="/paper" element={<PaperManager />} />
+        <Route path="/order-list" element={<OrderListPage />} />
         <Route path="/exam/:examId/questions" element={<ExamQuestionsPage />} />
+        <Route path="/exam/:examId/view" element={<ExamPaperView />} />
+        <Route path="/exam/:examId/ranking" element={<ExamPaperView mode="ranking" />} />
+        <Route path="/exam/:examId/answer-sheet" element={<ExamPaperView mode="answer" />} />
         <Route path="/solved-paper" element={<ExamManager solvedOnly />} />
         <Route path="/settings" element={<Navigate to="/test-series/settings/categories" replace />} />
         <Route path="/settings/categories" element={<CategorySettings />} />

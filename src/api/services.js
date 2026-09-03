@@ -584,6 +584,7 @@ export const questionService = {
 export const examService = {
   getAll: () => api.get('/exams').then((r) => r.data),
   getById: (id) => api.get(`/exams/${id}`).then((r) => r.data),
+  getRanking: (id) => api.get(`/exams/${id}/ranking`).then((r) => r.data),
   create: (values, image) => {
     const form = new FormData()
     form.append('exam', JSON.stringify(values))

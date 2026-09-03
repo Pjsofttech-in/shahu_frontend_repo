@@ -34,10 +34,12 @@ export const settingsLinks = [
 export const testSeriesLinks = [
   { to: '/test-series', label: 'Dashboard', icon: <FiGrid />, end: true },
   { to: '/test-series/series', label: 'Series', icon: <FiLayers /> },
-  { to: '/test-series/questions', label: 'Questions', icon: <FiBook /> },
-  { to: '/test-series/exam', label: 'Exam', icon: <FiFileText /> },
+  { to: '/test-series/paper', label: 'Paper', icon: <FiFileText /> },
+  { to: '/test-series/questions', label: 'Question Bank', icon: <FiBook /> },
+  { to: '/test-series/questions/add', label: 'Add Question', icon: <FiPlus /> },
   { to: '/test-series/solved-paper', label: 'Solved Paper', icon: <FiCheckSquare /> },
   { to: '/test-series/settings', label: 'Settings', icon: <FiSettings /> },
+  { to: '/test-series/order-list', label: 'Order List', icon: <FiFileText /> },
 ]
 
 export const ebookLinks = [
