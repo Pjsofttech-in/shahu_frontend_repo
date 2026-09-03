@@ -184,7 +184,7 @@ export default function Students() {
         },
       ]}
       fields={[
-        { name: 'studentName', label: 'Student Full Name', type: 'text', required: true },
+        { name: 'studentName', label: 'Student Name', type: 'text', required: true },
         { name: 'fatherName', label: "Father's Name", type: 'text', required: true },
         { name: 'lastName', label: 'Last Name', type: 'text', required: true },
         { name: 'schoolName', label: 'School Name', type: 'text', required: true },
@@ -228,7 +228,7 @@ export default function Students() {
         const coordinatorId = fv.coordinatorId !== undefined && fv.coordinatorId !== null && fv.coordinatorId !== '' ? Number(fv.coordinatorId) : null
         const schoolName = String(fv.schoolName ?? '').trim()
 
-        if (!fv.studentName || !fv.studentName.trim()) throw new Error('Student Full Name is required')
+        if (!fv.studentName || !fv.studentName.trim()) throw new Error('Student Name is required')
         if (!fv.fatherName || !fv.fatherName.trim()) throw new Error("Father's Name is required")
         if (!fv.lastName || !fv.lastName.trim()) throw new Error('Last Name is required')
         if (!schoolName) throw new Error('School Name is required')
