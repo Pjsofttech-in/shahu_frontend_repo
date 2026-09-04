@@ -1,3 +1,4 @@
+import DescriptionPreview from '../../components/common/DescriptionPreview.jsx'
 import React, { useEffect, useState, useCallback } from 'react'
 import { FiPlus, FiEdit2, FiTrash2, FiSave, FiDownload } from 'react-icons/fi'
 import { answerKeyService } from '../../api/services.js'
@@ -226,7 +227,7 @@ export default function AnswerKey() {
                     </td>
                     <td>
                       {/* description is frontend-only — no backend field yet */}
-                      {row.description || '—'}
+                      <DescriptionPreview value={row.description} />
                     </td>
                     <td>
                       <div className="table-actions">

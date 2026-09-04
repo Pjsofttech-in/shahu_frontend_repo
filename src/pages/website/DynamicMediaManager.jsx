@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useState } from 'react'
 import { FiImage, FiPlus, FiSave, FiTrash2 } from 'react-icons/fi'
 import Modal from '../../components/common/Modal.jsx'
+import DescriptionPreview from '../../components/common/DescriptionPreview.jsx'
 
 const getError = (error) => error?.response?.data?.message || error?.response?.data?.error || error?.message || 'Something went wrong.'
 
@@ -165,7 +166,7 @@ export default function DynamicMediaManager({
                   <td className="dynamic-content-section-label">{recordLabel} {priority ? (row.priority || index + 1) : index + 1}</td>
                   <td>{row.image ? <img className="dynamic-content-thumb" src={row.image} alt="" /> : <FiImage />}</td>
                   <td>{row.title || '—'}</td>
-                  <td className="dynamic-content-description">{row.description || '—'}</td>
+                  <td className="dynamic-content-description"><DescriptionPreview value={row.description} /></td>
                   <td>{row.link ? <a href={row.link} target="_blank" rel="noopener noreferrer" onClick={(event) => event.stopPropagation()}>{row.link}</a> : '—'}</td>
                   {priority && <td>{row.priority ?? '—'}</td>}
                   <td><button className="btn btn-danger btn-sm" onClick={(event) => { event.stopPropagation(); handleDelete(row) }} title={`Delete ${recordLabel}`}><FiTrash2 /></button></td>

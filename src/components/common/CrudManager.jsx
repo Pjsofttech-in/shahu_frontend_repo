@@ -371,37 +371,39 @@ export default function CrudManager({
 
   return (
     <div>
-      {searchKeys.length > 0 && (
-        <div className="toolbar">
-          <div className="form-group">
-            <label><FiSearch /> Search</label>
-            <input placeholder={searchPlaceholder} value={search} onChange={(e) => setSearch(e.target.value)} />
+      <div className="filter-section">
+        {searchKeys.length > 0 && (
+          <div className="toolbar">
+            <div className="form-group">
+              <label><FiSearch /> Search</label>
+              <input placeholder={searchPlaceholder} value={search} onChange={(e) => setSearch(e.target.value)} />
+            </div>
+            {extraToolbar}
+            {onResetFilters && (
+              <button type="button" className="btn btn-outline reset-filters-btn" onClick={resetFilters}>
+                <FiRotateCcw /> Reset Filters
+              </button>
+            )}
           </div>
-          {extraToolbar}
-          {onResetFilters && (
-            <button type="button" className="btn btn-outline reset-filters-btn" onClick={resetFilters}>
-              <FiRotateCcw /> Reset Filters
-            </button>
-          )}
-        </div>
-      )}
+        )}
 
-      {!extraToolbar && (
-        <div className="column-filter-row" role="group" aria-label="Filter by column">
-          {columns.map((column) => (
-            <select
-              key={column.key}
-              value={columnFilters[column.key] || ''}
-              onChange={(event) => updateColumnFilter(column.key, event.target.value)}
-              aria-label={`Filter ${column.label}`}
-            >
-              <option value="">All {column.label}</option>
-              {columnOptions[column.key].map((option) => <option key={option} value={option}>{option}</option>)}
-            </select>
-          ))}
-        </div>
-      )}
-      <div className="result-count">Showing <strong>{filteredRows.length}</strong> of {rows.length} records</div>
+        {!extraToolbar && (
+          <div className="column-filter-row" role="group" aria-label="Filter by column">
+            {columns.map((column) => (
+              <select
+                key={column.key}
+                value={columnFilters[column.key] || ''}
+                onChange={(event) => updateColumnFilter(column.key, event.target.value)}
+                aria-label={`Filter ${column.label}`}
+              >
+                <option value="">All {column.label}</option>
+                {columnOptions[column.key].map((option) => <option key={option} value={option}>{option}</option>)}
+              </select>
+            ))}
+          </div>
+        )}
+        <div className="result-count">Showing <strong>{filteredRows.length}</strong> of {rows.length} records</div>
+      </div>
 
       {showCreateAction && (
         <div className="crud-action-row">

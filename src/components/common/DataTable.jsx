@@ -1,6 +1,9 @@
 import React from 'react'
+import DescriptionPreview from './DescriptionPreview.jsx'
 
 export default function DataTable({ columns, rows, rowKey = 'id', loading, emptyText = 'No records found.', onRowClick }) {
+    const isDescriptionColumn = (key) => /description|message|vision|mission/i.test(key)
+
   return (
     <div className="table-wrap">
       <table className="data-table">
@@ -20,9 +23,11 @@ export default function DataTable({ columns, rows, rowKey = 'id', loading, empty
           )}
           {!loading && rows.map((row) => (
             <tr key={row[rowKey]} className={onRowClick ? 'is-clickable' : ''} onClick={() => onRowClick?.(row)}>
-              {columns.map((c) => (
-                <td key={c.key}>{c.render ? c.render(row) : row[c.key]}</td>
-              ))}
+              {columns.map((c) => {
+                const value = c.render ? c.render(row) : row[c.key]
+                const preview = isDescriptionColumn(c.key) && (typeof value === 'string' || typeof value === 'number')
+                return <td key={c.key}>{preview ? <DescriptionPreview value={value} /> : value}</td>
+              })}
             </tr>
           ))}
         </tbody>

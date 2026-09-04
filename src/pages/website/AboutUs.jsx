@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useState } from 'react'
 import { FiImage, FiPlus, FiSave, FiTrash2 } from 'react-icons/fi'
 import Modal from '../../components/common/Modal.jsx'
+import DescriptionPreview from '../../components/common/DescriptionPreview.jsx'
 import { useAuth } from '../../context/AuthContext.jsx'
 import { aboutUsService } from '../../api/services.js'
 
@@ -136,7 +137,7 @@ export default function AboutUs() {
                   <td>{row.id}</td>
                   <td>{row.aboutUsImage ? <img className="about-us-thumb" src={row.aboutUsImage} alt="" /> : <FiImage />}</td>
                   <td>{row.aboutUsTitle || '—'}</td>
-                  <td className="about-us-description">{row.aboutUsDescription || '—'}</td>
+                  <td className="about-us-description"><DescriptionPreview value={row.aboutUsDescription} /></td>
                   <td>{row.totalYearsOfExcellence ?? '—'}</td><td>{row.totalExamCenters ?? '—'}</td><td>{row.totalFaculties ?? '—'}</td><td>{row.totalStudents ?? '—'}</td>
                   <td><div className="table-actions"><button className="btn btn-danger btn-sm" onClick={(event) => { event.stopPropagation(); handleDelete(row) }} title="Delete"><FiTrash2 /></button></div></td>
                 </tr>

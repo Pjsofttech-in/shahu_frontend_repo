@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import { FiFileText, FiImage, FiPlus, FiTrash2 } from 'react-icons/fi'
 import Modal from '../../components/common/Modal.jsx'
+import DescriptionPreview from '../../components/common/DescriptionPreview.jsx'
 import { categoryService, examService, testSeriesService } from '../../api/services.js'
 
 const EMPTY_FORM = {
@@ -273,7 +274,7 @@ export default function SeriesManager() {
               {!loading && filtered.map((row) => (
                 <tr key={row.id}>
                   <td>{row.id}</td><td><button className="table-link-button series-name-link" type="button" onClick={() => openEdit(row)}>{row.title || '—'}</button></td><td>{row.subject || row.examType || '—'}</td><td>{row.price ?? '—'}</td><td>{row.mrp ?? '—'}</td>
-                  <td>{row.category?.categoryName || row.category?.name || row.categoryName || getCategoryId(row) || '—'}</td><td>{[row.testFeatureOne, row.testFeatureTwo, row.testFeatureThree].filter(Boolean).join(', ') || '—'}</td><td className="series-description-cell">{row.description || '—'}</td>
+                  <td>{row.category?.categoryName || row.category?.name || row.categoryName || getCategoryId(row) || '—'}</td><td>{[row.testFeatureOne, row.testFeatureTwo, row.testFeatureThree].filter(Boolean).join(', ') || '—'}</td><td className="series-description-cell"><DescriptionPreview value={row.description} /></td>
                   <td><span className={`badge ${row.active === false ? 'badge-inactive' : 'badge-active'}`}>{row.active === false ? 'Inactive' : 'Active'}</span></td>
                   <td>{row.createdAt ? new Date(row.createdAt).toLocaleDateString() : '—'}</td>
                   <td><SeriesImage value={getImageValue(row)} className="series-thumb" /></td>
