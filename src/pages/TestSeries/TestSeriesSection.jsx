@@ -9,7 +9,7 @@ import ExamManager from './ExamManager.jsx'
 import PaperManager from './PaperManager.jsx'
 import QuestionManager from './QuestionManager.jsx'
 import ExamQuestionsPage from './ExamQuestionsPage.jsx'
-import TestSeriesPage from './TestSeriesPage.jsx'
+import TestSeriesDashboard from './TestSeriesDashboard.jsx'
 import OrderListPage from '../ebook/OrderListPage.jsx'
 import ExamPaperView from './ExamPaperView.jsx'
 import AddQuestionPage from './AddQuestionPage.jsx'
@@ -25,7 +25,7 @@ export default function TestSeriesSection() {
       verticalNav={isSettings ? <VerticalNav links={testSeriesSettingsLinks} title="Settings" className="test-series-settings-nav" /> : null}
     >
       <Routes>
-        <Route path="/" element={<TestSeriesPage title="Test Series" description="" />} />
+        <Route path="/" element={<TestSeriesDashboard />} />
         <Route path="/series" element={<SeriesManager />} />
         <Route path="/questions" element={<QuestionManager />} />
         <Route path="/questions/add" element={<AddQuestionPage />} />

@@ -21,10 +21,7 @@ export default function OrderListPage() {
 
   return (
     <div className="ebook-list-page" style={{ width: '100%', maxWidth: '1220px', margin: '0 auto' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '12px', marginBottom: '18px' }}>
-        <div style={{ fontSize: '14px', fontWeight: 700, color: '#1f2d3d' }}>
-          Order Count: <span style={{ color: '#2f74c0' }}>{rows.length}</span>
-        </div>
+      <div className="ebook-list-controls">
         <input
           value={search}
           onChange={(e) => setSearch(e.target.value)}
@@ -32,6 +29,7 @@ export default function OrderListPage() {
           style={{ width: '320px', padding: '10px 12px', borderRadius: '7px', border: '1px solid #d8e2ef', background: '#fff' }}
         />
       </div>
+      <div className="ebook-list-count">Order Count: <span>{rows.length}</span></div>
 
       <div className="table-wrap" style={{ border: '1px solid #dfe5ee', borderRadius: '10px', overflow: 'hidden' }}>
         <table className="data-table">

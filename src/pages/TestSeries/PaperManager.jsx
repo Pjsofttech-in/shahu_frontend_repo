@@ -17,6 +17,31 @@ const categoryIdOf = (row) => row.categoryId ?? row.category?.id ?? ''
 const categoryNameOf = (row) => row.category?.categoryName || row.category?.name || row.categoryName || categoryIdOf(row) || '-'
 const errorOf = (error) => String(error?.response?.data?.message || error?.response?.data?.error || error?.message || 'Could not complete the paper request.')
 const dateOf = (value) => value ? String(value).slice(0, 10) : '-'
+const imageUrlOf = (row) => row.image || row.imageUrl || row.examImage || ''
+const EMPTY_PAPER_IMAGE = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII='
+
+const getExistingImageFile = async (row) => {
+  const source = imageUrlOf(row)
+  if (source && source.startsWith('data:')) {
+    const response = await fetch(source)
+    const blob = await response.blob()
+    return new File([blob], 'existing-paper-image.png', { type: blob.type || 'image/png' })
+  }
+
+  if (source) {
+    try {
+      const response = await fetch(source, { credentials: 'include' })
+      if (response.ok) {
+        const blob = await response.blob()
+        return new File([blob], 'existing-paper-image', { type: blob.type || 'image/jpeg' })
+      }
+    } catch {}
+  }
+
+  const fallbackResponse = await fetch(EMPTY_PAPER_IMAGE)
+  const blob = await fallbackResponse.blob()
+  return new File([blob], 'existing-paper-image', { type: blob.type || 'image/jpeg' })
+}
 
 export default function PaperManager() {
   const navigate = useNavigate()
@@ -81,7 +106,8 @@ export default function PaperManager() {
     try {
       const values = { ...row, [field]: !row[field] }
       delete values.id; delete values.image; delete values.category; delete values.active
-      await examService.update(row.id, values, null); await load()
+      const existingImage = await getExistingImageFile(row)
+      await examService.update(row.id, values, existingImage); await load()
     } catch (toggleError) { setError(errorOf(toggleError)) }
   }
 

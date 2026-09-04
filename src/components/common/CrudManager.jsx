@@ -37,6 +37,7 @@ export default function CrudManager({
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [search, setSearch] = useState('')
+  const [columnFilters, setColumnFilters] = useState({})
   const [showModal, setShowModal] = useState(false)
   const [editing, setEditing] = useState(null)
   const [formValues, setFormValues] = useState({})
@@ -304,8 +305,25 @@ export default function CrudManager({
 
   const resetFilters = () => {
     setSearch('')
+    setColumnFilters({})
     onResetFilters?.()
   }
+
+  const updateColumnFilter = (key, value) => {
+    setColumnFilters((current) => ({ ...current, [key]: value }))
+  }
+
+  const getColumnValue = (row, column) => {
+    const directValue = row[column.key]
+    if (directValue !== undefined && directValue !== null && directValue !== '') return directValue
+    const renderedValue = column.render?.(row)
+    return typeof renderedValue === 'string' || typeof renderedValue === 'number' ? renderedValue : ''
+  }
+
+  const columnOptions = useMemo(() => columns.reduce((result, column) => {
+    result[column.key] = [...new Set(rows.map((row) => String(getColumnValue(row, column) ?? '').trim()).filter(Boolean))].sort()
+    return result
+  }, {}), [columns, rows])
 
   const filteredRows = useMemo(() => {
     let result = rows
@@ -314,8 +332,14 @@ export default function CrudManager({
       result = result.filter((r) => searchKeys.some((k) => String(r[k] ?? '').toLowerCase().includes(q)))
     }
     if (filterFn) result = result.filter(filterFn)
+    result = result.filter((row) => columns.every((column) => {
+      const query = columnFilters[column.key]?.trim().toLowerCase()
+      if (!query) return true
+      const value = getColumnValue(row, column)
+      return String(value ?? '').toLowerCase().includes(query)
+    }))
     return result
-  }, [rows, search, searchKeys, filterFn])
+  }, [rows, search, searchKeys, filterFn, columns, columnFilters])
 
   const fieldGroups = useMemo(() => {
     const groups = []
@@ -347,14 +371,6 @@ export default function CrudManager({
 
   return (
     <div>
-      <div className="page-header">
-        <div>
-          <h1>{title}</h1>
-          {subtitle && <p>{subtitle}</p>}
-        </div>
-        {showCreateAction && <button className="btn btn-primary" data-open-create onClick={openCreate}><FiPlus /> {addLabel}</button>}
-      </div>
-
       {searchKeys.length > 0 && (
         <div className="toolbar">
           <div className="form-group">
@@ -367,6 +383,29 @@ export default function CrudManager({
               <FiRotateCcw /> Reset Filters
             </button>
           )}
+        </div>
+      )}
+
+      {!extraToolbar && (
+        <div className="column-filter-row" role="group" aria-label="Filter by column">
+          {columns.map((column) => (
+            <select
+              key={column.key}
+              value={columnFilters[column.key] || ''}
+              onChange={(event) => updateColumnFilter(column.key, event.target.value)}
+              aria-label={`Filter ${column.label}`}
+            >
+              <option value="">All {column.label}</option>
+              {columnOptions[column.key].map((option) => <option key={option} value={option}>{option}</option>)}
+            </select>
+          ))}
+        </div>
+      )}
+      <div className="result-count">Showing <strong>{filteredRows.length}</strong> of {rows.length} records</div>
+
+      {showCreateAction && (
+        <div className="crud-action-row">
+          <button className="btn btn-primary" data-open-create onClick={openCreate}><FiPlus /> {addLabel}</button>
         </div>
       )}
 

@@ -5,7 +5,7 @@ import { categoryService } from '../../api/services.js'
 export default function CategorySettings() {
   return (
     <CrudManager
-      title="Test Categories"
+      title="Categories"
       subtitle="Manage the categories used by your test series."
       service={categoryService}
       addLabel="Add Category"

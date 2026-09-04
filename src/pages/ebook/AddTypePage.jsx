@@ -62,11 +62,8 @@ export default function AddTypePage() {
 
   return (
     <div className="ebook-list-page" style={{ width: '100%', maxWidth: '1220px', margin: '0 auto' }}>
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr auto', alignItems: 'center', gap: '12px', marginBottom: '18px' }}>
-        <div style={{ fontSize: '14px', fontWeight: 700, color: '#1f2d3d' }}>
-          Material Type Count: <span style={{ color: '#2f74c0' }}>{allRows.length}</span>
-        </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+      <div className="ebook-list-controls">
+        <div className="ebook-list-control-actions">
           <input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
@@ -78,6 +75,7 @@ export default function AddTypePage() {
           </button>
         </div>
       </div>
+      <div className="ebook-list-count">Material Type Count: <span>{filteredRows.length}</span></div>
 
       <div className="table-wrap" style={{ border: '1px solid #dfe5ee', borderRadius: '10px', overflow: 'hidden' }}>
         <table className="data-table">

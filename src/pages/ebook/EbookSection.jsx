@@ -14,7 +14,7 @@ import OrderListPage from './OrderListPage.jsx'
 
 const footerBlock = (
   <div style={{ textAlign: 'center', color: '#1d2430', padding: '28px 16px 10px', fontWeight: 700, fontSize: '15px' }}>
-    Software Designed by <span style={{ color: '#2f74c0' }}>PJSOFTTECH</span> Pvt. Ltd. © All Rights Reserved
+    Software Designed by <a href="https://pjsofttech.com/" target="_blank" rel="noreferrer" style={{ color: '#2f74c0' }}>PJSOFTTECH</a> Pvt. Ltd. © All Rights Reserved
   </div>
 )
 

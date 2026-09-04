@@ -2,6 +2,7 @@ import React from 'react'
 
 export default function FormField({ field, value, onChange, options, error }) {
   const { name, label, type = 'text', required, placeholder, rows } = field
+  const hasValue = value !== undefined && value !== null && value !== ''
 
   const common = {
     id: name,
@@ -11,12 +12,12 @@ export default function FormField({ field, value, onChange, options, error }) {
   }
 
   return (
-    <div className="form-group">
+    <div className={`form-group floating-field${hasValue ? ' has-value' : ''}`}>
       <label htmlFor={name}>{label}{required && ' *'}</label>
 
       {type === 'select' && (
         <select {...common} value={value ?? ''} onChange={(e) => onChange(name, e.target.value)}>
-          <option value="">Select {label}</option>
+          <option value=""> </option>
           {(options || []).map((opt) => (
             <option key={opt.value} value={opt.value}>{opt.label}</option>
           ))}

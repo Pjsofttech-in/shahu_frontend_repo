@@ -78,21 +78,19 @@ export default function MaterialTypePage() {
 
   return (
     <div className="ebook-list-page" style={{ width: '100%', maxWidth: '1220px', margin: '0 auto' }}>
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr auto auto', alignItems: 'center', gap: '12px', marginBottom: '18px' }}>
-        <div style={{ fontSize: '14px', fontWeight: 700, color: '#1f2d3d' }}>
-          Category Count: <span style={{ color: '#2f74c0' }}>{rows.length}</span>
-        </div>
+      <div className="ebook-list-controls">
         <input
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           placeholder="Search Categories"
           style={{ width: '260px', padding: '10px 12px', borderRadius: '7px', border: '1px solid #d8e2ef', background: '#fff' }}
         />
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+        <div className="ebook-list-control-actions">
           <button className="btn btn-primary" onClick={() => setIsModalOpen(true)}>Add Category</button>
           <button className="btn btn-outline" onClick={() => navigate('/ebook/add-type')}>Back to Material Type</button>
         </div>
       </div>
+      <div className="ebook-list-count">Category Count: <span>{filteredRows.length}</span></div>
 
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '12px', marginBottom: '16px' }}>
         <h2 style={{ margin: 0, fontSize: '26px', color: '#1d2430' }}>Categories of Material Type: {materialTypeName}</h2>
