@@ -42,7 +42,7 @@ export default function WebsiteSection() {
         <Route path="/services" element={<ModulePlaceholder title="Services" />} />
         <Route path="/sankalp-features" element={<ModulePlaceholder title="Sankalp Features" />} />
         <Route path="/about" element={<AboutUs />} />
-        <Route path="/features" element={<DynamicMediaManager title="Mentors" subtitle="Manage mentors shown on the website." service={mentorService} recordLabel="Mentor" imageLabel="Mentor Image" imageRequiredOnUpdate showTitle={false} />} />
+        <Route path="/features" element={<DynamicMediaManager title="Mentors" subtitle="Manage mentors shown on the website." service={mentorService} recordLabel="Mentor" imageLabel="Mentor Image" titleLabel="Mentor Name" showLink={false} showPosition imageRequiredOnUpdate showTitle={false} />} />
         <Route path="/footer" element={<Footer />} />
         <Route path="/gallery" element={<Gallery />} />
         <Route path="/toppers" element={<Toppers />} />

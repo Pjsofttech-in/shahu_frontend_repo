@@ -246,20 +246,23 @@ export const contactFormService = {
 }
 export const notificationService = makeDynamicCrudService('/notifications')
 
-const dynamicMediaService = ({ listPath, createPath, updatePath, deletePath, jsonField, imageField }) => ({
+const dynamicMediaService = ({ listPath, createPath, updatePath, deletePath, jsonField, imageField, serializeValues, normalizeRow }) => ({
   getAll: () => dynamicApi.get(listPath, {
     params: { url: getWebsiteRequestParams().url },
-  }).then((r) => r.data),
+  }).then((r) => {
+    const rows = Array.isArray(r.data) ? r.data : r.data?.content || []
+    return normalizeRow ? rows.map(normalizeRow) : r.data
+  }),
   create: (values, image) => {
     const form = new FormData()
-    form.append(jsonField, JSON.stringify(values))
+    form.append(jsonField, JSON.stringify(serializeValues ? serializeValues(values) : values))
     form.append('url', getWebsiteRequestParams().url)
     if (image) form.append(imageField, image)
     return dynamicApiUpload.post(createPath, form).then((r) => r.data)
   },
   update: (id, values, image) => {
     const form = new FormData()
-    form.append(jsonField, JSON.stringify(values))
+    form.append(jsonField, JSON.stringify(serializeValues ? serializeValues(values) : values))
     form.append('url', getWebsiteRequestParams().url)
     if (image) form.append(imageField, image)
     return dynamicApiUpload.put(`${updatePath}/${id}`, form).then((r) => r.data)
@@ -293,6 +296,20 @@ export const mentorService = dynamicMediaService({
   deletePath: '/api/mentors',
   jsonField: 'mentor',
   imageField: 'mentorImage',
+  serializeValues: (values) => ({
+    mentorName: values.title,
+    description: values.description,
+    active: true,
+    position: Number(values.position) || 1,
+  }),
+  normalizeRow: (row) => ({
+    ...row,
+    title: row.mentorName ?? row.name ?? row.title ?? '',
+    description: row.description ?? '',
+    image: row.image ?? row.mentorImage ?? '',
+    link: row.link ?? '',
+    position: row.position ?? 1,
+  }),
 })
 
 const getWebsiteRequestParams = (user = {}) => ({
