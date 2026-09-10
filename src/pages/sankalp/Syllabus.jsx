@@ -10,10 +10,11 @@ export default function Syllabus() {
         subtitle="Manage syllabus documents from the live database."
         service={syllabusService}
         addLabel="Add Syllabus"
-        searchKeys={['title', 'link']}
-        searchPlaceholder="Search by title or link…"
+        searchKeys={['title', 'description', 'link']}
+        searchPlaceholder="Search by title, description or link…"
         columns={[
           { key: 'title', label: 'Title' },
+          { key: 'description', label: 'Description', render: (r) => r.description || '—' },
           {
             key: 'fileUrl', label: 'File / Link',
             render: (r) => {
@@ -26,11 +27,13 @@ export default function Syllabus() {
         fields={[
           { name: 'title', label: 'Title', type: 'text', required: true },
           { name: 'link', label: 'Link', type: 'url', placeholder: 'https://example.com/syllabus.pdf' },
+          { name: 'description', label: 'Description', type: 'textarea', rows: 4, placeholder: 'Add a short description for this syllabus…', fullWidth: true },
           { name: 'file', label: 'PDF File', type: 'file', accept: 'application/pdf', required: true },
         ]}
         transformSubmit={async (values) => {
           const title = (values.title ?? '').trim()
           const link = (values.link ?? '').trim()
+          const description = (values.description ?? '').trim()
 
           if (!title) {
             throw new Error('Title is required')
@@ -42,6 +45,7 @@ export default function Syllabus() {
           return {
             title,
             link,
+            description,
             syllabusFile: values.file,
           }
         }}

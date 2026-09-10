@@ -18,12 +18,6 @@ export default function WebsiteUrl() {
 
   return (
     <section className="website-url-page">
-      <div className="page-header">
-        <div>
-          <h1>Website URL</h1>
-          <p>Use this address to open the public website.</p>
-        </div>
-      </div>
       <div className="website-url-card card">
         <div className="website-url-icon"><FiGlobe /></div>
         <span className="website-url-label">Public website address</span>

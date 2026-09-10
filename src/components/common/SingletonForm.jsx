@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import FormField from './FormField.jsx'
 
-export default function SingletonForm({ title, subtitle, service, fields, transformSubmit, preview }) {
+export default function SingletonForm({ title, subtitle, service, fields, transformSubmit, preview, showHeader = true }) {
   const [values, setValues] = useState({})
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
@@ -42,9 +42,9 @@ export default function SingletonForm({ title, subtitle, service, fields, transf
 
   return (
     <div>
-      <div className="page-header">
+      {showHeader && <div className="page-header">
         <div><h1>{title}</h1>{subtitle && <p>{subtitle}</p>}</div>
-      </div>
+      </div>}
 
       {preview && preview(values)}
 

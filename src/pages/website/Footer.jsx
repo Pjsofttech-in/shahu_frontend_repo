@@ -32,6 +32,7 @@ export default function Footer() {
         title="Footer Settings"
         subtitle="Edit the content shown in the website footer."
         service={footerService}
+        showHeader={false}
         preview={FooterPreview}
         fields={[
           { name: 'title', label: 'Title', type: 'text', required: true },

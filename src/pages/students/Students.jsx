@@ -145,6 +145,7 @@ export default function Students() {
       subtitle="All students registered under Sankalp centers. Add students manually or review registrations."
       service={studentService}
       addLabel="Add Student"
+      getRowId={(row) => row?.id ?? row?.studentId ?? row?.student_id}
       formColumns={4}
       searchKeys={['studentName', 'fatherName', 'lastName', 'school', 'schoolName', 'mobile', 'email']}
       searchPlaceholder="Search by name, school, mobile, email…"
@@ -171,7 +172,7 @@ export default function Students() {
         {
           key: 'paymentMode',
           label: 'Payment Mode',
-          render: (r) => r.paymentMode || r.payment_mode || r.payment?.paymentMode || r.payment?.payment_mode || r.payment?.mode || r.payment?.paymentType || '—',
+          render: (r) => r.paymentMode || r.payment_mode || r.paymentModeName || r.payment_mode_name || r.paymentType || r.payment_type || r.mode || r.payment?.paymentMode || r.payment?.payment_mode || r.payment?.paymentModeName || r.payment?.mode || r.payment?.paymentType || r.payment?.type || '—',
         },
         {
           key: 'paymentDone',

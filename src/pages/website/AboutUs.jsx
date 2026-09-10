@@ -121,8 +121,7 @@ export default function AboutUs() {
 
   return (
     <div>
-      <div className="page-header">
-        <div><h1>About Us</h1><p>Manage the About Us content and homepage statistics.</p></div>
+      <div className="home-page-actions">
         <button className="btn btn-primary" onClick={openAdd}><FiPlus /> Add About Us</button>
       </div>
       {error && !showModal && <div className="login-alert">{error}</div>}

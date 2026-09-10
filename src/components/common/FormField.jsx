@@ -11,7 +11,7 @@ export default function FormField({ field, value, onChange, options, error }) {
   }
 
   return (
-    <div className="form-group">
+    <div className={`form-group${field.fullWidth ? ' form-group-full-width' : ''}`}>
       <label htmlFor={name}>{label}{required && ' *'}</label>
 
       {type === 'select' && (

@@ -38,6 +38,7 @@ export default function DynamicMediaManager({
   imageLabel,
   imageRequired = true,
   priority = false,
+  showTitle = true,
 }) {
   const [rows, setRows] = useState([])
   const [loading, setLoading] = useState(true)
@@ -150,11 +151,10 @@ export default function DynamicMediaManager({
   return (
     <section>
       <div className="page-header">
-        <div><h1>{title}</h1><p>{subtitle}</p></div>
+        {showTitle && <div><h1>{title}</h1><p>{subtitle}</p></div>}
         <button className="btn btn-primary" onClick={openAdd}><FiPlus /> Add {recordLabel}</button>
       </div>
       {error && !showModal && <div className="login-alert">{error}</div>}
-      <div className="content-limit-note">{rows.length} of {maxRecords} {recordLabel.toLowerCase()} sections used</div>
       <div className="card" style={{ padding: 0 }}>
         <div className="table-wrap">
           <table className="data-table dynamic-content-table">
@@ -175,6 +175,7 @@ export default function DynamicMediaManager({
           </table>
         </div>
       </div>
+      <div className="content-limit-note">{rows.length} of {maxRecords} {recordLabel.toLowerCase()} sections used</div>
 
       {showModal && <Modal title={editing ? `Edit ${recordLabel}` : `Add ${recordLabel}`} onClose={closeModal} maxWidth={760} footer={<><button className="btn btn-outline" onClick={closeModal}>Cancel</button><button className="btn btn-primary" form="dynamic-content-form" disabled={saving}><FiSave /> {saving ? 'Saving...' : 'Save Changes'}</button></>}>
         <form id="dynamic-content-form" onSubmit={handleSubmit}>

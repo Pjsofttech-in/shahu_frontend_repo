@@ -4,7 +4,7 @@ import { FiImage, FiTarget, FiInfo, FiPhone, FiFileText, FiGlobe } from 'react-i
 
 const homeModules = [
   { to: '/website/url', label: 'Website URL', description: 'Manage website URL', icon: FiGlobe },
-  { to: '/website/hero', label: 'Hero Section', description: 'Manage hero banner', icon: FiImage },
+  { to: '/website/hero', label: 'Home Sec', description: 'Manage hero banner and marquee', icon: FiImage },
   { to: '/website/features', label: 'Features', description: 'Manage features & highlights', icon: FiTarget },
   { to: '/website/footer', label: 'Footer', description: 'Manage footer section', icon: FiFileText },
   { to: '/website/about', label: 'About Us', description: 'Manage about content', icon: FiInfo },

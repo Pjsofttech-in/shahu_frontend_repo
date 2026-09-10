@@ -116,7 +116,20 @@ export const centersByTaluka = (talukaId) =>
 export const userService = makeCrudService('/users')
 
 // ---------------- Students ----------------
-export const studentService = makeCrudService('/students')
+export const studentService = {
+  getAll: (params) => api.get('/students', { params }).then((r) => r.data),
+  getById: (id) => api.get(`/students/${id}`).then((r) => r.data),
+  create: (payload) => api.post('/students', payload).then((r) => r.data),
+  update: (id, payload) => api.put(`/students/${id}`, payload).then((r) => r.data),
+  remove: async (id) => {
+    try {
+      return (await api.delete(`/students/${id}`)).data
+    } catch (error) {
+      if (![404, 405].includes(error?.response?.status)) throw error
+      return (await api.delete(`/deleteStudent/${id}`)).data
+    }
+  },
+}
 
 // ---------------- Website management ----------------
 export const galleryService = {
@@ -264,6 +277,14 @@ export const heroSectionService = dynamicMediaService({
   jsonField: 'heroSection',
   imageField: 'heroSectionImage',
 })
+
+export const marqueeService = {
+  get: async () => {
+    const response = await dynamicApi.get('/marquee')
+    return response.data || {}
+  },
+  update: (payload) => dynamicApi.put('/marquee', payload).then((r) => r.data),
+}
 
 export const featureService = dynamicMediaService({
   listPath: '/getAllFeatures',

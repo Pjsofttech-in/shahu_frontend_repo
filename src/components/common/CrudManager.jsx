@@ -32,6 +32,7 @@ export default function CrudManager({
   onResetFilters,
   uniqueFields = [],
   formColumns = 2,
+  getRowId = (row) => row?.id,
 }) {
   const [rows, setRows] = useState([])
   const [loading, setLoading] = useState(true)
@@ -295,10 +296,19 @@ export default function CrudManager({
   const handleDelete = async (row) => {
     if (!window.confirm('Delete this record? This cannot be undone.')) return
     try {
-      await service.remove(row.id)
-      setRows((prev) => prev.filter((r) => r.id !== row.id))
+      const rowId = getRowId(row)
+      if (rowId === undefined || rowId === null || rowId === '') {
+        throw new Error('This student does not have a valid ID and cannot be deleted.')
+      }
+
+      await service.remove(rowId)
+      setRows((prev) => prev.filter((currentRow) => getRowId(currentRow) !== rowId))
     } catch (e) {
-      alert(getApiErrorMessage(e, 'Delete failed.'))
+      const backendMessage = getApiErrorMessage(e, 'Delete failed.')
+      const isPaymentConstraint = /payment|foreign key|constraint|referenced/i.test(backendMessage)
+      alert(isPaymentConstraint
+        ? 'This student cannot be deleted because payment records are linked to the student. Remove the linked payments or use the backend soft-delete option.'
+        : backendMessage)
     }
   }
 

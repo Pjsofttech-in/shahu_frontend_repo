@@ -8,6 +8,7 @@ export default function ContactUs({ title = 'Contact Us' }) {
       title={title}
       subtitle="Manage contact details displayed on the public website."
       service={contactService}
+      showHeader={false}
       fields={[
         { name: 'address', label: 'Address', type: 'textarea', required: true },
         { name: 'contactNo', label: 'Contact Number', type: 'tel', required: true },
