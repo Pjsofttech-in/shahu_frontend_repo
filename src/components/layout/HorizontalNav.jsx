@@ -26,9 +26,6 @@ export const sankalpLinks = [
 // Settings Submenu
 export const settingsLinks = [
   { to: '/settings/districts', label: 'Districts', icon: <FiMapPin /> },
-  { to: '/settings/talukas', label: 'Talukas', icon: <FiMap /> },
-  { to: '/settings/centers', label: 'Centers', icon: <FiHome /> },
-  { to: '/settings/coordinators', label: 'Coordinators', icon: <FiUserCheck /> },
 ]
 
 export const testSeriesLinks = [
@@ -51,8 +48,8 @@ export const ebookLinks = [
 ]
 
 export const testSeriesSettingsLinks = [
-  { to: '/test-series/settings/categories', label: 'Test Categories', icon: <FiGrid /> },
-  { to: '/test-series/settings/sections', label: 'Test Sections', icon: <FiLayers /> },
+  { to: '/test-series/settings/categories', label: 'Categories', icon: <FiGrid /> },
+  { to: '/test-series/settings/sections', label: 'Sections', icon: <FiLayers /> },
 ]
 
 // Website Management Submenu
@@ -115,6 +112,8 @@ export function VerticalNav({ links, title, className = '' }) {
             key={link.to}
             to={link.to}
             state={{ websiteNavGroup: link.group }}
+            title={link.label}
+            aria-label={link.label}
             className={({ isActive }) => `vertical-nav-link ${isActive ? 'active' : ''}`}
           >
             {link.icon && <span className="nav-icon">{link.icon}</span>}

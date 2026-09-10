@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useState } from 'react'
 import { FiImage, FiPlus, FiSave, FiTrash2 } from 'react-icons/fi'
 import Modal from '../../components/common/Modal.jsx'
+import DescriptionPreview from '../../components/common/DescriptionPreview.jsx'
 import { visionMissionDynamicService } from '../../api/services.js'
 
 const EMPTY_FORM = {
@@ -103,7 +104,7 @@ export default function VisionMission() {
               <tr key={row.id} className="is-clickable" onClick={() => openEdit(row)}>
                 <td>{row.id}</td>
                 <td>{row.directorImage ? <img className="about-us-thumb" src={row.directorImage} alt="" /> : <FiImage />}</td>
-                <td>{row.directorName || '—'}</td><td className="about-us-description">{row.directorMessage || '—'}</td><td className="about-us-description">{row.description || '—'}</td><td className="about-us-description">{row.vision || '—'}</td><td className="about-us-description">{row.mission || '—'}</td>
+                <td>{row.directorName || '—'}</td><td className="about-us-description"><DescriptionPreview value={row.directorMessage} /></td><td className="about-us-description"><DescriptionPreview value={row.description} /></td><td className="about-us-description"><DescriptionPreview value={row.vision} /></td><td className="about-us-description"><DescriptionPreview value={row.mission} /></td>
                 <td><div className="table-actions"><button className="btn btn-danger btn-sm" onClick={(event) => { event.stopPropagation(); handleDelete(row) }} title="Delete"><FiTrash2 /></button></div></td>
               </tr>
             ))}

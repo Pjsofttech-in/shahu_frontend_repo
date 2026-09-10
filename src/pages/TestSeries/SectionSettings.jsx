@@ -5,7 +5,7 @@ import { sectionService } from '../../api/services.js'
 export default function SectionSettings() {
   return (
     <CrudManager
-      title="Test Sections"
+      title="Sections"
       subtitle="Manage the sections used to organize your test papers."
       service={sectionService}
       addLabel="Add Section"

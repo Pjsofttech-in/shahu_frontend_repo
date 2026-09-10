@@ -13,13 +13,15 @@ export default function SettingsSection() {
       title="Settings"
       horizontalNav={<HorizontalNav links={settingsLinks} title="Settings" />}
     >
-      <Routes>
-        <Route path="/districts" element={<Districts />} />
-        <Route path="/talukas" element={<Talukas />} />
-        <Route path="/centers" element={<Centers />} />
-        <Route path="/coordinators" element={<Coordinators />} />
-        <Route path="/*" element={<Navigate to="/settings/districts" replace />} />
-      </Routes>
+      <div className="settings-pages">
+        <Routes>
+          <Route path="/districts" element={<Districts />} />
+          <Route path="/talukas" element={<Talukas />} />
+          <Route path="/centers" element={<Centers />} />
+          <Route path="/coordinators" element={<Coordinators />} />
+          <Route path="/*" element={<Navigate to="/settings/districts" replace />} />
+        </Routes>
+      </div>
     </Layout>
   )
 }

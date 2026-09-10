@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useState } from 'react'
 import { FiPlus, FiTrash2, FiSave, FiArrowLeft } from 'react-icons/fi'
+import DescriptionPreview from '../../components/common/DescriptionPreview.jsx'
 import { facultyService } from '../../api/services.js'
 
 const EMPTY_FORM = {
@@ -336,7 +337,7 @@ export default function Faculty() {
                     <td>{row.facilityEducation || '—'}</td>
                     <td style={{ maxWidth: 200 }}>
                       <span style={{ display: 'block', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: 200 }}>
-                        {row.description || '—'}
+                        <DescriptionPreview value={row.description} />
                       </span>
                     </td>
                     <td>

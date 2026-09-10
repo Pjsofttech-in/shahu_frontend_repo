@@ -5,6 +5,7 @@ import { vmMaterialService } from '../../api/services.js'
 export default function MaterialListPage() {
   const [materials, setMaterials] = useState([])
   const [search, setSearch] = useState('')
+  const [filters, setFilters] = useState({})
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -28,7 +29,8 @@ export default function MaterialListPage() {
     const value = search.trim().toLowerCase()
     return materials.filter((row) => [row.materialtype, row.chapterName, row.categoryName, row.subcategoryName, row.status]
       .some((field) => String(field || '').toLowerCase().includes(value)))
-  }, [materials, search])
+      .filter((row) => Object.entries(filters).every(([key, query]) => !query || String(row[key] ?? '').toLowerCase().includes(query.toLowerCase())))
+  }, [materials, search, filters])
 
   const remove = async (id) => {
     if (!window.confirm('Delete this material?')) return
@@ -51,10 +53,7 @@ export default function MaterialListPage() {
 
   return (
     <div className="ebook-list-page" style={{ width: '100%', maxWidth: '1220px', margin: '0 auto' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '12px', marginBottom: '18px' }}>
-        <div style={{ fontSize: '14px', fontWeight: 700, color: '#1f2d3d' }}>
-          Material List: <span style={{ color: '#2f74c0' }}>{rows.length}</span>
-        </div>
+      <div className="ebook-list-controls">
         <input
           value={search}
           onChange={(e) => setSearch(e.target.value)}
@@ -62,6 +61,20 @@ export default function MaterialListPage() {
           style={{ width: '320px', padding: '10px 12px', borderRadius: '7px', border: '1px solid #d8e2ef', background: '#fff' }}
         />
       </div>
+      <div className="ebook-list-count">Material List Count: <span>{rows.length}</span></div>
+
+      <div className="column-filter-row material-column-filters" role="group" aria-label="Filter materials by column">
+        {[
+          ['id', 'ID'], ['materialtype', 'Material Type'], ['chapterName', 'Chapter Name'], ['categoryName', 'Category'],
+          ['subcategoryName', 'Subcategory'], ['status', 'Status'], ['price', 'Price'],
+        ].map(([key, label]) => (
+          <select key={key} value={filters[key] || ''} onChange={(event) => setFilters((current) => ({ ...current, [key]: event.target.value }))} aria-label={`Filter ${label}`}>
+            <option value="">All {label}</option>
+            {[...new Set(materials.map((row) => String(row[key] ?? '').trim()).filter(Boolean))].sort().map((option) => <option key={option} value={option}>{option}</option>)}
+          </select>
+        ))}
+      </div>
+      <div className="result-count">Showing <strong>{rows.length}</strong> of {materials.length} materials</div>
 
       <div className="table-wrap" style={{ border: '1px solid #dfe5ee', borderRadius: '10px', overflow: 'hidden' }}>
         <table className="data-table">

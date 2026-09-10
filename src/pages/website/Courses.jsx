@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import { FiPlus, FiTrash2, FiSave } from 'react-icons/fi'
+import DescriptionPreview from '../../components/common/DescriptionPreview.jsx'
 import { courseService } from '../../api/services'
 
 const EMPTY_FORM = {
@@ -183,7 +184,7 @@ export default function Courses() {
                     <td>{row.courseName || '—'}</td>
                     <td style={{ maxWidth: 200 }}>
                       <span style={{ display: 'block', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: 200 }}>
-                        {row.courseDescription || '—'}
+                        <DescriptionPreview value={row.courseDescription} />
                       </span>
                     </td>
                     <td>{row.duration || '—'}</td>
