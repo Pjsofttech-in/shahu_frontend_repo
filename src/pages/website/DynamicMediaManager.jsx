@@ -43,15 +43,16 @@ export default function DynamicMediaManager({
   showTitle = true,
   titleLabel = 'Title',
   showLink = true,
+  showButtonName = false,
   showPosition = false,
 }) {
-  const tableColumnCount = 4 + (showLink ? 1 : 0) + (priority ? 1 : 0) + (showPosition ? 1 : 0) + 1
+  const tableColumnCount = 4 + (showButtonName ? 1 : 0) + (showLink ? 1 : 0) + (priority ? 1 : 0) + (showPosition ? 1 : 0) + 1
   const [rows, setRows] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [showModal, setShowModal] = useState(false)
   const [editing, setEditing] = useState(null)
-  const [form, setForm] = useState({ title: '', description: '', link: '', priority: '', position: '' })
+  const [form, setForm] = useState({ title: '', description: '', buttonText: '', link: '', priority: '', position: '' })
   const [image, setImage] = useState(null)
   const [saving, setSaving] = useState(false)
 
@@ -76,7 +77,7 @@ export default function DynamicMediaManager({
       return
     }
     setEditing(null)
-    setForm({ title: '', description: '', link: '', priority: String(rows.length + 1), position: String(rows.length + 1) })
+    setForm({ title: '', description: '', buttonText: '', link: '', priority: String(rows.length + 1), position: String(rows.length + 1) })
     setImage(null)
     setError('')
     setShowModal(true)
@@ -87,6 +88,7 @@ export default function DynamicMediaManager({
     setForm({
       title: row.title ?? '',
       description: row.description ?? '',
+      buttonText: row.buttonText ?? '',
       link: row.link ?? '',
       priority: row.priority ?? '',
       position: row.position ?? '',
@@ -121,6 +123,7 @@ export default function DynamicMediaManager({
     const values = {
       title: form.title.trim(),
       description: form.description.trim(),
+      buttonText: form.buttonText.trim(),
       link: form.link.trim(),
     }
     if (priority) values.priority = Number(form.priority) || 1
@@ -165,7 +168,7 @@ export default function DynamicMediaManager({
       <div className="card" style={{ padding: 0 }}>
         <div className="table-wrap">
           <table className="data-table dynamic-content-table">
-              <thead><tr><th>Section</th><th>Image</th><th>{titleLabel}</th><th>Description</th>{showLink && <th>Link / Button</th>}{priority && <th>Priority</th>}{showPosition && <th>Position</th>}<th>Actions</th></tr></thead>
+              <thead><tr><th>Section</th><th>Image</th><th>{titleLabel}</th><th>Description</th>{showButtonName && <th>Button Name</th>}{showLink && <th>Link / Button</th>}{priority && <th>Priority</th>}{showPosition && <th>Position</th>}<th>Actions</th></tr></thead>
             <tbody>
               {loading ? <tr><td colSpan={tableColumnCount} className="empty-row">Loading...</td></tr> : rows.length === 0 ? <tr><td colSpan={tableColumnCount} className="empty-row">No {recordLabel.toLowerCase()} sections found</td></tr> : rows.map((row, index) => (
                 <tr key={row.id} className="is-clickable" onClick={() => openEdit(row)}>
@@ -173,6 +176,7 @@ export default function DynamicMediaManager({
                   <td>{row.image ? <img className="dynamic-content-thumb" src={row.image} alt="" /> : <FiImage />}</td>
                   <td>{row.title || '—'}</td>
                   <td className="dynamic-content-description"><DescriptionPreview value={row.description} /></td>
+                  {showButtonName && <td>{row.buttonText || '—'}</td>}
                   {showLink && <td>{row.link ? <a href={row.link} target="_blank" rel="noopener noreferrer" onClick={(event) => event.stopPropagation()}>{row.link}</a> : '—'}</td>}
                   {priority && <td>{row.priority ?? '—'}</td>}
                   {showPosition && <td>{row.position ?? '—'}</td>}
@@ -194,6 +198,7 @@ export default function DynamicMediaManager({
           </div>
           <div className="form-group"><label htmlFor="dynamic-description">Description *</label><textarea id="dynamic-description" name="description" value={form.description} onChange={handleChange} required /></div>
           {showLink && <div className="form-row">
+            {showButtonName && <div className="form-group"><label htmlFor="dynamic-button-text">Button Name</label><input id="dynamic-button-text" name="buttonText" value={form.buttonText} onChange={handleChange} placeholder="Learn More" /></div>}
             <div className="form-group"><label htmlFor="dynamic-link">Link / Button URL</label><input id="dynamic-link" name="link" type="url" value={form.link} onChange={handleChange} placeholder="https://example.com" /></div>
             {priority && <div className="form-group"><label htmlFor="dynamic-priority">Priority</label><input id="dynamic-priority" name="priority" type="number" min="1" max={maxRecords} value={form.priority} onChange={handleChange} /></div>}
           </div>}

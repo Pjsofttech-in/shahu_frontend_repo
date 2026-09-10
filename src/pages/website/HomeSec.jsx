@@ -37,6 +37,7 @@ export default function HomeSec() {
           recordLabel="Hero Section"
           imageLabel="Hero Image"
           priority
+          showButtonName
           showTitle={false}
         />
       </div>
