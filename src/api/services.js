@@ -286,13 +286,13 @@ export const marqueeService = {
   update: (payload) => dynamicApi.put('/marquee', payload).then((r) => r.data),
 }
 
-export const featureService = dynamicMediaService({
-  listPath: '/getAllFeatures',
-  createPath: '/createFeature',
-  updatePath: '/updateFeature',
-  deletePath: '/deleteFeature',
-  jsonField: 'feature',
-  imageField: 'featureImage',
+export const mentorService = dynamicMediaService({
+  listPath: '/api/mentors',
+  createPath: '/api/mentors',
+  updatePath: '/api/mentors',
+  deletePath: '/api/mentors',
+  jsonField: 'mentor',
+  imageField: 'mentorImage',
 })
 
 const getWebsiteRequestParams = (user = {}) => ({

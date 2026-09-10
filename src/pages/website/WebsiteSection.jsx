@@ -20,7 +20,7 @@ import Notifications from './Notifications.jsx'
 import WebsiteUrl from './WebsiteUrl.jsx'
 import HomeSec from './HomeSec.jsx'
 import DynamicMediaManager from './DynamicMediaManager.jsx'
-import { featureService } from '../../api/services.js'
+import { mentorService } from '../../api/services.js'
 
 export default function WebsiteSection() {
   const location = useLocation()
@@ -42,7 +42,7 @@ export default function WebsiteSection() {
         <Route path="/services" element={<ModulePlaceholder title="Services" />} />
         <Route path="/sankalp-features" element={<ModulePlaceholder title="Sankalp Features" />} />
         <Route path="/about" element={<AboutUs />} />
-        <Route path="/features" element={<DynamicMediaManager title="Features" subtitle="Manage the four feature cards shown on the website." service={featureService} maxRecords={4} recordLabel="Feature" imageLabel="Feature Image" showTitle={false} />} />
+        <Route path="/features" element={<DynamicMediaManager title="Mentors" subtitle="Manage mentors shown on the website." service={mentorService} recordLabel="Mentor" imageLabel="Mentor Image" imageRequiredOnUpdate showTitle={false} />} />
         <Route path="/footer" element={<Footer />} />
         <Route path="/gallery" element={<Gallery />} />
         <Route path="/toppers" element={<Toppers />} />

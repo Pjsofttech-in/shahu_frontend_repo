@@ -34,10 +34,11 @@ export default function DynamicMediaManager({
   title,
   subtitle,
   service,
-  maxRecords,
+  maxRecords = null,
   recordLabel,
   imageLabel,
   imageRequired = true,
+  imageRequiredOnUpdate = false,
   priority = false,
   showTitle = true,
 }) {
@@ -66,7 +67,7 @@ export default function DynamicMediaManager({
   useEffect(() => { load() }, [load])
 
   const openAdd = () => {
-    if (rows.length >= maxRecords) {
+    if (Number.isFinite(maxRecords) && rows.length >= maxRecords) {
       setError(`${title} supports a maximum of ${maxRecords} sections.`)
       return
     }
@@ -107,7 +108,7 @@ export default function DynamicMediaManager({
       setError('Title and description are required.')
       return
     }
-    if (!editing && imageRequired && !image) {
+    if ((!editing && imageRequired || editing && imageRequiredOnUpdate) && !image) {
       setError(`${imageLabel} is required.`)
       return
     }
@@ -130,7 +131,7 @@ export default function DynamicMediaManager({
     } catch (saveError) {
       const status = saveError?.response?.status
       setError(status === 401
-        ? 'The live backend rejected the admin token. Check the Hero/Feature endpoint permissions in Spring Security.'
+        ? 'The live backend rejected the admin token. Check the endpoint permissions in Spring Security.'
         : status === 413
           ? 'Image is still too large for the live server. Please choose a smaller image.'
           : getError(saveError))
@@ -176,7 +177,7 @@ export default function DynamicMediaManager({
           </table>
         </div>
       </div>
-      <div className="content-limit-note">{rows.length} of {maxRecords} {recordLabel.toLowerCase()} sections used</div>
+      {Number.isFinite(maxRecords) && <div className="content-limit-note">{rows.length} of {maxRecords} {recordLabel.toLowerCase()} sections used</div>}
 
       {showModal && <Modal title={editing ? `Edit ${recordLabel}` : `Add ${recordLabel}`} onClose={closeModal} maxWidth={760} footer={<><button className="btn btn-outline" onClick={closeModal}>Cancel</button><button className="btn btn-primary" form="dynamic-content-form" disabled={saving}><FiSave /> {saving ? 'Saving...' : 'Save Changes'}</button></>}>
         <form id="dynamic-content-form" onSubmit={handleSubmit}>

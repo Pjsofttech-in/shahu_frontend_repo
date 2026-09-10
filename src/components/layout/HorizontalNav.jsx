@@ -57,7 +57,7 @@ export const homeLinks = [
   { to: '/website/url', label: 'Website URL', icon: <FiPhone />, group: 'home' },
   { to: '/website/hero', label: 'Home Sec', icon: <FiImage />, group: 'home' },
   { to: '/website/about', label: 'About Us', icon: <FiFileText />, group: 'home' },
-  { to: '/website/features', label: 'Features', icon: <FiTarget />, group: 'home' },
+  { to: '/website/features', label: 'Mentors', icon: <FiUser />, group: 'home' },
   { to: '/website/footer', label: 'Footer', icon: <FiLayers />, group: 'home' },
   { to: '/website/contact-us', label: 'Contact Us', icon: <FiPhone />, group: 'home' },
 ]

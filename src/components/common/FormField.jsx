@@ -12,11 +12,7 @@ export default function FormField({ field, value, onChange, options, error }) {
   }
 
   return (
-<<<<<<< HEAD
-    <div className={`form-group${field.fullWidth ? ' form-group-full-width' : ''}`}>
-=======
-    <div className={`form-group floating-field${hasValue ? ' has-value' : ''}`}>
->>>>>>> 6adc82a5ceebd6363fc7f43afb76eb135533e783
+    <div className={`form-group floating-field${hasValue ? ' has-value' : ''}${field.fullWidth ? ' form-group-full-width' : ''}`}>
       <label htmlFor={name}>{label}{required && ' *'}</label>
 
       {type === 'select' && (
