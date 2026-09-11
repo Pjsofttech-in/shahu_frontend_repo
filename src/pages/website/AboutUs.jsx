@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useState } from 'react'
 import { FiImage, FiPlus, FiSave, FiTrash2 } from 'react-icons/fi'
 import Modal from '../../components/common/Modal.jsx'
 import DescriptionPreview from '../../components/common/DescriptionPreview.jsx'
+import MediaReplaceField from '../../components/common/MediaReplaceField.jsx'
 import { useAuth } from '../../context/AuthContext.jsx'
 import { aboutUsService } from '../../api/services.js'
 
@@ -151,7 +152,7 @@ export default function AboutUs() {
           {error && <div className="login-alert">{error}</div>}
           <div className="form-row">
             <div className="form-group"><label htmlFor="about-title">Title</label><input id="about-title" name="aboutUsTitle" value={form.aboutUsTitle} onChange={handleChange} required /></div>
-            <div className="form-group"><label htmlFor="about-image">Image</label><input id="about-image" type="file" accept="image/*" onChange={(event) => setImage(event.target.files?.[0] || null)} /></div>
+            <MediaReplaceField id="about-image" label="Image" accept="image/*" currentUrl={editing?.aboutUsImage || ''} value={image} onChange={setImage} preview />
           </div>
           <div className="form-group"><label htmlFor="about-description">Description</label><textarea id="about-description" name="aboutUsDescription" rows={4} value={form.aboutUsDescription} onChange={handleChange} required /></div>
           <div className="form-row">

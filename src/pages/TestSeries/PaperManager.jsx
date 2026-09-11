@@ -79,6 +79,18 @@ export default function PaperManager() {
     setError(''); setShowModal(true)
   }
 
+  useEffect(() => {
+    const handleTitleClick = (event) => {
+      const titleCell = event.target.closest('.paper-title')
+      if (!titleCell) return
+      const rowElement = titleCell.closest('tr')
+      const rowIndex = rowElement ? Array.from(rowElement.parentElement.children).indexOf(rowElement) : -1
+      if (rowIndex >= 0 && visibleRows[rowIndex]) open(visibleRows[rowIndex])
+    }
+    document.addEventListener('click', handleTitleClick)
+    return () => document.removeEventListener('click', handleTitleClick)
+  }, [visibleRows])
+
   const change = (event) => {
     const { name, value, type, checked } = event.target
     setForm((current) => ({ ...current, [name]: type === 'checkbox' ? checked : value }))
@@ -124,9 +136,9 @@ export default function PaperManager() {
   }
 
   return <section className="series-manager paper-manager">
-    <div className="page-header"><div><h1>Paper</h1><p>Manage test papers and their availability.</p></div><button className="btn btn-primary" type="button" onClick={() => open()}><FiPlus /> Create Paper</button></div>
+    <div className="page-header"><div><h1>Paper</h1><p>Manage test papers and their availability.</p></div></div>
     {error && !showModal && <div className="login-alert">{error}</div>}
-    <div className="paper-toolbar"><select value={category} onChange={(event) => setCategory(event.target.value)} aria-label="Filter by series"><option value="">Select Series</option>{categories.map((item) => <option key={item.id} value={item.id}>{item.categoryName || item.name}</option>)}</select><div className="paper-search"><input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search by Test Title" aria-label="Search by test title" /><FiSearch /></div><button className="btn btn-primary" type="button" onClick={() => load()}><FiSearch /> Search</button></div>
+    <div className="paper-toolbar"><select value={category} onChange={(event) => setCategory(event.target.value)} aria-label="Filter by series"><option value="">Select Series</option>{categories.map((item) => <option key={item.id} value={item.id}>{item.categoryName || item.name}</option>)}</select><div className="paper-search"><input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search by Test Title" aria-label="Search by test title" /><FiSearch /></div><button className="btn btn-primary" type="button" onClick={() => load()}><FiSearch /> Search</button><button className="btn btn-primary" type="button" onClick={() => open()}><FiPlus /> Create Paper</button></div>
     <div className="card series-table-card paper-table-card"><div className="table-wrap"><table className="data-table paper-table"><thead><tr><th>Sr No</th><th>Title</th><th>Img</th><th>Attem</th><th>Max Attem</th><th>Status</th><th>Result</th><th>Noq</th><th>Marks</th><th>Dur.</th><th>Start Date</th><th>End Date</th><th>Solved</th><th>All Result</th><th>Download</th><th>Actions</th></tr></thead><tbody>
       {loading && <tr className="empty-row"><td colSpan="16">Loading papers...</td></tr>}
       {!loading && visibleRows.length === 0 && <tr className="empty-row"><td colSpan="16">No papers found.</td></tr>}

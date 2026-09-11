@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import { FiPlus, FiTrash2, FiSave } from 'react-icons/fi'
 import DescriptionPreview from '../../components/common/DescriptionPreview.jsx'
+import MediaReplaceField from '../../components/common/MediaReplaceField.jsx'
 import { courseService } from '../../api/services'
 
 const EMPTY_FORM = {
@@ -223,12 +224,7 @@ export default function Courses() {
                   {/* Left — image upload + preview */}
                   <div className="form-group">
                     <label>Course Image</label>
-                    <input
-                      type="file"
-                      accept="image/*"
-                      onChange={handleImageChange}
-                      style={{ padding: '6px 8px' }}
-                    />
+                      <MediaReplaceField id="course-image" label="" accept="image/*" currentUrl={editing?.courseImage || ''} value={imageFile} onChange={(file) => handleImageChange({ target: { files: file ? [file] : [] } })} />
                     <div
                       style={{
                         marginTop: 10,

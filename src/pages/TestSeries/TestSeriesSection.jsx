@@ -10,9 +10,10 @@ import PaperManager from './PaperManager.jsx'
 import QuestionManager from './QuestionManager.jsx'
 import ExamQuestionsPage from './ExamQuestionsPage.jsx'
 import TestSeriesDashboard from './TestSeriesDashboard.jsx'
-import OrderListPage from '../ebook/OrderListPage.jsx'
+import OrderListPage from './OrderListPage.jsx'
 import ExamPaperView from './ExamPaperView.jsx'
 import AddQuestionPage from './AddQuestionPage.jsx'
+import SolvedPaper from './SolvedPaper.jsx'
 
 export default function TestSeriesSection() {
   const location = useLocation()
@@ -36,7 +37,7 @@ export default function TestSeriesSection() {
         <Route path="/exam/:examId/view" element={<ExamPaperView />} />
         <Route path="/exam/:examId/ranking" element={<ExamPaperView mode="ranking" />} />
         <Route path="/exam/:examId/answer-sheet" element={<ExamPaperView mode="answer" />} />
-        <Route path="/solved-paper" element={<ExamManager solvedOnly />} />
+        <Route path="/solved-paper" element={<SolvedPaper />} />
         <Route path="/settings" element={<Navigate to="/test-series/settings/categories" replace />} />
         <Route path="/settings/categories" element={<CategorySettings />} />
         <Route path="/settings/sections" element={<SectionSettings />} />

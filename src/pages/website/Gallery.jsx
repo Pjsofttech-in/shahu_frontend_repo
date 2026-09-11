@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useCallback } from 'react'
 import { FiPlus, FiTrash2, FiSave } from 'react-icons/fi'
 import { galleryService } from '../../api/services.js'
+import MediaReplaceField from '../../components/common/MediaReplaceField.jsx'
 
 const EMPTY_FORM = {
   title: '',
@@ -248,13 +249,14 @@ export default function Gallery() {
                 {/* Row 2: Gallery images */}
                 <div className="form-group">
                     <label htmlFor="g-images">Images</label>
-                    <input
+                    <MediaReplaceField
                       id="g-images"
-                      type="file"
+                      label=""
                       accept="image/*"
                       multiple
-                      onChange={handleImages}
-                      style={{ padding: '6px 8px' }}
+                      currentUrl={editing?.galleryImages?.[0] || ''}
+                      value={imageFiles}
+                      onChange={(files) => handleImages({ target: { files } })}
                     />
                     {previews.length > 0 && (
                       <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 10 }}>

@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import { FiPlus, FiTrash2, FiSave, FiArrowLeft } from 'react-icons/fi'
 import { topperService } from '../../api/services'
+import MediaReplaceField from '../../components/common/MediaReplaceField.jsx'
 
 // No mock data — table starts empty until backend is connected
 
@@ -163,12 +164,7 @@ export default function Toppers() {
               {/* Left — photo upload + preview */}
               <div className="form-group">
                 <label>Topper Photo</label>
-                <input
-                  type="file"
-                  accept="image/*"
-                  onChange={handleImageChange}
-                  style={{ padding: '6px 8px' }}
-                />
+                <MediaReplaceField id="topper-image" label="" accept="image/*" currentUrl={editing?.topperImage || ''} value={imageFile} onChange={(file) => handleImageChange({ target: { files: file ? [file] : [] } })} />
                 <div
                   style={{
                     marginTop: 10,

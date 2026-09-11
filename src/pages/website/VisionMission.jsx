@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useState } from 'react'
 import { FiImage, FiPlus, FiSave, FiTrash2 } from 'react-icons/fi'
 import Modal from '../../components/common/Modal.jsx'
 import DescriptionPreview from '../../components/common/DescriptionPreview.jsx'
+import MediaReplaceField from '../../components/common/MediaReplaceField.jsx'
 import { visionMissionDynamicService } from '../../api/services.js'
 
 const EMPTY_FORM = {
@@ -115,7 +116,7 @@ export default function VisionMission() {
       {showModal && <Modal title={editing ? 'Edit Vision & Mission' : 'Add Vision & Mission'} onClose={closeModal} maxWidth={800} footer={<><button className="btn btn-outline" onClick={closeModal}>Cancel</button><button className="btn btn-primary" form="vision-mission-form" disabled={saving}><FiSave /> {saving ? 'Saving…' : 'Save Changes'}</button></>}>
         <form id="vision-mission-form" onSubmit={handleSubmit}>
           {formError && <div className="login-alert">{formError}</div>}
-          <div className="form-group"><label htmlFor="vm-image">Director Image</label><input id="vm-image" type="file" accept="image/*" onChange={(event) => setImage(event.target.files?.[0] || null)} /></div>
+          <MediaReplaceField id="vm-image" label="Director Image" accept="image/*" currentUrl={editing?.directorImage || ''} value={image} onChange={setImage} preview />
           <div className="form-row"><div className="form-group"><label htmlFor="vm-name">Director Name</label><input id="vm-name" name="directorName" value={form.directorName} onChange={handleChange} /></div><div className="form-group"><label htmlFor="vm-message">Director Message</label><input id="vm-message" name="directorMessage" value={form.directorMessage} onChange={handleChange} /></div></div>
           <div className="form-group"><label htmlFor="vm-description">Director Description</label><textarea id="vm-description" name="description" rows={3} value={form.description} onChange={handleChange} /></div>
           <div className="form-row"><div className="form-group"><label htmlFor="vm-vision">Vision</label><textarea id="vm-vision" name="vision" rows={4} value={form.vision} onChange={handleChange} required /></div><div className="form-group"><label htmlFor="vm-mission">Mission</label><textarea id="vm-mission" name="mission" rows={4} value={form.mission} onChange={handleChange} required /></div></div>

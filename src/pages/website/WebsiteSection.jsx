@@ -20,6 +20,7 @@ import Notifications from './Notifications.jsx'
 import WebsiteUrl from './WebsiteUrl.jsx'
 import HomeSec from './HomeSec.jsx'
 import DynamicMediaManager from './DynamicMediaManager.jsx'
+import ResultPdf from './ResultPdf.jsx'
 import { mentorService } from '../../api/services.js'
 
 export default function WebsiteSection() {
@@ -52,6 +53,7 @@ export default function WebsiteSection() {
         <Route path="/vision-mission" element={<VisionMission />} />
         <Route path="/courses" element={<Courses />} />
         <Route path="/downloads" element={<Downloads />} />
+        <Route path="/result-pdf" element={<ResultPdf />} />
         <Route path="/contact-us" element={<ContactUs />} />
         <Route path="/contact-form" element={<ContactForm />} />
         <Route path="/notifications" element={<Notifications />} />

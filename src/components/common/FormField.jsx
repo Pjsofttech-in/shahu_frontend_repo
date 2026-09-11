@@ -1,4 +1,5 @@
 import React from 'react'
+import MediaReplaceField from './MediaReplaceField.jsx'
 
 export default function FormField({ field, value, onChange, options, error }) {
   const { name, label, type = 'text', required, placeholder, rows } = field
@@ -29,16 +30,15 @@ export default function FormField({ field, value, onChange, options, error }) {
       )}
 
       {type === 'file' && (
-        <div className="file-input-wrap">
-          <input
-            type="file"
-            accept={field.accept}
-            onChange={(e) => onChange(name, e.target.files[0])}
-          />
-          {typeof value === 'string' && value && (
-            <a href={value} target="_blank" rel="noreferrer" style={{ fontSize: 12 }}>current file</a>
-          )}
-        </div>
+        <MediaReplaceField
+          id={name}
+          label=""
+          accept={field.accept}
+          currentUrl={field.currentUrl || (typeof value === 'string' ? value : '')}
+          value={value instanceof File ? value : null}
+          onChange={(nextValue) => onChange(name, nextValue)}
+          required={required}
+        />
       )}
 
       {type === 'checkbox' && (

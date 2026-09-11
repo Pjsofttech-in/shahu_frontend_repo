@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react'
 import { FiFileText, FiImage, FiPlus, FiTrash2 } from 'react-icons/fi'
 import Modal from '../../components/common/Modal.jsx'
 import DescriptionPreview from '../../components/common/DescriptionPreview.jsx'
+import MediaReplaceField from '../../components/common/MediaReplaceField.jsx'
 import { categoryService, examService, testSeriesService } from '../../api/services.js'
 
 const EMPTY_FORM = {
@@ -35,6 +36,25 @@ const resolveImageUrl = (value) => {
   const apiUrl = import.meta.env.VITE_API_BASE_URL?.trim() || window.location.origin
   const origin = apiUrl.replace(/\/api(?:\/.*)?\/?$/, '').replace(/\/$/, '')
   return `${origin}/${String(value).replace(/^\/+/, '')}`
+}
+
+const existingImageFile = async (row) => {
+  const imageValue = getImageValue(row)
+  const imageUrl = resolveImageUrl(imageValue)
+  if (!imageUrl) throw new Error('This Test Series has no existing image. Please choose an image file.')
+
+  let downloadUrl = imageUrl
+  if (import.meta.env.DEV && /^https?:\/\//i.test(imageUrl)) {
+    const remoteUrl = new URL(imageUrl)
+    downloadUrl = `/remote-media${remoteUrl.pathname}${remoteUrl.search}`
+  }
+
+  const response = await fetch(downloadUrl)
+  if (!response.ok) throw new Error('The existing Test Series image could not be loaded. Please choose the image again.')
+
+  const blob = await response.blob()
+  const extension = blob.type?.split('/')[1] || String(imageValue).split('.').pop() || 'jpg'
+  return new File([blob], `test-series-image.${extension}`, { type: blob.type || 'image/jpeg' })
 }
 
 const SeriesImage = ({ value, className, alt = '' }) => {
@@ -141,7 +161,10 @@ export default function SeriesManager() {
     setSaving(true)
     setError('')
     try {
-      if (editing) await testSeriesService.update(editing.id, values, imageFile)
+      if (editing) {
+        const imageToUpload = imageFile || await existingImageFile(editing)
+        await testSeriesService.update(editing.id, values, imageToUpload)
+      }
       else await testSeriesService.create(values, imageFile)
       closeModal()
       await load()
@@ -251,7 +274,6 @@ export default function SeriesManager() {
     <section className="series-manager">
       <div className="page-header">
         <div><h1>Test Series</h1><p>Manage test series connected to the live database.</p></div>
-        <button className="btn btn-primary" type="button" onClick={openAdd}><FiPlus /> Create Test Series</button>
       </div>
       {error && !showModal && <div className="login-alert">{String(error)}</div>}
       <div className="series-filters">
@@ -263,6 +285,7 @@ export default function SeriesManager() {
         <select value={activeFilter} onChange={(event) => setActiveFilter(event.target.value)} aria-label="Filter by status">
           <option value="">All Statuses</option><option value="true">Active</option><option value="false">Inactive</option>
         </select>
+        <button className="btn btn-primary" type="button" onClick={openAdd}><FiPlus /> Create Test Series</button>
       </div>
       <div className="card series-table-card">
         <div className="table-wrap">
@@ -309,7 +332,7 @@ export default function SeriesManager() {
           </div>
           <div className="form-group"><label htmlFor="series-description">Description *</label><textarea id="series-description" name="description" rows="7" value={form.description} onChange={change} required /></div>
           <div className="series-form-bottom">
-            <div className="form-group"><label htmlFor="series-image">Image {!editing && '*'}</label><input id="series-image" type="file" accept="image/*" onChange={changeImage} required={!editing} />{preview && <img className="series-preview" src={preview} alt="Test Series preview" />}</div>
+            <MediaReplaceField id="series-image" label="Image" accept="image/*" currentUrl={editing ? resolveImageUrl(getImageValue(editing)) : ''} value={imageFile} onChange={(file) => changeImage({ target: { files: file ? [file] : [] } })} required={!editing} preview />
             <label className="series-active"><input name="active" type="checkbox" checked={!!form.active} onChange={change} /> Active</label>
           </div>
         </form>

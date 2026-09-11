@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useState } from 'react'
 import { FiPlus, FiTrash2, FiSave, FiArrowLeft } from 'react-icons/fi'
 import DescriptionPreview from '../../components/common/DescriptionPreview.jsx'
+import MediaReplaceField from '../../components/common/MediaReplaceField.jsx'
 import { facultyService } from '../../api/services.js'
 
 const EMPTY_FORM = {
@@ -162,12 +163,7 @@ export default function Faculty() {
                 <span style={{ fontSize: 11.5, color: 'var(--text-400)', marginBottom: 6, display: 'block' }}>
                   Upload faculty profile image
                 </span>
-                <input
-                  type="file"
-                  accept="image/*"
-                  onChange={handleImageChange}
-                  style={{ padding: '6px 8px' }}
-                />
+                <MediaReplaceField id="faculty-image" label="" accept="image/*" currentUrl={editing?.facilityImage || ''} value={image} onChange={(file) => handleImageChange({ target: { files: file ? [file] : [] } })} />
                 <div
                   style={{
                     marginTop: 10,

@@ -209,6 +209,23 @@ export const courseService = {
   remove: (id) => dynamicApi.delete(`/deleteCourse/${id}`, { params: { url: getWebsiteRequestParams().url } }).then((r) => r.data),
 }
 export const downloadService = makeCrudService('/downloads')
+export const resultsPdfManagementService = {
+  getAll: () => dynamicApi.get('/results-pdfs').then((r) => r.data),
+  getById: (id) => dynamicApi.get(`/results-pdfs/${id}`).then((r) => r.data),
+  create: ({ filePdf, ...resultsPdf }) => {
+    const form = new FormData()
+    form.append('resultsPdfJson', JSON.stringify(resultsPdf))
+    if (filePdf instanceof File) form.append('filePdf', filePdf)
+    return dynamicApiUpload.post('/results-pdfs', form).then((r) => r.data)
+  },
+  update: (id, { filePdf, ...resultsPdf }) => {
+    const form = new FormData()
+    form.append('resultsPdfJson', JSON.stringify(resultsPdf))
+    if (filePdf instanceof File) form.append('filePdf', filePdf)
+    return dynamicApiUpload.put(`/results-pdfs/${id}`, form).then((r) => r.data)
+  },
+  remove: (id) => dynamicApi.delete(`/results-pdfs/${id}`).then((r) => r.data),
+}
 export const footerService = {
   get: async () => {
     const response = await dynamicApi.get('/getAllFooters', {
@@ -636,6 +653,12 @@ export const examService = {
     return apiUpload.put(`/exams/${id}`, form).then((r) => r.data)
   },
   remove: (id) => api.delete(`/exams/${id}`).then((r) => r.data),
+}
+export const resultService = {
+  getAll: () => api.get('/results').then((r) => r.data),
+  getById: (id) => api.get(`/results/${id}`).then((r) => r.data),
+  publish: (id) => api.put(`/results/${id}/publish`).then((r) => r.data),
+  publishAll: (ids) => api.put('/results/publishAllResults', ids).then((r) => r.data),
 }
 export const examQuestionService = {
   getAll: (examId) => api.get(`/exams/${examId}/questions`).then((r) => r.data),

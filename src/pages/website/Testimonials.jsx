@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useState } from 'react'
 import { FiPlus, FiTrash2, FiSave, FiArrowLeft } from 'react-icons/fi'
 import DescriptionPreview from '../../components/common/DescriptionPreview.jsx'
+import MediaReplaceField from '../../components/common/MediaReplaceField.jsx'
 import { testimonialService } from '../../api/services'
 
 const EMPTY_FORM = {
@@ -174,12 +175,7 @@ export default function Testimonials() {
                 <span style={{ fontSize: 11.5, color: 'var(--text-400)', marginBottom: 6, display: 'block' }}>
                   Upload testimonial image
                 </span>
-                <input
-                  type="file"
-                  accept="image/*"
-                  onChange={handleImageChange}
-                  style={{ padding: '6px 8px' }}
-                />
+                <MediaReplaceField id="testimonial-image" label="" accept="image/*" currentUrl={editing?.testimonialImage || ''} value={imageFile} onChange={(file) => handleImageChange({ target: { files: file ? [file] : [] } })} />
                 <div
                   style={{
                     marginTop: 10,

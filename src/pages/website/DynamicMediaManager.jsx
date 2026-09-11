@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useState } from 'react'
 import { FiImage, FiPlus, FiSave, FiTrash2 } from 'react-icons/fi'
 import Modal from '../../components/common/Modal.jsx'
 import DescriptionPreview from '../../components/common/DescriptionPreview.jsx'
+import MediaReplaceField from '../../components/common/MediaReplaceField.jsx'
 
 const getError = (error) => error?.response?.data?.message || error?.response?.data?.error || error?.message || 'Something went wrong.'
 
@@ -194,7 +195,16 @@ export default function DynamicMediaManager({
           {error && <div className="login-alert">{error}</div>}
           <div className="form-row">
             <div className="form-group"><label htmlFor="dynamic-title">{titleLabel} *</label><input id="dynamic-title" name="title" value={form.title} onChange={handleChange} required /></div>
-            <div className="form-group"><label htmlFor="dynamic-image">{imageLabel}{!editing && ' *'}</label><input id="dynamic-image" type="file" accept="image/*" onChange={(event) => setImage(event.target.files?.[0] || null)} /></div>
+            <MediaReplaceField
+              id="dynamic-image"
+              label={imageLabel}
+              accept="image/*"
+              currentUrl={editing?.image || ''}
+              value={image}
+              onChange={setImage}
+              required={!editing}
+              preview
+            />
           </div>
           <div className="form-group"><label htmlFor="dynamic-description">Description *</label><textarea id="dynamic-description" name="description" value={form.description} onChange={handleChange} required /></div>
           {showLink && <div className="form-row">

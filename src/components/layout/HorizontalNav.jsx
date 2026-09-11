@@ -73,6 +73,7 @@ export const websiteLinks = [
   { to: '/website/about', label: 'About Us', icon: <FiFileText />, group: 'management' },
   { to: '/website/vision-mission', label: 'Vision & Mission', icon: <FiTarget />, group: 'management' },
   { to: '/website/downloads', label: 'Downloads', icon: <FiDownload />, group: 'management' },
+  { to: '/website/result-pdf', label: 'Result PDF', icon: <FiFileText />, group: 'management' },
   { to: '/website/notifications', label: 'Notifications', icon: <FiFileText />, group: 'management' },
 ]
 

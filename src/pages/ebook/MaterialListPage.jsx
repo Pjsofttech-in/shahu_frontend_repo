@@ -1,8 +1,10 @@
 import React, { useEffect, useMemo, useState } from 'react'
-import { FiDownload, FiTrash2 } from 'react-icons/fi'
+import { FiDownload, FiPlus, FiTrash2 } from 'react-icons/fi'
+import { useNavigate } from 'react-router-dom'
 import { vmMaterialService } from '../../api/services.js'
 
 export default function MaterialListPage() {
+  const navigate = useNavigate()
   const [materials, setMaterials] = useState([])
   const [search, setSearch] = useState('')
   const [filters, setFilters] = useState({})
@@ -53,27 +55,27 @@ export default function MaterialListPage() {
 
   return (
     <div className="ebook-list-page" style={{ width: '100%', maxWidth: '1220px', margin: '0 auto' }}>
-      <div className="ebook-list-controls">
+      <div className="ebook-material-filters">
         <input
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           placeholder="Search material type"
-          style={{ width: '320px', padding: '10px 12px', borderRadius: '7px', border: '1px solid #d8e2ef', background: '#fff' }}
+          aria-label="Search material type"
         />
-      </div>
-      <div className="ebook-list-count">Material List Count: <span>{rows.length}</span></div>
-
-      <div className="column-filter-row material-column-filters" role="group" aria-label="Filter materials by column">
         {[
-          ['id', 'ID'], ['materialtype', 'Material Type'], ['chapterName', 'Chapter Name'], ['categoryName', 'Category'],
-          ['subcategoryName', 'Subcategory'], ['status', 'Status'], ['price', 'Price'],
+          ['materialtype', 'Material Type'], ['chapterName', 'Chapter Name'], ['categoryName', 'Category'],
+          ['subcategoryName', 'Subcategory'], ['status', 'Status'],
         ].map(([key, label]) => (
           <select key={key} value={filters[key] || ''} onChange={(event) => setFilters((current) => ({ ...current, [key]: event.target.value }))} aria-label={`Filter ${label}`}>
             <option value="">All {label}</option>
             {[...new Set(materials.map((row) => String(row[key] ?? '').trim()).filter(Boolean))].sort().map((option) => <option key={option} value={option}>{option}</option>)}
           </select>
         ))}
+        <button className="btn btn-primary" type="button" onClick={() => navigate('/ebook/add-material')}>
+          <FiPlus /> Add Material
+        </button>
       </div>
+      <div className="ebook-list-count">Material List Count: <span>{rows.length}</span></div>
       <div className="result-count">Showing <strong>{rows.length}</strong> of {materials.length} materials</div>
 
       <div className="table-wrap" style={{ border: '1px solid #dfe5ee', borderRadius: '10px', overflow: 'hidden' }}>

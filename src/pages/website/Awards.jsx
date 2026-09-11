@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useState } from 'react'
 import { FiPlus, FiTrash2, FiSave } from 'react-icons/fi'
 import { awardService } from '../../api/services.js'
+import MediaReplaceField from '../../components/common/MediaReplaceField.jsx'
 
 const EMPTY_FORM = {
   awardName: '',
@@ -201,13 +202,7 @@ export default function Awards() {
                   {/* Left — image upload + preview */}
                   <div className="form-group">
                     <label htmlFor="a-image">Award Image</label>
-                    <input
-                      id="a-image"
-                      type="file"
-                      accept="image/*"
-                      required={!editing}
-                      onChange={(e) => setImage(e.target.files?.[0] || null)}
-                    />
+                    <MediaReplaceField id="a-image" label="" accept="image/*" currentUrl={editing?.awardImage || ''} value={image} onChange={setImage} required={!editing} />
                     <div
                       style={{
                         marginTop: 10,
