@@ -262,6 +262,11 @@ export const contactFormService = {
   getAll: () => dynamicApi.get('/getAllContactForms', { params: { url: getWebsiteRequestParams().url } }).then((r) => r.data),
 }
 export const notificationService = makeDynamicCrudService('/notifications')
+export const faqService = makeDynamicCrudService('/faqs')
+export const examSectionService = {
+  get: () => dynamicApi.get('/exam-section').then((r) => r.status === 204 ? {} : r.data),
+  update: (payload) => dynamicApi.put('/exam-section', payload).then((r) => r.data),
+}
 
 const dynamicMediaService = ({ listPath, createPath, updatePath, deletePath, jsonField, imageField, serializeValues, normalizeRow }) => ({
   getAll: () => dynamicApi.get(listPath, {

@@ -6,6 +6,8 @@ import Syllabus from './Syllabus.jsx'
 import AnswerKey from './AnswerKey.jsx'
 import ResultCheck from './ResultCheck.jsx'
 import ResultPdf from './ResultPdf.jsx'
+import ExamInfo from './ExamInfo.jsx'
+import FAQ from './FAQ.jsx'
 
 export default function SankalpSection() {
   return (
@@ -14,6 +16,8 @@ export default function SankalpSection() {
       horizontalNav={<HorizontalNav links={sankalpLinks} title="Sankalp Exam" />}
     >
       <Routes>
+        <Route path="/exam-info" element={<ExamInfo />} />
+        <Route path="/faq" element={<FAQ />} />
         <Route path="/syllabus" element={<Syllabus />} />
         <Route path="/answer-key" element={<AnswerKey />} />
         <Route path="/result-check" element={<ResultCheck />} />

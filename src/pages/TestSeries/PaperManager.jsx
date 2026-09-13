@@ -4,6 +4,7 @@ import {
   FiAward, FiCloud, FiEdit2, FiEye, FiFileText, FiPlus, FiSearch, FiTrash2,
 } from 'react-icons/fi'
 import Modal from '../../components/common/Modal.jsx'
+import MediaReplaceField from '../../components/common/MediaReplaceField.jsx'
 import { categoryService, examService } from '../../api/services.js'
 
 const EMPTY_FORM = {
@@ -18,6 +19,14 @@ const categoryNameOf = (row) => row.category?.categoryName || row.category?.name
 const errorOf = (error) => String(error?.response?.data?.message || error?.response?.data?.error || error?.message || 'Could not complete the paper request.')
 const dateOf = (value) => value ? String(value).slice(0, 10) : '-'
 const imageUrlOf = (row) => row.image || row.imageUrl || row.examImage || ''
+const resolveImageUrl = (value) => {
+  if (!value) return ''
+  if (/^(data:|blob:|https?:\/\/)/i.test(value)) return value
+
+  const apiUrl = import.meta.env.VITE_API_BASE_URL?.trim() || window.location.origin
+  const origin = apiUrl.replace(/\/api(?:\/.*)?\/?$/, '').replace(/\/$/, '')
+  return `${origin}/${String(value).replace(/^\/+/, '')}`
+}
 const EMPTY_PAPER_IMAGE = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII='
 
 const getExistingImageFile = async (row) => {
@@ -53,6 +62,8 @@ export default function PaperManager() {
   const [editing, setEditing] = useState(null)
   const [image, setImage] = useState(null)
   const [showModal, setShowModal] = useState(false)
+  const [deleteTarget, setDeleteTarget] = useState(null)
+  const [deleting, setDeleting] = useState(false)
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
@@ -68,6 +79,7 @@ export default function PaperManager() {
   useEffect(() => { load() }, [])
 
   const visibleRows = useMemo(() => rows.filter((row) => {
+    if (row.active === false) return false
     const title = String(row.examName || row.title || '').toLowerCase()
     return (!search.trim() || title.includes(search.trim().toLowerCase())) && (!category || String(categoryIdOf(row)) === category)
   }), [rows, search, category])
@@ -108,7 +120,7 @@ export default function PaperManager() {
     ;['testStartDate', 'testEndDate', 'terms'].forEach((key) => { if (!values[key]) values[key] = null })
     setSaving(true); setError('')
     try {
-      if (editing) await examService.update(editing.id, values, image)
+      if (editing) await examService.update(editing.id, values, image || await getExistingImageFile(editing))
       else await examService.create(values, image)
       setShowModal(false); setEditing(null); await load()
     } catch (saveError) { setError(errorOf(saveError)) } finally { setSaving(false) }
@@ -124,8 +136,21 @@ export default function PaperManager() {
   }
 
   const remove = async (row) => {
-    if (!window.confirm(`Delete paper "${row.examName || row.id}"?`)) return
-    try { await examService.remove(row.id); await load() } catch (deleteError) { setError(errorOf(deleteError)) }
+    setDeleting(true)
+    try {
+      await examService.remove(row.id)
+      setDeleteTarget(null)
+      setRows((currentRows) => currentRows.filter((currentRow) => currentRow.id !== row.id))
+    } catch (deleteError) {
+      try {
+        const values = { ...row, active: false }
+        delete values.id; delete values.image; delete values.imageUrl; delete values.examImage; delete values.category
+        const existingImage = await getExistingImageFile(row)
+        await examService.update(row.id, values, existingImage)
+        setDeleteTarget(null)
+        setRows((currentRows) => currentRows.filter((currentRow) => currentRow.id !== row.id))
+      } catch (softDeleteError) { setError(errorOf(softDeleteError || deleteError)) }
+    } finally { setDeleting(false) }
   }
 
   const uploadImage = async (row, file) => {
@@ -142,8 +167,9 @@ export default function PaperManager() {
     <div className="card series-table-card paper-table-card"><div className="table-wrap"><table className="data-table paper-table"><thead><tr><th>Sr No</th><th>Title</th><th>Img</th><th>Attem</th><th>Max Attem</th><th>Status</th><th>Result</th><th>Noq</th><th>Marks</th><th>Dur.</th><th>Start Date</th><th>End Date</th><th>Solved</th><th>All Result</th><th>Download</th><th>Actions</th></tr></thead><tbody>
       {loading && <tr className="empty-row"><td colSpan="16">Loading papers...</td></tr>}
       {!loading && visibleRows.length === 0 && <tr className="empty-row"><td colSpan="16">No papers found.</td></tr>}
-      {!loading && visibleRows.map((row, index) => <tr key={row.id}><td>{index + 1}</td><td className="paper-title">{row.examName || row.title || '-'}</td><td className="muted-cell">{row.image || row.imageUrl ? <img src={row.image || row.imageUrl} alt="" /> : 'No Image'}</td><td>{row.attempt ?? row.attem ?? 'No'}</td><td>{row.maxAttempt ?? row.maxAttem ?? 1}</td><td><span className={`status-badge ${row.active === false ? 'inactive' : 'active'}`}>{row.active === false ? 'Inactive' : 'Active'}</span></td><td><button className={`switch ${row.showTestResult ? 'on' : ''}`} type="button" onClick={() => toggle(row, 'showTestResult')}><span />{row.showTestResult ? 'ON' : 'OFF'}</button></td><td>{row.totalQuestions ?? row.noq ?? '-'}</td><td>{row.totalMarks ?? '-'}</td><td>{row.duration ?? '-'}</td><td>{dateOf(row.testStartDate || row.examDate)}</td><td>{dateOf(row.testEndDate)}</td><td>{row.solved ?? 0}</td><td><button className={`switch ${row.showAllResult ? 'on' : ''}`} type="button" onClick={() => toggle(row, 'showAllResult')}><span />{row.showAllResult ? 'ON' : 'OFF'}</button></td><td><button className={`switch ${row.downloadTestPaper ? 'on' : ''}`} type="button" onClick={() => toggle(row, 'downloadTestPaper')}><span />{row.downloadTestPaper ? 'ON' : 'OFF'}</button></td><td><div className="table-actions paper-actions"><button className="icon-btn" type="button" onClick={() => navigate(`/test-series/exam/${row.id}/view`)} title="View question paper" aria-label={`View question paper for ${row.examName}`}><FiEye /></button><button className="icon-btn" type="button" onClick={() => navigate(`/test-series/exam/${row.id}/ranking`)} title="View ranking" aria-label={`View ranking for ${row.examName}`}><FiAward /></button><button className="icon-btn edit" type="button" onClick={() => navigate(`/test-series/exam/${row.id}/answer-sheet`)} title="View answer sheet" aria-label={`View answer sheet for ${row.examName}`}><FiFileText /></button><label className="icon-btn upload-control" title="Upload paper image" aria-label={`Upload image for ${row.examName}`}><FiCloud /><input type="file" accept="image/*" onChange={(event) => uploadImage(row, event.target.files?.[0])} /></label><button className="icon-btn danger" type="button" onClick={() => remove(row)} title="Delete paper" aria-label={`Delete ${row.examName}`}><FiTrash2 /></button></div></td></tr>)}
+      {!loading && visibleRows.map((row, index) => <tr key={row.id}><td>{index + 1}</td><td className="paper-title">{row.examName || row.title || '-'}</td><td className="muted-cell">{imageUrlOf(row) ? <img src={resolveImageUrl(imageUrlOf(row))} alt={`${row.examName || 'Paper'} thumbnail`} onError={(event) => { event.currentTarget.style.display = 'none' }} /> : 'No Image'}</td><td>{row.attempt ?? row.attem ?? 'No'}</td><td>{row.maxAttempt ?? row.maxAttem ?? 1}</td><td><span className={`status-badge ${row.active === false ? 'inactive' : 'active'}`}>{row.active === false ? 'Inactive' : 'Active'}</span></td><td><button className={`switch ${row.showTestResult ? 'on' : ''}`} type="button" onClick={() => toggle(row, 'showTestResult')}><span />{row.showTestResult ? 'ON' : 'OFF'}</button></td><td>{row.totalQuestions ?? row.noq ?? '-'}</td><td>{row.totalMarks ?? '-'}</td><td>{row.duration ?? '-'}</td><td>{dateOf(row.testStartDate || row.examDate)}</td><td>{dateOf(row.testEndDate)}</td><td>{row.solved ?? 0}</td><td><button className={`switch ${row.showAllResult ? 'on' : ''}`} type="button" onClick={() => toggle(row, 'showAllResult')}><span />{row.showAllResult ? 'ON' : 'OFF'}</button></td><td><button className={`switch ${row.downloadTestPaper ? 'on' : ''}`} type="button" onClick={() => toggle(row, 'downloadTestPaper')}><span />{row.downloadTestPaper ? 'ON' : 'OFF'}</button></td><td><div className="table-actions paper-actions"><button className="icon-btn" type="button" onClick={() => navigate(`/test-series/exam/${row.id}/view`)} title="View question paper" aria-label={`View question paper for ${row.examName}`}><FiEye /></button><button className="icon-btn" type="button" onClick={() => navigate(`/test-series/exam/${row.id}/ranking`)} title="View ranking" aria-label={`View ranking for ${row.examName}`}><FiAward /></button><button className="icon-btn edit" type="button" onClick={() => navigate(`/test-series/exam/${row.id}/answer-sheet`)} title="View answer sheet" aria-label={`View answer sheet for ${row.examName}`}><FiFileText /></button><label className="icon-btn upload-control" title="Upload paper image" aria-label={`Upload image for ${row.examName}`}><FiCloud /><input type="file" accept="image/*" onChange={(event) => uploadImage(row, event.target.files?.[0])} /></label><button className="icon-btn danger" type="button" onClick={() => setDeleteTarget(row)} title="Delete paper" aria-label={`Delete ${row.examName}`}><FiTrash2 /></button></div></td></tr>)}
     </tbody></table></div></div>
-    {showModal && <Modal title={editing ? 'Edit Paper' : 'Create Paper'} onClose={() => setShowModal(false)} maxWidth="980px" footer={<><button className="btn btn-outline" type="button" onClick={() => setShowModal(false)}>Cancel</button><button className="btn btn-primary" type="submit" form="paper-form" disabled={saving}>{saving ? 'Saving...' : editing ? 'Update' : 'Create'}</button></>}><form id="paper-form" onSubmit={submit} className="series-form"><div className="series-form-grid"><div className="form-group"><label>Paper Title *</label><input name="examName" value={form.examName} onChange={change} required /></div><div className="form-group"><label>Exam Date *</label><input name="examDate" type="date" value={form.examDate} onChange={change} required /></div><div className="form-group"><label>Series *</label><select name="categoryId" value={form.categoryId} onChange={change} required><option value="">Select Series</option>{categories.map((item) => <option key={item.id} value={item.id}>{item.categoryName || item.name}</option>)}</select></div><div className="form-group"><label>Total Marks *</label><input name="totalMarks" type="number" min="1" value={form.totalMarks} onChange={change} required /></div><div className="form-group"><label>Total Questions *</label><input name="totalQuestions" type="number" min="1" value={form.totalQuestions} onChange={change} required /></div><div className="form-group"><label>Duration (minutes) *</label><input name="duration" type="number" min="1" value={form.duration} onChange={change} required /></div><div className="form-group"><label>Paper Image {!editing && '*'}</label><input type="file" accept="image/*" onChange={(event) => setImage(event.target.files?.[0] || null)} required={!editing} /></div><div className="form-group"><label>Start Date</label><input name="testStartDate" type="date" value={form.testStartDate} onChange={change} /></div><div className="form-group"><label>End Date</label><input name="testEndDate" type="date" value={form.testEndDate} onChange={change} /></div></div><div className="form-group"><label>Terms</label><textarea name="terms" rows="4" value={form.terms} onChange={change} /></div></form></Modal>}
+    {showModal && <Modal title={editing ? 'Edit Paper' : 'Create Paper'} onClose={() => setShowModal(false)} maxWidth="980px" footer={<><button className="btn btn-outline" type="button" onClick={() => setShowModal(false)}>Cancel</button><button className="btn btn-primary" type="submit" form="paper-form" disabled={saving}>{saving ? 'Saving...' : editing ? 'Update' : 'Create'}</button></>}><form id="paper-form" onSubmit={submit} className="series-form"><div className="series-form-grid"><div className="form-group"><label>Paper Title *</label><input name="examName" value={form.examName} onChange={change} required /></div><div className="form-group"><label>Exam Date *</label><input name="examDate" type="date" value={form.examDate} onChange={change} required /></div><div className="form-group"><label>Series *</label><select name="categoryId" value={form.categoryId} onChange={change} required><option value="">Select Series</option>{categories.map((item) => <option key={item.id} value={item.id}>{item.categoryName || item.name}</option>)}</select></div><div className="form-group"><label>Total Marks *</label><input name="totalMarks" type="number" min="1" value={form.totalMarks} onChange={change} required /></div><div className="form-group"><label>Total Questions *</label><input name="totalQuestions" type="number" min="1" value={form.totalQuestions} onChange={change} required /></div><div className="form-group"><label>Duration (minutes) *</label><input name="duration" type="number" min="1" value={form.duration} onChange={change} required /></div><MediaReplaceField id="paper-image" label="Paper Image" accept="image/*" currentUrl={editing ? resolveImageUrl(imageUrlOf(editing)) : ''} value={image} onChange={setImage} required={!editing} preview /><div className="form-group"><label>Start Date</label><input name="testStartDate" type="date" value={form.testStartDate} onChange={change} /></div><div className="form-group"><label>End Date</label><input name="testEndDate" type="date" value={form.testEndDate} onChange={change} /></div></div><div className="form-group"><label>Terms</label><textarea name="terms" rows="4" value={form.terms} onChange={change} /></div></form></Modal>}
+    {deleteTarget && <Modal title="Delete Paper" onClose={() => !deleting && setDeleteTarget(null)} maxWidth="460px" footer={<><button className="btn btn-outline" type="button" onClick={() => setDeleteTarget(null)} disabled={deleting}>Cancel</button><button className="btn btn-danger" type="button" onClick={() => remove(deleteTarget)} disabled={deleting}>{deleting ? 'Deleting...' : 'Delete Paper'}</button></>}><p>Are you sure you want to delete this paper?</p><p><strong>{deleteTarget.examName || deleteTarget.title || `Paper #${deleteTarget.id}`}</strong></p></Modal>}
   </section>
 }

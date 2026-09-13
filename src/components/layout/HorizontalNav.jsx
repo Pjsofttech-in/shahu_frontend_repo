@@ -3,7 +3,7 @@ import { NavLink } from 'react-router-dom'
 import {
   FiBook, FiFileText, FiMapPin, FiMap, FiHome, FiUserCheck,
   FiLayers, FiImage, FiAward, FiStar, FiUser, FiTarget, FiDownload, FiPhone,
-  FiGrid, FiPlus, FiCheckSquare, FiSettings
+  FiGrid, FiPlus, FiCheckSquare, FiSettings, FiInfo, FiHelpCircle
 } from 'react-icons/fi'
 
 export const dashboardLinks = [
@@ -17,6 +17,8 @@ export const studentLinks = [
 
 // Sankalp Exam Submenu
 export const sankalpLinks = [
+  { to: '/sankalp-exam/exam-info', label: 'Exam Info', icon: <FiInfo /> },
+  { to: '/sankalp-exam/faq', label: 'FAQ', icon: <FiHelpCircle /> },
   { to: '/sankalp-exam/syllabus', label: 'Syllabus', icon: <FiBook /> },
   { to: '/sankalp-exam/answer-key', label: 'Answer Key', icon: <FiFileText /> },
   { to: '/sankalp-exam/result-check', label: 'Result Check', icon: <FiUserCheck /> },
