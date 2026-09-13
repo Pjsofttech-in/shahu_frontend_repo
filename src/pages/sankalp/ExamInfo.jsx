@@ -12,7 +12,7 @@ export default function ExamInfo() {
       fields={[
         { name: 'title', label: 'Title', type: 'text', required: true, placeholder: 'Sankalp Exam' },
         { name: 'subtitle', label: 'Subtitle', type: 'text', placeholder: 'Exam overview' },
-        { name: 'description', label: 'Description', type: 'textarea', rows: 5, required: true, fullWidth: true },
+        { name: 'description', label: 'Description', type: 'richtext', required: true, fullWidth: true, placeholder: 'Describe the Sankalp exam' },
         { name: 'eligibility', label: 'Eligibility', type: 'textarea', rows: 3, fullWidth: true },
         { name: 'instructions', label: 'Instructions', type: 'textarea', rows: 5, fullWidth: true },
         { name: 'examDate', label: 'Exam Date', type: 'date' },

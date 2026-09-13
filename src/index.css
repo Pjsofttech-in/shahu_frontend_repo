@@ -567,6 +567,13 @@ table.data-table tr:hover td { background: var(--blue-100); }
 .ebook-editor textarea { width: 100%; height: 340px; display: block; resize: vertical; border: 0; border-radius: 0; padding: 12px 9px; font-family: inherit; font-size: 13px; }
 .ebook-editor textarea:focus { box-shadow: none; }
 .ebook-editor-status { display: flex; justify-content: space-between; padding: 5px 9px; color: #8190a3; border-top: 1px solid #edf0f3; font-size: 11px; }
+.rich-text-editor { border: 1px solid var(--border); border-radius: 6px; overflow: hidden; background: #fff; }
+.rich-text-toolbar { display: flex; gap: 5px; padding: 6px; border-bottom: 1px solid var(--border); background: var(--surface-100, #f7f9fc); }
+.rich-text-toolbar button { min-width: 30px; min-height: 28px; padding: 3px 7px; border: 1px solid transparent; border-radius: 4px; background: transparent; color: var(--text-700); cursor: pointer; font-size: 12px; }
+.rich-text-toolbar button:hover { border-color: var(--border); background: #fff; color: var(--blue-700); }
+.rich-text-content { min-height: 145px; max-height: 210px; overflow-y: auto; padding: 10px 12px; outline: none; line-height: 1.55; font-size: 13px; }
+.rich-text-content:empty::before { content: attr(data-placeholder); color: var(--text-400); pointer-events: none; }
+.rich-text-content:focus { box-shadow: inset 0 0 0 2px var(--blue-500); }
 .ebook-upload-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 30px; margin-top: 38px; }
 .ebook-file-picker { min-width: 0; }
 .ebook-file-button { display: inline-flex; align-items: center; gap: 7px; width: fit-content; max-width: 100%; padding: 7px 12px; border: 1px solid var(--border); border-radius: 6px; background: #fff; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; cursor: pointer; }

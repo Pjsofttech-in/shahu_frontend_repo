@@ -1,5 +1,6 @@
 import React from 'react'
 import MediaReplaceField from './MediaReplaceField.jsx'
+import RichTextEditor from './RichTextEditor.jsx'
 
 export default function FormField({ field, value, onChange, options, error }) {
   const { name, label, type = 'text', required, placeholder, rows } = field
@@ -27,6 +28,10 @@ export default function FormField({ field, value, onChange, options, error }) {
 
       {type === 'textarea' && (
         <textarea {...common} rows={rows || 3} value={value ?? ''} onChange={(e) => onChange(name, e.target.value)} />
+      )}
+
+      {type === 'richtext' && (
+        <RichTextEditor id={name} value={value} onChange={(nextValue) => onChange(name, nextValue)} placeholder={placeholder || label} />
       )}
 
       {type === 'file' && (

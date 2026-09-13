@@ -34,7 +34,8 @@ export default function SingletonForm({ title, subtitle, service, fields, transf
     setError('')
     setMessage('')
     try {
-      const payload = transformSubmit ? await transformSubmit(values) : values
+      const submitted = transformSubmit ? await transformSubmit(values, initialValues) : values
+      const payload = values.id ? { ...initialValues, ...submitted } : submitted
       const saved = await service.update(payload)
       setValues(saved || payload)
       setInitialValues(saved || payload)

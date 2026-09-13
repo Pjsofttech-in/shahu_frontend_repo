@@ -275,7 +275,7 @@ export default function CrudManager({
       }
 
       if (editing) {
-        await service.update(editing.id, payload)
+        await service.update(editing.id, { ...editing, ...payload })
       } else {
         console.log(
           'FINAL CREATE REQUEST:',
