@@ -1,6 +1,7 @@
 import React from 'react'
 import { NavLink, useLocation } from 'react-router-dom'
 import { useState } from 'react'
+import logoImage from '../../asset/logo.png'
 import {
   FiGrid,
   FiUsers,
@@ -37,7 +38,7 @@ export default function Sidebar() {
   return (
     <aside className={`sidebar ${collapsed ? 'collapsed' : ''}`}>
       <div className="sidebar-brand">
-        <div className="name">Shri Shahu Prabodhini</div>
+        <img src={logoImage} alt="Shri Shahu Prabodhini logo" className="sidebar-logo" />
         <div className="sub">Admin Panel</div>
       </div>
       <button className="sidebar-collapse-btn" type="button" onClick={toggleSidebar} aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}>

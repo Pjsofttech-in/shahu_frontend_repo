@@ -1,10 +1,12 @@
 import React, { useState, useRef, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { FiChevronDown, FiUser, FiLogOut, FiSun, FiMoon } from 'react-icons/fi'
+import { FiChevronDown, FiUser, FiLogOut, FiSun, FiMoon, FiGlobe } from 'react-icons/fi'
 import { useAuth } from '../../context/AuthContext.jsx'
+import { useLanguage } from '../../context/LanguageContext.jsx'
 
 export default function Topbar({ title }) {
   const { user, logout } = useAuth()
+  const { language, setLanguage, t } = useLanguage()
   const [open, setOpen] = useState(false)
   const ref = useRef(null)
   const navigate = useNavigate()
@@ -27,6 +29,23 @@ export default function Topbar({ title }) {
     <header className="topbar">
       <div className="page-title">{title}</div>
       <div className="topbar-right" ref={ref}>
+        <div className="language-switcher" aria-label={t('language')}>
+          <FiGlobe />
+          <button
+            type="button"
+            className={language === 'en' ? 'active' : ''}
+            onClick={() => setLanguage('en')}
+          >
+            EN
+          </button>
+          <button
+            type="button"
+            className={language === 'mr' ? 'active' : ''}
+            onClick={() => setLanguage('mr')}
+          >
+            मराठी
+          </button>
+        </div>
         <button className="theme-toggle" type="button" onClick={() => setTheme((current) => current === 'light' ? 'dark' : 'light')} aria-label={`Switch to ${theme === 'light' ? 'dark' : 'light'} theme`}>
           {theme === 'light' ? <FiMoon /> : <FiSun />}
         </button>

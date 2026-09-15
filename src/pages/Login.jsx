@@ -1,10 +1,13 @@
 import React, { useState } from 'react'
 import { useNavigate, useLocation, Navigate } from 'react-router-dom'
-import { FiMail, FiLock } from 'react-icons/fi'
+import { FiMail, FiLock, FiGlobe } from 'react-icons/fi'
+import logoImage from '../asset/logo.png'
 import { useAuth } from '../context/AuthContext.jsx'
+import { useLanguage } from '../context/LanguageContext.jsx'
 
 export default function Login() {
   const { login, isAuthenticated } = useAuth()
+  const { language, setLanguage, t } = useLanguage()
   const navigate = useNavigate()
   const location = useLocation()
   const [email, setEmail] = useState('')
@@ -44,15 +47,21 @@ export default function Login() {
   return (
     <div className="login-page">
       <div className="login-card">
-        <div className="logo-circle">SSP</div>
-        <h1>Shri Shahu Prabodhini</h1>
-        <p className="sub">Sign in to the admin panel</p>
+        <div className="login-header-row">
+          <div className="login-language-picker" aria-label={t('language')}>
+            <FiGlobe />
+            <button type="button" className={language === 'en' ? 'active' : ''} onClick={() => setLanguage('en')}>EN</button>
+            <button type="button" className={language === 'mr' ? 'active' : ''} onClick={() => setLanguage('mr')}>मराठी</button>
+          </div>
+        </div>
+        <img src={logoImage} alt="Shri Shahu Prabodhini logo" className="login-brand-logo" />
+        <p className="sub">{t('signIn')}</p>
 
         {error && <div className="login-alert">{error}</div>}
 
         <form onSubmit={handleSubmit}>
           <div className="form-group">
-            <label htmlFor="email"><FiMail /> Admin Email</label>
+            <label htmlFor="email"><FiMail /> {t('adminEmail')}</label>
             <input
               id="email"
               type="email"
@@ -64,7 +73,7 @@ export default function Login() {
             />
           </div>
           <div className="form-group">
-            <label htmlFor="password"><FiLock /> Password</label>
+            <label htmlFor="password"><FiLock /> {t('password')}</label>
             <input
               id="password"
               type="password"
@@ -75,7 +84,7 @@ export default function Login() {
             />
           </div>
           <button className="btn btn-primary" type="submit" disabled={loading}>
-            {loading ? 'Signing in…' : 'Login'}
+            {loading ? (language === 'mr' ? 'साइन इन होत आहे…' : 'Signing in…') : t('login')}
           </button>
         </form>
       </div>
