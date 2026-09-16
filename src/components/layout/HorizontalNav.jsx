@@ -3,7 +3,7 @@ import { NavLink } from 'react-router-dom'
 import {
   FiBook, FiFileText, FiMapPin, FiMap, FiHome, FiUserCheck,
   FiLayers, FiImage, FiAward, FiStar, FiUser, FiTarget, FiDownload, FiPhone,
-  FiGrid, FiPlus, FiCheckSquare, FiSettings, FiInfo, FiHelpCircle
+  FiGrid, FiPlus, FiCheckSquare, FiSettings, FiInfo, FiHelpCircle, FiGlobe
 } from 'react-icons/fi'
 
 export const dashboardLinks = [
@@ -56,7 +56,7 @@ export const testSeriesSettingsLinks = [
 
 // Website Management Submenu
 export const homeLinks = [
-  { to: '/website/url', label: 'Website URL', icon: <FiPhone />, group: 'home' },
+  { to: '/website/url', label: 'Website URL', icon: <FiGlobe />, group: 'home' },
   { to: '/website/hero', label: 'Home Sec', icon: <FiImage />, group: 'home' },
   { to: '/website/about', label: 'About Us', icon: <FiFileText />, group: 'home' },
   { to: '/website/features', label: 'Mentors', icon: <FiUser />, group: 'home' },

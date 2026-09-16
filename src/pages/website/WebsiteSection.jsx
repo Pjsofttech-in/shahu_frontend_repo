@@ -32,6 +32,7 @@ export default function WebsiteSection() {
   return (
     <Layout
       title="Website Management"
+      className="website-workspace"
       verticalNav={isContactForm ? null : <VerticalNav links={isHomeGroup ? homeLinks : websiteLinks} title={isHomeGroup ? 'Home' : 'Website Management'} />}
     >
       <Routes>

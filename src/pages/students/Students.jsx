@@ -300,42 +300,42 @@ export default function Students() {
           <div className="form-group">
             <label>District</label>
             <FilterSelect value={districtFilter} onChange={(e) => setDistrictFilter(e.target.value)}>
-              <option value="">All Districts</option>
+              <option value="">District</option>
               {districtOptions.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
             </FilterSelect>
           </div>
           <div className="form-group">
             <label>Taluka</label>
             <FilterSelect value={talukaFilter} onChange={(e) => setTalukaFilter(e.target.value)} disabled={!districtFilter}>
-              <option value="">All Talukas</option>
+              <option value="">Taluka</option>
               {talukaOptions.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
             </FilterSelect>
           </div>
           <div className="form-group">
             <label>Center</label>
             <FilterSelect value={centerFilter} onChange={(e) => setCenterFilter(e.target.value)} disabled={!talukaFilter}>
-              <option value="">All Centers</option>
+              <option value="">Center</option>
               {centerOptions.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
             </FilterSelect>
           </div>
           <div className="form-group">
             <label>Coordinator</label>
             <FilterSelect value={coordinatorFilter} onChange={(e) => setCoordinatorFilter(e.target.value)}>
-              <option value="">All Coordinators</option>
+              <option value="">Coordinator</option>
               {coordinatorOptions.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
             </FilterSelect>
           </div>
           <div className="form-group">
             <label>Payment Status</label>
             <FilterSelect value={paymentStatusFilter} onChange={(e) => setPaymentStatusFilter(e.target.value)}>
-              <option value="">All Payment Statuses</option>
+              <option value="">Payment Status</option>
               {paymentStatusOptions.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
             </FilterSelect>
           </div>
           <div className="form-group">
             <label>Class</label>
             <FilterSelect value={classFilter} onChange={(e) => setClassFilter(e.target.value)}>
-              <option value="">All Classes</option>
+              <option value="">Class</option>
               {classOptions.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
             </FilterSelect>
           </div>

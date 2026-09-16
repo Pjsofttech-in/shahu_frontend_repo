@@ -11,6 +11,7 @@ export default function SettingsSection() {
   return (
     <Layout
       title="Settings"
+      className="settings-workspace"
       horizontalNav={<HorizontalNav links={settingsLinks} title="Settings" />}
     >
       <div className="settings-pages">

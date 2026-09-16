@@ -41,20 +41,30 @@ const resolveImageUrl = (value) => {
 const existingImageFile = async (row) => {
   const imageValue = getImageValue(row)
   const imageUrl = resolveImageUrl(imageValue)
-  if (!imageUrl) throw new Error('This Test Series has no existing image. Please choose an image file.')
+  if (!imageUrl) throw new Error('The existing Test Series image is unavailable. Please choose an image file.')
 
-  let downloadUrl = imageUrl
-  if (import.meta.env.DEV && /^https?:\/\//i.test(imageUrl)) {
-    const remoteUrl = new URL(imageUrl)
-    downloadUrl = `/remote-media${remoteUrl.pathname}${remoteUrl.search}`
+  const candidates = [imageUrl]
+  if (import.meta.env.DEV) {
+    try {
+      const parsed = new URL(imageUrl, window.location.origin)
+      candidates.unshift(`/remote-media${parsed.pathname}${parsed.search}`)
+    } catch {}
   }
 
-  const response = await fetch(downloadUrl)
-  if (!response.ok) throw new Error('The existing Test Series image could not be loaded. Please choose the image again.')
+  let lastError = null
+  for (const candidate of [...new Set(candidates)]) {
+    try {
+      const response = await fetch(candidate, { credentials: 'include' })
+      if (!response.ok) throw new Error(`Image request failed with ${response.status}`)
+      const blob = await response.blob()
+      const extension = blob.type?.split('/')[1] || String(imageValue).split('.').pop() || 'jpg'
+      return new File([blob], `test-series-image.${extension}`, { type: blob.type || 'image/jpeg' })
+    } catch (error) {
+      lastError = error
+    }
+  }
 
-  const blob = await response.blob()
-  const extension = blob.type?.split('/')[1] || String(imageValue).split('.').pop() || 'jpg'
-  return new File([blob], `test-series-image.${extension}`, { type: blob.type || 'image/jpeg' })
+  throw new Error(`The existing Test Series image could not be reused. Please choose the image again. ${lastError?.message || ''}`.trim())
 }
 
 const SeriesImage = ({ value, className, alt = '' }) => {
@@ -149,7 +159,6 @@ export default function SeriesManager() {
       setError('Test Series image is required.')
       return
     }
-
     const values = { ...form }
     delete values.image
     values.title = values.title.trim()
@@ -279,11 +288,11 @@ export default function SeriesManager() {
       <div className="series-filters">
         <input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search test series…" aria-label="Search test series" />
         <select value={categoryFilter} onChange={(event) => setCategoryFilter(event.target.value)} aria-label="Filter by category">
-          <option value="">All Categories</option>
+          <option value="">Category</option>
           {categories.map((category) => <option key={category.id} value={category.id}>{category.categoryName || category.name}</option>)}
         </select>
         <select value={activeFilter} onChange={(event) => setActiveFilter(event.target.value)} aria-label="Filter by status">
-          <option value="">All Statuses</option><option value="true">Active</option><option value="false">Inactive</option>
+          <option value="">Status</option><option value="true">Active</option><option value="false">Inactive</option>
         </select>
         <button className="btn btn-primary" type="button" onClick={openAdd}><FiPlus /> Create Test Series</button>
       </div>
@@ -332,7 +341,7 @@ export default function SeriesManager() {
           </div>
           <div className="form-group"><label htmlFor="series-description">Description *</label><textarea id="series-description" name="description" rows="7" value={form.description} onChange={change} required /></div>
           <div className="series-form-bottom">
-            <MediaReplaceField id="series-image" label="Image" accept="image/*" currentUrl={editing ? resolveImageUrl(getImageValue(editing)) : ''} value={imageFile} onChange={(file) => changeImage({ target: { files: file ? [file] : [] } })} required={!editing} preview />
+            <MediaReplaceField id="series-image" label={editing ? 'Replace Image' : 'Image *'} accept="image/*" currentUrl={editing ? resolveImageUrl(getImageValue(editing)) : ''} value={imageFile} onChange={(file) => changeImage({ target: { files: file ? [file] : [] } })} required={!editing} preview />
             <label className="series-active"><input name="active" type="checkbox" checked={!!form.active} onChange={change} /> Active</label>
           </div>
         </form>

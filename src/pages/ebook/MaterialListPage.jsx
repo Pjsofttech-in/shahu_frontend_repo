@@ -67,16 +67,15 @@ export default function MaterialListPage() {
           ['subcategoryName', 'Subcategory'], ['status', 'Status'],
         ].map(([key, label]) => (
           <select key={key} value={filters[key] || ''} onChange={(event) => setFilters((current) => ({ ...current, [key]: event.target.value }))} aria-label={`Filter ${label}`}>
-            <option value="">All {label}</option>
+            <option value="">{label}</option>
             {[...new Set(materials.map((row) => String(row[key] ?? '').trim()).filter(Boolean))].sort().map((option) => <option key={option} value={option}>{option}</option>)}
           </select>
         ))}
         <button className="btn btn-primary" type="button" onClick={() => navigate('/ebook/add-material')}>
           <FiPlus /> Add Material
         </button>
+        <div className="result-count">Showing <strong>{rows.length}</strong> of {materials.length} materials</div>
       </div>
-      <div className="ebook-list-count">Material List Count: <span>{rows.length}</span></div>
-      <div className="result-count">Showing <strong>{rows.length}</strong> of {materials.length} materials</div>
 
       <div className="table-wrap" style={{ border: '1px solid #dfe5ee', borderRadius: '10px', overflow: 'hidden' }}>
         <table className="data-table">

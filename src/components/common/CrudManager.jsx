@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState, useCallback } from 'react'
-import { FiPlus, FiTrash2, FiSearch, FiRotateCcw } from 'react-icons/fi'
+import { FiPlus, FiTrash2 } from 'react-icons/fi'
 import DataTable from './DataTable.jsx'
 import Modal from './Modal.jsx'
 import FormField from './FormField.jsx'
@@ -347,7 +347,7 @@ export default function CrudManager({
           {showDeleteAction && <button className="btn btn-danger btn-sm" onClick={(event) => { event.stopPropagation(); handleDelete(row) }}><FiTrash2 /></button>}
           {extraRowAction && (
             <button className="btn btn-gold btn-sm" onClick={(event) => { event.stopPropagation(); extraRowAction.onClick(row) }}>
-              {extraRowAction.icon} {extraRowAction.label}
+              {extraRowAction.icon} {typeof extraRowAction.label === 'function' ? extraRowAction.label(row) : extraRowAction.label}
             </button>
           )}
         </div>
@@ -361,24 +361,17 @@ export default function CrudManager({
         <div className="filter-controls-row">
           {searchKeys.length > 0 && (
             <div className="form-group">
-              <label><FiSearch /> Search</label>
-              <input placeholder={searchPlaceholder} value={search} onChange={(e) => setSearch(e.target.value)} />
+              <input aria-label="Search" placeholder={searchPlaceholder} value={search} onChange={(e) => setSearch(e.target.value)} />
             </div>
           )}
           {extraToolbar}
-
-          {onResetFilters && (
-            <button type="button" className="btn btn-outline reset-filters-btn" onClick={resetFilters}>
-              <FiRotateCcw /> Reset Filters
-            </button>
-          )}
+          <div className="result-count">Showing <strong>{filteredRows.length}</strong> of {rows.length} records</div>
           {showCreateAction && (
             <button className="btn btn-primary crud-inline-add" data-open-create onClick={openCreate}>
               <FiPlus /> {addLabel}
             </button>
           )}
         </div>
-        <div className="result-count">Showing <strong>{filteredRows.length}</strong> of {rows.length} records</div>
       </div>
 
       {error && !showModal && <div className="login-alert" style={{ marginBottom: 14 }}>{error}</div>}

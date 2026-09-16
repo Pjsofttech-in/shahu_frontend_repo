@@ -2,7 +2,7 @@ import React from 'react'
 import Sidebar from './Sidebar.jsx'
 import Topbar from './Topbar.jsx'
 
-export default function Layout({ title, children, horizontalNav, verticalNav }) {
+export default function Layout({ title, children, horizontalNav, verticalNav, className = '' }) {
   return (
     <div className="app-shell">
       <Sidebar />
@@ -13,7 +13,7 @@ export default function Layout({ title, children, horizontalNav, verticalNav }) 
             {horizontalNav}
           </div>
         )}
-        <div className={verticalNav ? 'workspace-with-nav' : ''}>
+        <div className={`${verticalNav ? 'workspace-with-nav' : ''} ${className}`.trim()}>
           {verticalNav && <div className="vertical-nav-container">{verticalNav}</div>}
           <main className="content">{children}</main>
         </div>
