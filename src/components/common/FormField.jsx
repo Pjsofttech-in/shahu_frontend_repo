@@ -3,7 +3,7 @@ import MediaReplaceField from './MediaReplaceField.jsx'
 import RichTextEditor from './RichTextEditor.jsx'
 
 export default function FormField({ field, value, onChange, options, error }) {
-  const { name, label, type = 'text', required, placeholder, rows } = field
+  const { name, label, type = 'text', required, placeholder, rows, min, max } = field
   const hasValue = value !== undefined && value !== null && value !== ''
 
   const common = {
@@ -11,6 +11,8 @@ export default function FormField({ field, value, onChange, options, error }) {
     name,
     required,
     placeholder: placeholder || label,
+    min,
+    max,
   }
 
   return (

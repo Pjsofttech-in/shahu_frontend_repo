@@ -620,7 +620,7 @@ table.data-table tr:hover td { background: var(--blue-100); }
 .rich-text-toolbar { display: flex; gap: 5px; padding: 6px; border-bottom: 1px solid var(--border); background: var(--surface-100, #f7f9fc); }
 .rich-text-toolbar button { min-width: 30px; min-height: 28px; padding: 3px 7px; border: 1px solid transparent; border-radius: 4px; background: transparent; color: var(--text-700); cursor: pointer; font-size: 12px; }
 .rich-text-toolbar button:hover { border-color: var(--border); background: #fff; color: var(--blue-700); }
-.rich-text-content { min-height: 145px; max-height: 210px; overflow-y: auto; padding: 10px 12px; outline: none; line-height: 1.55; font-size: 13px; }
+.rich-text-content { min-height: 110px; padding: 10px 12px; outline: none; line-height: 1.55; font-size: 13px; }
 .rich-text-content:empty::before { content: attr(data-placeholder); color: var(--text-400); pointer-events: none; }
 .rich-text-content:focus { box-shadow: inset 0 0 0 2px var(--blue-500); }
 .ebook-upload-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 30px; margin-top: 38px; }
@@ -886,7 +886,8 @@ table.data-table tr.is-clickable:hover td:not(:last-child) { color: var(--blue-7
 @media (max-width: 900px) { .footer-preview { grid-template-columns: 1fr 1fr; } }
 
 .loading-block { padding: 40px; text-align: center; color: var(--text-400); }
-.singleton-form-card { width: 100%; max-width: 900px; }
+.singleton-form-card { width: 100%; max-width: 900px; margin-left: auto; margin-right: auto; }
+.singleton-form-card:has(.exam-info-form) { max-width: 1080px; }
 .singleton-empty-state { padding: 28px 8px; text-align: center; }
 .singleton-empty-state h2 { margin: 0 0 8px; color: var(--text-900); font-size: 18px; }
 .singleton-empty-state p { margin: 0 auto 18px; max-width: 520px; color: var(--text-600); font-size: 13px; line-height: 1.5; }
@@ -895,7 +896,17 @@ table.data-table tr.is-clickable:hover td:not(:last-child) { color: var(--blue-7
 .singleton-form > button { grid-column: 1 / -1; }
 .singleton-form .form-group-full-width { grid-column: 1 / -1; }
 .singleton-form > button { justify-self: start; margin-top: 6px; }
+.exam-info-form { gap: 0 18px; max-height: calc(100dvh - 250px); overflow-y: auto; padding: 2px 12px 4px 2px; scrollbar-width: thin; scrollbar-color: var(--orange-500) var(--orange-100); }
+.exam-info-form::-webkit-scrollbar { width: 8px; }
+.exam-info-form::-webkit-scrollbar-track { background: var(--orange-100); border-radius: 8px; }
+.exam-info-form::-webkit-scrollbar-thumb { background: var(--orange-500); border-radius: 8px; }
+.exam-info-form .form-group { padding: 2px 0; }
+.exam-info-form .rich-text-editor { margin-top: 1px; }
+.exam-info-form input, .exam-info-form textarea { background: #fffdf8; border-color: #ead9b8; }
+.exam-info-form input:focus, .exam-info-form textarea:focus { border-color: var(--orange-500); box-shadow: 0 0 0 3px rgba(237, 90, 0, .1); }
+.exam-info-form > button { min-width: 150px; margin-top: 10px; box-shadow: 0 7px 16px rgba(237, 90, 0, .2); }
 @media (max-width: 700px) {
+  .singleton-form-card:has(.exam-info-form) { max-width: 100%; }
   .singleton-form { grid-template-columns: 1fr; }
   .singleton-form > .login-alert,
   .singleton-form > button,
