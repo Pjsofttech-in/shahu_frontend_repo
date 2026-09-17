@@ -25,8 +25,20 @@ const paymentStatusOptions = [
   { label: 'Completed', value: 'COMPLETED' },
 ]
 
+const examModeOptions = [
+  { label: 'Online', value: 'ONLINE' },
+  { label: 'Offline', value: 'OFFLINE' },
+]
+
+const toList = (response) => {
+  if (Array.isArray(response)) return response
+  if (Array.isArray(response?.content)) return response.content
+  if (Array.isArray(response?.data)) return response.data
+  return []
+}
+
 const loadUserOptions = async () => {
-  const list = await userService.getAll()
+  const list = toList(await userService.getAll())
   return list.map((u) => ({
     label: u?.fullName || u?.full_name || u?.name || u?.email || `User #${u?.id}`,
     value: u?.id,
@@ -34,7 +46,7 @@ const loadUserOptions = async () => {
 }
 
 const loadDistrictOptions = async () => {
-  const list = await districtService.getAll()
+  const list = toList(await districtService.getAll())
   return list.map((d) => ({
     label: d?.name || d?.districtName || d?.fullName || d?.title || d?.label || `#${d?.id}`,
     value: d?.id,
@@ -43,7 +55,7 @@ const loadDistrictOptions = async () => {
 
 const loadTalukaOptions = async (fv) => {
   if (!fv.districtId) return []
-  const list = await talukasByDistrict(fv.districtId)
+  const list = toList(await talukasByDistrict(fv.districtId))
   return list.map((t) => ({
     label: t?.name || t?.talukaName || t?.title || t?.label || `#${t?.id}`,
     value: t?.id ?? t?.talukaId ?? t?.taluka_id,
@@ -52,7 +64,7 @@ const loadTalukaOptions = async (fv) => {
 
 const loadCenterOptions = async (fv) => {
   if (!fv.talukaId) return []
-  const list = await centersByTaluka(fv.talukaId)
+  const list = toList(await centersByTaluka(fv.talukaId))
   return list.map((c) => {
     const name = c?.name || c?.centerName || c?.title || c?.label || `#${c?.id}`
     const taluka = c?.taluka?.name || c?.talukaName
@@ -64,7 +76,7 @@ const loadCenterOptions = async (fv) => {
 }
 
 const loadCoordinatorOptions = async () => {
-  const list = await coordinatorService.getAll()
+  const list = toList(await coordinatorService.getAll())
   return list.map((c) => ({
     label: c?.coordinatorName || c?.name || c?.fullName || c?.displayName || `#${c?.id}`,
     value: c?.id,
@@ -89,6 +101,7 @@ export default function Students() {
   const [talukaFilter, setTalukaFilter] = useState('')
   const [centerFilter, setCenterFilter] = useState('')
   const [coordinatorFilter, setCoordinatorFilter] = useState('')
+  const [examModeFilter, setExamModeFilter] = useState('')
   const [paymentStatusFilter, setPaymentStatusFilter] = useState('')
   const [districtOptions, setDistrictOptions] = useState([])
   const [talukaOptions, setTalukaOptions] = useState([])
@@ -96,15 +109,8 @@ export default function Students() {
   const [coordinatorOptions, setCoordinatorOptions] = useState([])
 
   useEffect(() => {
-    Promise.all([loadDistrictOptions(), loadCoordinatorOptions()])
-      .then(([districts, coordinators]) => {
-        setDistrictOptions(districts)
-        setCoordinatorOptions(coordinators)
-      })
-      .catch(() => {
-        setDistrictOptions([])
-        setCoordinatorOptions([])
-      })
+    loadDistrictOptions().then(setDistrictOptions).catch(() => setDistrictOptions([]))
+    loadCoordinatorOptions().then(setCoordinatorOptions).catch(() => setCoordinatorOptions([]))
   }, [])
 
   useEffect(() => {
@@ -156,6 +162,7 @@ export default function Students() {
         { key: 'lastName', label: 'Last Name', render: (r) => r.lastName || r.last_name || r.student?.lastName || '' },
         { key: 'school', label: 'School Name', render: (r) => r.school || r.schoolName || r.school_name || r.school?.schoolName || r.school?.name || '' },
         { key: 'studentClass', label: 'Class', render: (r) => r.studentClass || r.standard || r.std || '' },
+        { key: 'examMode', label: 'Exam Mode', render: (r) => String(r.examMode || r.exam_mode || '').toUpperCase() || '—' },
         { key: 'mobile', label: 'Mobile', render: (r) => r.mobile || r.phone || r.phoneNumber || r.contact || '' },
         { key: 'districtName', label: 'District', render: (r) => r.districtName || r.district?.name || r.district?.districtName || r.districtId || '' },
         { key: 'talukaName', label: 'Taluka', render: (r) => r.talukaName || r.taluka?.name || r.taluka?.talukaName || r.talukaId || '' },
@@ -209,17 +216,18 @@ export default function Students() {
         { name: 'pincode', label: 'Pincode', type: 'text' },
         { name: 'dateOfBirth', label: 'Date of Birth', type: 'date', required: true },
         { name: 'userId', label: 'User', type: 'select', required: true, options: loadUserOptions },
+        { name: 'examMode', label: 'Exam Mode', type: 'select', required: true, options: examModeOptions },
         { name: 'districtId', label: 'District', type: 'select', required: true, options: loadDistrictOptions },
         { name: 'talukaId', label: 'Taluka', type: 'select', required: true, dependsOn: 'districtId', options: loadTalukaOptions },
-        { name: 'centerId', label: 'Center', type: 'select', required: true, dependsOn: 'talukaId', options: loadCenterOptions },
-        { name: 'coordinatorId', label: 'Coordinator', type: 'select', required: true, options: loadCoordinatorOptions },
+        { name: 'centerId', label: 'Center', type: 'select', required: true, dependsOn: 'talukaId', hidden: (fv) => fv.examMode === 'ONLINE', options: loadCenterOptions },
+        { name: 'coordinatorId', label: 'Coordinator', type: 'select', required: true, hidden: (fv) => fv.examMode === 'ONLINE', options: loadCoordinatorOptions },
         { name: 'status', label: 'Status', type: 'select', default: 'ACTIVE', options: [
           { label: 'Active', value: 'ACTIVE' },
           { label: 'Inactive', value: 'INACTIVE' },
         ] },
         { name: 'amount', label: 'Payment Amount', type: 'number', required: true, default: '0', placeholder: 'Enter amount' },
-        { name: 'paymentMode', label: 'Payment Mode', type: 'select', default: 'CASH', options: paymentModeOptions },
         { name: 'paymentStatus', label: 'Payment Status', type: 'select', default: 'PENDING', options: paymentStatusOptions },
+        { name: 'paymentMode', label: 'Payment Mode', type: 'select', default: 'CASH', options: paymentModeOptions },
       ]}
       transformSubmit={async (fv, editing) => {
         const userId = fv.userId !== undefined && fv.userId !== null && fv.userId !== '' ? Number(fv.userId) : null
@@ -227,6 +235,7 @@ export default function Students() {
         const talukaId = fv.talukaId !== undefined && fv.talukaId !== null && fv.talukaId !== '' ? Number(fv.talukaId) : null
         const centerId = fv.centerId !== undefined && fv.centerId !== null && fv.centerId !== '' ? Number(fv.centerId) : null
         const coordinatorId = fv.coordinatorId !== undefined && fv.coordinatorId !== null && fv.coordinatorId !== '' ? Number(fv.coordinatorId) : null
+        const examMode = String(fv.examMode || '').toUpperCase()
         const schoolName = String(fv.schoolName ?? '').trim()
 
         if (!fv.studentName || !fv.studentName.trim()) throw new Error('Student Name is required')
@@ -239,10 +248,11 @@ export default function Students() {
         if (!fv.medium) throw new Error('Medium is required')
         if (!fv.dateOfBirth) throw new Error('Date of Birth is required')
         if (!userId) throw new Error('User is required')
+        if (!examMode || !['ONLINE', 'OFFLINE'].includes(examMode)) throw new Error('Exam Mode is required')
         if (!districtId) throw new Error('District is required')
         if (!talukaId) throw new Error('Taluka is required')
-        if (!centerId) throw new Error('Center is required')
-        if (!coordinatorId) throw new Error('Coordinator is required')
+        if (examMode === 'OFFLINE' && !centerId) throw new Error('Center is required for offline exams')
+        if (examMode === 'OFFLINE' && !coordinatorId) throw new Error('Coordinator is required for offline exams')
 
         if (fv.pincode && !/^\d{6}$/.test(String(fv.pincode).trim())) {
           throw new Error('Pincode must be a 6-digit number')
@@ -271,12 +281,13 @@ export default function Students() {
           state: fv.state?.trim() || 'Maharashtra',
           pincode: fv.pincode?.trim() || null,
           dateOfBirth: fv.dateOfBirth || null,
+          examMode,
           active: fv.status === 'ACTIVE',
           userId,
           districtId,
           talukaId,
-          centerId,
-          coordinatorId,
+          centerId: examMode === 'OFFLINE' ? centerId : null,
+          coordinatorId: examMode === 'OFFLINE' ? coordinatorId : null,
           amount,
           paymentMode,
           paymentStatus,
@@ -333,6 +344,13 @@ export default function Students() {
             </FilterSelect>
           </div>
           <div className="form-group">
+            <label>Exam Mode</label>
+            <FilterSelect value={examModeFilter} onChange={(e) => setExamModeFilter(e.target.value)}>
+              <option value="">Exam Mode</option>
+              {examModeOptions.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
+            </FilterSelect>
+          </div>
+          <div className="form-group">
             <label>Class</label>
             <FilterSelect value={classFilter} onChange={(e) => setClassFilter(e.target.value)}>
               <option value="">Class</option>
@@ -347,10 +365,12 @@ export default function Students() {
         setTalukaFilter('')
         setCenterFilter('')
         setCoordinatorFilter('')
+        setExamModeFilter('')
         setPaymentStatusFilter('')
       }}
       filterFn={(row) => (
         (!classFilter || (row.studentClass || row.standard || '') === classFilter) &&
+        (!examModeFilter || String(row.examMode || row.exam_mode || '').toUpperCase() === examModeFilter) &&
         matchesFilter(row, districtFilter, ['districtId', 'district.id'], ['districtName', 'district.name', 'district.districtName']) &&
         matchesFilter(row, talukaFilter, ['talukaId', 'taluka_id', 'taluka.id', 'taluka.talukaId', 'taluka.taluka_id'], ['talukaName', 'taluka_name', 'taluka.name', 'taluka.talukaName', 'taluka.taluka_name']) &&
         matchesFilter(row, centerFilter, ['centerId', 'center_id', 'center.id', 'center.centerId', 'center.center_id'], ['centerName', 'center_name', 'center.name', 'center.centerName', 'center.center_name']) &&

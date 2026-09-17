@@ -329,11 +329,14 @@ export default function CrudManager({
 
   const fieldGroups = useMemo(() => {
     const groups = []
-    for (let index = 0; index < fields.length; index += formColumns) {
-      groups.push(fields.slice(index, index + formColumns))
+    const visibleFields = fields.filter((field) => (
+      typeof field.hidden === 'function' ? !field.hidden(formValues, editing) : !field.hidden
+    ))
+    for (let index = 0; index < visibleFields.length; index += formColumns) {
+      groups.push(visibleFields.slice(index, index + formColumns))
     }
     return groups
-  }, [fields, formColumns])
+  }, [fields, formColumns, formValues, editing])
 
   const hasActions = showDeleteAction || extraRowAction
   const tableColumns = hasActions ? [
