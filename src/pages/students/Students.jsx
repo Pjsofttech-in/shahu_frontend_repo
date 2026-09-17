@@ -10,7 +10,7 @@ import {
   userService,
 } from '../../api/services.js'
 
-const classOptions = ['5th', '6th', '7th', '8th', '9th', '10th', '11th', '12th'].map((s) => ({
+const classOptions = ['4th', '5th', '6th', '7th', '8th', '9th', '10th', '11th', '12th', 'None'].map((s) => ({
   label: s,
   value: s,
 }))
