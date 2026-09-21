@@ -2,19 +2,31 @@ import React from 'react'
 import MediaReplaceField from './MediaReplaceField.jsx'
 import RichTextEditor from './RichTextEditor.jsx'
 
+export const formatIndianDate = (value) => {
+  const match = String(value ?? '').slice(0, 10).match(/^(\d{4})-(\d{2})-(\d{2})$/)
+  return match ? `${match[3]}/${match[2]}/${match[1]}` : String(value ?? '')
+}
+
+const toIsoDate = (value) => {
+  const match = String(value ?? '').trim().match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/)
+  if (!match) return value
+  return `${match[3]}-${match[2].padStart(2, '0')}-${match[1].padStart(2, '0')}`
+}
+
 export default function FormField({ field, value, onChange, options, error }) {
-  const { name, label, type = 'text', required, placeholder, rows, min, max, maxLength, inputMode } = field
+  const { name, label, type = 'text', required, placeholder, rows, min, max, maxLength, inputMode, dateFormat } = field
   const hasValue = value !== undefined && value !== null && value !== ''
+  const isIndianDate = type === 'date' && dateFormat === 'DD/MM/YYYY'
 
   const common = {
     id: name,
     name,
     required,
-    placeholder: placeholder || label,
+    placeholder: placeholder || (isIndianDate ? 'DD/MM/YYYY' : label),
     min,
     max,
     maxLength,
-    inputMode,
+    inputMode: isIndianDate ? 'numeric' : inputMode,
   }
 
   return (
@@ -60,7 +72,12 @@ export default function FormField({ field, value, onChange, options, error }) {
       )}
 
       {['text', 'email', 'password', 'number', 'date', 'tel', 'url'].includes(type) && (
-        <input {...common} type={type} value={value ?? ''} onChange={(e) => onChange(name, e.target.value)} />
+        <input
+          {...common}
+          type={isIndianDate ? 'text' : type}
+          value={isIndianDate ? formatIndianDate(value) : (value ?? '')}
+          onChange={(e) => onChange(name, isIndianDate ? toIsoDate(e.target.value) : e.target.value)}
+        />
       )}
 
       {error && <span className="field-error">{error}</span>}

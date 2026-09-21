@@ -3,6 +3,7 @@ import { FiPlus, FiTrash2 } from 'react-icons/fi'
 import DataTable from './DataTable.jsx'
 import Modal from './Modal.jsx'
 import FormField from './FormField.jsx'
+import Pagination from './Pagination.jsx'
 
 /**
  * Generic list + create/edit/delete manager.
@@ -43,6 +44,8 @@ export default function CrudManager({
   const [formValues, setFormValues] = useState({})
   const [saving, setSaving] = useState(false)
   const [optionsCache, setOptionsCache] = useState({})
+  const [page, setPage] = useState(1)
+  const [pageSize, setPageSize] = useState(10)
 
   const getApiErrorMessage = (e, fallback = 'Something went wrong') => {
     const payload = e?.response?.data
@@ -360,6 +363,17 @@ export default function CrudManager({
     return result
   }, [rows, search, searchKeys, filterFn])
 
+  useEffect(() => {
+    setPage(1)
+  }, [search, pageSize])
+
+  const totalPages = Math.max(1, Math.ceil(filteredRows.length / pageSize))
+  const currentPage = Math.min(page, totalPages)
+  const pagedRows = useMemo(() => {
+    const start = (currentPage - 1) * pageSize
+    return filteredRows.slice(start, start + pageSize)
+  }, [filteredRows, currentPage, pageSize])
+
   const fieldGroups = useMemo(() => {
     const groups = []
     const visibleFields = fields.filter((field) => (
@@ -412,7 +426,16 @@ export default function CrudManager({
 
       {error && !showModal && <div className="login-alert" style={{ marginBottom: 14 }}>{error}</div>}
 
-      <DataTable columns={tableColumns} rows={filteredRows} loading={loading} onRowClick={rowClickEdit ? openEdit : undefined} />
+      <DataTable columns={tableColumns} rows={pagedRows} loading={loading} onRowClick={rowClickEdit ? openEdit : undefined} />
+      {!loading && filteredRows.length > 0 && (
+        <Pagination
+          page={currentPage}
+          pageSize={pageSize}
+          totalItems={filteredRows.length}
+          onPageChange={setPage}
+          onPageSizeChange={setPageSize}
+        />
+      )}
 
       {showModal && (
         <Modal

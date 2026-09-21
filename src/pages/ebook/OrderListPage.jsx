@@ -1,4 +1,5 @@
 import React, { useMemo, useState } from 'react'
+import Pagination from '../../components/common/Pagination.jsx'
 
 const initialOrders = [
   { id: 1, buyer: 'Amit Shah', material: 'Science', total: '₹ 1500', status: 'Paid' },
@@ -9,6 +10,8 @@ const initialOrders = [
 
 export default function OrderListPage() {
   const [search, setSearch] = useState('')
+  const [page, setPage] = useState(1)
+  const [pageSize, setPageSize] = useState(10)
   const rows = useMemo(() => {
     const value = search.trim().toLowerCase()
     if (!value) return initialOrders
@@ -18,6 +21,9 @@ export default function OrderListPage() {
       || String(row.status).toLowerCase().includes(value)
     )
   }, [search])
+  const totalPages = Math.max(1, Math.ceil(rows.length / pageSize))
+  const currentPage = Math.min(page, totalPages)
+  const pageRows = rows.slice((currentPage - 1) * pageSize, currentPage * pageSize)
 
   return (
     <div className="ebook-list-page" style={{ width: '100%', maxWidth: '1220px', margin: '0 auto' }}>
@@ -45,7 +51,7 @@ export default function OrderListPage() {
           <tbody>
             {rows.length === 0 ? (
               <tr><td colSpan={5} style={{ textAlign: 'center', padding: '24px' }}>No order found.</td></tr>
-            ) : rows.map((row) => (
+            ) : pageRows.map((row) => (
               <tr key={row.id}>
                 <td>{row.id}</td>
                 <td>{row.buyer}</td>
@@ -57,6 +63,7 @@ export default function OrderListPage() {
           </tbody>
         </table>
       </div>
+      {rows.length > 0 && <Pagination page={currentPage} pageSize={pageSize} totalItems={rows.length} onPageChange={setPage} onPageSizeChange={(size) => { setPageSize(size); setPage(1) }} />}
     </div>
   )
 }

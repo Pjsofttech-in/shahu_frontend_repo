@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react'
 import { studentService } from '../../api/services.js'
+import Pagination from '../../components/common/Pagination.jsx'
 
 const rowsOf = (data) => Array.isArray(data) ? data : data?.content || data?.data || []
 const valueOf = (row, keys) => keys.map((key) => key.split('.').reduce((value, part) => value?.[part], row)).find((value) => value !== undefined && value !== null && value !== '')
@@ -15,6 +16,8 @@ export default function OrderListPage() {
   const [statusFilter, setStatusFilter] = useState('ALL')
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
+  const [page, setPage] = useState(1)
+  const [pageSize, setPageSize] = useState(10)
 
   const load = async () => {
     setLoading(true); setError('')
@@ -36,6 +39,9 @@ export default function OrderListPage() {
   }), [students, search, statusFilter])
   const paidAmount = filteredStudents.filter(paidOf).reduce((total, row) => total + amountOf(row), 0)
   const pendingAmount = filteredStudents.filter((row) => !paidOf(row)).reduce((total, row) => total + amountOf(row), 0)
+  const totalPages = Math.max(1, Math.ceil(filteredStudents.length / pageSize))
+  const currentPage = Math.min(page, totalPages)
+  const pageRows = filteredStudents.slice((currentPage - 1) * pageSize, currentPage * pageSize)
 
   return (
     <section className="series-manager test-series-orders-page">
@@ -53,8 +59,9 @@ export default function OrderListPage() {
       <div className="card series-table-card"><div className="table-wrap"><table className="data-table"><thead><tr><th>Student ID</th><th>Student</th><th>School</th><th>Amount</th><th>Payment Mode</th><th>Payment Status</th><th>Transaction</th><th>Paid At</th></tr></thead><tbody>
         {loading && <tr className="empty-row"><td colSpan="8">Loading student orders...</td></tr>}
         {!loading && !filteredStudents.length && <tr className="empty-row"><td colSpan="8">No student orders found.</td></tr>}
-        {!loading && filteredStudents.map((row) => <tr key={valueOf(row, ['id', 'studentId', 'student_id'])}><td>{valueOf(row, ['id', 'studentId', 'student_id']) || '-'}</td><td><strong>{[valueOf(row, ['studentName', 'name', 'fullName', 'student.name']), valueOf(row, ['lastName', 'student.lastName'])].filter(Boolean).join(' ') || '-'}</strong><small className="solved-paper-secondary">{valueOf(row, ['mobile', 'phone', 'email', 'student.email']) || ''}</small></td><td>{valueOf(row, ['school', 'schoolName', 'school.name']) || '-'}</td><td className="order-amount">{formatAmount(amountOf(row))}</td><td>{paymentModeOf(row)}</td><td><span className={`badge ${paidOf(row) ? 'badge-active' : 'badge-pending'}`}>{paidOf(row) ? 'PAID' : 'PENDING'}</span></td><td>{valueOf(row, ['transactionId', 'paymentId', 'payment.transactionId', 'payment.paymentId', 'orderId']) || '-'}</td><td>{valueOf(row, ['paidAt', 'paymentDate', 'payment.paidAt', 'createdAt']) || '-'}</td></tr>)}
+        {!loading && pageRows.map((row) => <tr key={valueOf(row, ['id', 'studentId', 'student_id'])}><td>{valueOf(row, ['id', 'studentId', 'student_id']) || '-'}</td><td><strong>{[valueOf(row, ['studentName', 'name', 'fullName', 'student.name']), valueOf(row, ['lastName', 'student.lastName'])].filter(Boolean).join(' ') || '-'}</strong><small className="solved-paper-secondary">{valueOf(row, ['mobile', 'phone', 'email', 'student.email']) || ''}</small></td><td>{valueOf(row, ['school', 'schoolName', 'school.name']) || '-'}</td><td className="order-amount">{formatAmount(amountOf(row))}</td><td>{paymentModeOf(row)}</td><td><span className={`badge ${paidOf(row) ? 'badge-active' : 'badge-pending'}`}>{paidOf(row) ? 'PAID' : 'PENDING'}</span></td><td>{valueOf(row, ['transactionId', 'paymentId', 'payment.transactionId', 'payment.paymentId', 'orderId']) || '-'}</td><td>{valueOf(row, ['paidAt', 'paymentDate', 'payment.paidAt', 'createdAt']) || '-'}</td></tr>)}
       </tbody></table></div></div>
+      {!loading && filteredStudents.length > 0 && <Pagination page={currentPage} pageSize={pageSize} totalItems={filteredStudents.length} onPageChange={setPage} onPageSizeChange={(size) => { setPageSize(size); setPage(1) }} />}
     </section>
   )
 }

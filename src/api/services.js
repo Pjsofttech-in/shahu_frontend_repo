@@ -260,6 +260,9 @@ export const contactService = {
 }
 export const contactFormService = {
   getAll: () => dynamicApi.get('/getAllContactForms', { params: { url: getWebsiteRequestParams().url } }).then((r) => r.data),
+  markAsReplied: (id, isReplied) => dynamicApi.put(`/markContactFormAsReplied/${id}`, null, {
+    params: { isReplied: Boolean(isReplied) },
+  }).then((r) => r.data),
 }
 export const notificationService = makeDynamicCrudService('/notifications')
 export const faqService = makeDynamicCrudService('/faqs')
@@ -637,8 +640,40 @@ export const sectionService = {
 export const questionService = {
   getAll: () => api.get('/questions').then((r) => r.data),
   getById: (id) => api.get(`/questions/${id}`).then((r) => r.data),
-  create: (payload) => api.post('/questions', payload).then((r) => r.data),
-  update: (id, payload) => api.put(`/questions/${id}`, payload).then((r) => r.data),
+  create: async (payload, files = {}) => {
+    const form = new FormData()
+    const requestPayload = {
+      ...payload,
+      sectionId: payload?.sectionId == null || payload?.sectionId === '' ? null : Number(payload.sectionId),
+      active: payload?.active ?? true,
+    }
+
+    // The Spring controller reads this value with @RequestParam("questionRequestJson").
+    // Always use multipart so text-only and image questions follow the same path.
+    form.append('questionRequestJson', JSON.stringify(requestPayload))
+
+    Object.entries(files).forEach(([key, file]) => {
+      if (file) form.append(key, file)
+    })
+
+    return apiUpload.post('/questions', form).then((r) => r.data)
+  },
+  update: async (id, payload, files = {}) => {
+    const form = new FormData()
+    const requestPayload = {
+      ...payload,
+      sectionId: payload?.sectionId == null || payload?.sectionId === '' ? null : Number(payload.sectionId),
+      active: payload?.active ?? true,
+    }
+
+    form.append('questionRequestJson', JSON.stringify(requestPayload))
+
+    Object.entries(files).forEach(([key, file]) => {
+      if (file) form.append(key, file)
+    })
+
+    return apiUpload.put(`/questions/${id}`, form).then((r) => r.data)
+  },
   remove: (id) => api.delete(`/questions/${id}`).then((r) => r.data),
 }
 export const examService = {

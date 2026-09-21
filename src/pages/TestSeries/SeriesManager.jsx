@@ -3,6 +3,7 @@ import { FiFileText, FiImage, FiPlus, FiTrash2 } from 'react-icons/fi'
 import Modal from '../../components/common/Modal.jsx'
 import DescriptionPreview from '../../components/common/DescriptionPreview.jsx'
 import MediaReplaceField from '../../components/common/MediaReplaceField.jsx'
+import Pagination from '../../components/common/Pagination.jsx'
 import { categoryService, examService, testSeriesService } from '../../api/services.js'
 
 const EMPTY_FORM = {
@@ -89,6 +90,8 @@ export default function SeriesManager() {
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
+  const [page, setPage] = useState(1)
+  const [pageSize, setPageSize] = useState(10)
 
   const load = async () => {
     setLoading(true)
@@ -278,6 +281,10 @@ export default function SeriesManager() {
     const matchesActive = !activeFilter || String(row.active !== false) === activeFilter
     return matchesSearch && matchesCategory && matchesActive
   })
+  useEffect(() => { setPage(1) }, [search, categoryFilter, activeFilter, pageSize])
+  const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize))
+  const currentPage = Math.min(page, totalPages)
+  const pageRows = filtered.slice((currentPage - 1) * pageSize, currentPage * pageSize)
 
   return (
     <section className="series-manager">
@@ -303,7 +310,7 @@ export default function SeriesManager() {
             <tbody>
               {loading && <tr className="empty-row"><td colSpan="13">Loading test series…</td></tr>}
               {!loading && filtered.length === 0 && <tr className="empty-row"><td colSpan="13">No test series found.</td></tr>}
-              {!loading && filtered.map((row) => (
+              {!loading && pageRows.map((row) => (
                 <tr key={row.id}>
                   <td>{row.id}</td><td><button className="table-link-button series-name-link" type="button" onClick={() => openEdit(row)}>{row.title || '—'}</button></td><td>{row.subject || row.examType || '—'}</td><td>{row.price ?? '—'}</td><td>{row.mrp ?? '—'}</td>
                   <td>{row.category?.categoryName || row.category?.name || row.categoryName || getCategoryId(row) || '—'}</td><td>{[row.testFeatureOne, row.testFeatureTwo, row.testFeatureThree].filter(Boolean).join(', ') || '—'}</td><td className="series-description-cell"><DescriptionPreview value={row.description} /></td>
@@ -321,6 +328,7 @@ export default function SeriesManager() {
             </tbody>
           </table>
         </div>
+        {!loading && filtered.length > 0 && <Pagination page={currentPage} pageSize={pageSize} totalItems={filtered.length} onPageChange={setPage} onPageSizeChange={setPageSize} />}
       </div>
 
 {showModal && <Modal title={editing ? 'Edit Test Series' : 'Create Test Series'} onClose={closeModal} maxWidth="980px" footer={<><button className="btn btn-outline" type="button" onClick={closeModal}>Cancel</button><button className="btn btn-primary" type="submit" form="series-form" disabled={saving}>{saving ? 'Saving…' : editing ? 'Update' : 'Create'}</button></>}>

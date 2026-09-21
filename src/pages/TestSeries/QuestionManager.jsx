@@ -3,7 +3,21 @@ import { FiEdit2, FiPlus, FiSearch, FiTrash2 } from 'react-icons/fi'
 import Modal from '../../components/common/Modal.jsx'
 import { questionService, sectionService } from '../../api/services.js'
 
-const EMPTY_FORM = { question: '', questionType: 'MCQ', sectionId: '', optionA: '', optionB: '', optionC: '', optionD: '', correctAnswer: 'A', answerExplanation: '', active: true }
+const OPTION_KEYS = ['optionA', 'optionB', 'optionC', 'optionD']
+const DEFAULT_OPTION_KINDS = { optionA: 'text', optionB: 'text', optionC: 'text', optionD: 'text' }
+const EMPTY_FORM = {
+  question: '',
+  questionType: 'MCQ',
+  sectionId: '',
+  optionA: '',
+  optionB: '',
+  optionC: '',
+  optionD: '',
+  correctAnswer: 'A',
+  answerExplanation: '',
+  active: true,
+  optionKinds: { ...DEFAULT_OPTION_KINDS },
+}
 const SYMBOL_GROUPS = [
   { label: 'Math', symbols: ['+', '−', '×', '÷', '=', '≠', '≈', '±', '√', '∞', '∑', '∏', '∫', '∂', '∆', '∇', 'π', '°', '²', '³', 'ⁿ', '₁', '₂', 'ₙ'] },
   { label: 'Greek', symbols: ['α', 'β', 'γ', 'δ', 'θ', 'λ', 'μ', 'σ', 'φ', 'ω', 'Δ', 'Ω', 'Σ', 'Π', 'Φ'] },
@@ -13,6 +27,51 @@ const SYMBOL_GROUPS = [
 const rowsOf = (data) => Array.isArray(data) ? data : data?.content || data?.data || []
 const errorOf = (error) => String(error?.response?.data?.message || error?.response?.data?.error || error?.message || 'Could not complete the question request.')
 const sectionIdOf = (row) => row.sectionId ?? row.section?.id ?? row.section?.sectionId
+const normalizeOptionKind = (value) => ['text', 'data', 'image'].includes(value) ? value : 'text'
+const normalizeQuestionPayload = (form) => {
+  const optionKinds = form?.optionKinds || DEFAULT_OPTION_KINDS
+  return {
+    question: (form?.question || '').trim(),
+    questionType: form?.questionType || 'MCQ',
+    sectionId: form?.sectionId == null || form?.sectionId === '' ? null : Number(form.sectionId),
+    optionA: optionKinds.optionA === 'image' ? (form.optionA || '') : (form.optionA || '').trim(),
+    optionB: optionKinds.optionB === 'image' ? (form.optionB || '') : (form.optionB || '').trim(),
+    optionC: optionKinds.optionC === 'image' ? (form.optionC || '') : (form.optionC || '').trim(),
+    optionD: optionKinds.optionD === 'image' ? (form.optionD || '') : (form.optionD || '').trim(),
+    correctAnswer: form?.questionType === 'MCQ' ? form?.correctAnswer || 'A' : '',
+    answerExplanation: (form?.answerExplanation || '').trim(),
+    active: form?.active ?? true,
+  }
+}
+
+function OptionField({ label, kind, value, onKindChange, onValueChange, onFileChange, disabled }) {
+  const handleFile = (event) => {
+    const file = event.target.files?.[0] || null
+    onFileChange(file)
+    if (file) onValueChange(file.name)
+  }
+
+  return <div className="form-group question-option-field">
+    <label>{label}</label>
+    <div className="option-kind-row">
+      <select className="option-kind-select" value={kind} onChange={(event) => onKindChange(event.target.value)} disabled={disabled}>
+        <option value="text">Text</option>
+        <option value="data">Data</option>
+        <option value="image">Image</option>
+      </select>
+    </div>
+    {kind === 'image' ? (
+      <div className="option-image-box">
+        <input type="file" accept="image/*" onChange={handleFile} disabled={disabled} />
+        {value && <small>{value}</small>}
+      </div>
+    ) : kind === 'data' ? (
+      <textarea rows="3" value={value} onChange={(event) => onValueChange(event.target.value)} disabled={disabled} placeholder="Write raw data / JSON / formula / text..." />
+    ) : (
+      <input value={value} onChange={(event) => onValueChange(event.target.value)} disabled={disabled} placeholder="Enter option text" />
+    )}
+  </div>
+}
 
 function QuestionEditor({ value, onChange }) {
   const inputRef = useRef(null)
@@ -60,6 +119,7 @@ export default function QuestionManager() {
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
+  const [optionFiles, setOptionFiles] = useState({})
 
   const load = async () => {
     setLoading(true)
@@ -81,7 +141,12 @@ export default function QuestionManager() {
   const pageRows = filtered.slice((page - 1) * pageSize, page * pageSize)
 
   const open = (row = null) => {
-    setEditing(row); setForm(row ? { ...EMPTY_FORM, ...row, sectionId: sectionIdOf(row) || '' } : EMPTY_FORM); setError(''); setShowModal(true)
+    const baseForm = row ? { ...EMPTY_FORM, ...row, sectionId: sectionIdOf(row) || '', optionKinds: { ...DEFAULT_OPTION_KINDS, ...(row.optionKinds || {}) } } : { ...EMPTY_FORM, optionKinds: { ...DEFAULT_OPTION_KINDS } }
+    setEditing(row)
+    setForm(baseForm)
+    setOptionFiles({})
+    setError('')
+    setShowModal(true)
   }
   const change = (event) => {
     const { name, value, type, checked } = event.target
@@ -90,10 +155,32 @@ export default function QuestionManager() {
   const submit = async (event) => {
     event.preventDefault()
     if (!form.question.trim() || !form.sectionId) { setError('Question and Section are required.'); return }
-    if (form.questionType === 'MCQ' && [form.optionA, form.optionB, form.optionC, form.optionD].some((value) => !value.trim())) { setError('All four options are required for MCQ.'); return }
-    const payload = { question: form.question.trim(), questionType: form.questionType, sectionId: Number(form.sectionId), optionA: form.questionType === 'MCQ' ? form.optionA.trim() : '', optionB: form.questionType === 'MCQ' ? form.optionB.trim() : '', optionC: form.questionType === 'MCQ' ? form.optionC.trim() : '', optionD: form.questionType === 'MCQ' ? form.optionD.trim() : '', correctAnswer: form.questionType === 'MCQ' ? form.correctAnswer : '', answerExplanation: form.answerExplanation.trim(), active: form.active }
+
+    const optionKinds = form.optionKinds || DEFAULT_OPTION_KINDS
+    if (form.questionType === 'MCQ') {
+      const optionValues = OPTION_KEYS.map((key) => form[key] ?? '')
+      const hasEmptyOption = optionValues.some((value) => !String(value).trim())
+      if (hasEmptyOption) {
+        setError('All four options are required for MCQ.');
+        return
+      }
+    }
+
+    const payload = normalizeQuestionPayload(form)
+    const files = {
+      optionAFile: optionKinds.optionA === 'image' ? optionFiles.optionAFile || null : null,
+      optionBFile: optionKinds.optionB === 'image' ? optionFiles.optionBFile || null : null,
+      optionCFile: optionKinds.optionC === 'image' ? optionFiles.optionCFile || null : null,
+      optionDFile: optionKinds.optionD === 'image' ? optionFiles.optionDFile || null : null,
+    }
+
     setSaving(true); setError('')
-    try { if (editing) await questionService.update(editing.id, payload); else await questionService.create(payload); setShowModal(false); await load() } catch (saveError) { setError(errorOf(saveError)) } finally { setSaving(false) }
+    try {
+      if (editing) await questionService.update(editing.id, payload, files)
+      else await questionService.create(payload, files)
+      setShowModal(false)
+      await load()
+    } catch (saveError) { setError(errorOf(saveError)) } finally { setSaving(false) }
   }
   const remove = async () => {
     if (!deleteTarget) return
@@ -106,7 +193,7 @@ export default function QuestionManager() {
     {error && !showModal && !deleteTarget && <div className="login-alert">{error}</div>}
     <div className="question-bank-filters"><select value={typeFilter} onChange={(event) => setTypeFilter(event.target.value)} aria-label="Filter question type"><option value="">Type</option><option value="MCQ">MCQ</option><option value="DESCRIPTIVE">Descriptive</option></select><select value={sectionFilter} onChange={(event) => setSectionFilter(event.target.value)} aria-label="Filter question section"><option value="">Section</option>{sections.map((section) => <option key={section.id} value={section.id}>{section.name || section.sectionName || section.title}</option>)}</select><div className="question-bank-search"><input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search Question" aria-label="Search question" /><FiSearch /></div></div>
     <div className="card question-bank-list-card"><div className="table-wrap"><table className="data-table question-bank-table"><thead><tr><th>Id</th><th>Question</th><th>Type</th><th>Section</th><th>Actions</th></tr></thead><tbody>{loading && <tr className="empty-row"><td colSpan="5">Loading questions...</td></tr>}{!loading && !pageRows.length && <tr className="empty-row"><td colSpan="5">No data</td></tr>}{!loading && pageRows.map((row) => <tr key={row.id}><td>{row.id}</td><td className="question-preview">{row.question || `Question #${row.id}`}</td><td>{row.questionType || 'MCQ'}</td><td>{sectionNameOf(row)}</td><td><div className="table-actions"><button className="icon-btn edit" type="button" onClick={() => open(row)} title="Edit question" aria-label={`Edit question ${row.id}`}><FiEdit2 /></button><button className="icon-btn danger" type="button" onClick={() => setDeleteTarget(row)} title="Delete question" aria-label={`Delete question ${row.id}`}><FiTrash2 /></button></div></td></tr>)}</tbody></table></div><div className="question-bank-footer"><label>Rows per page <select value={pageSize} onChange={(event) => setPageSize(Number(event.target.value))}><option value="20">20</option><option value="50">50</option><option value="100">100</option><option value="1000">1000</option></select></label><span>{filtered.length ? `${(page - 1) * pageSize + 1}-${Math.min(page * pageSize, filtered.length)} of ${filtered.length}` : '0 results'}</span><div><button className="btn btn-outline btn-sm" type="button" disabled={page <= 1} onClick={() => setPage((current) => current - 1)}>Previous</button><button className="btn btn-outline btn-sm" type="button" disabled={page >= totalPages} onClick={() => setPage((current) => current + 1)}>Next</button></div></div></div>
-    {showModal && <Modal title={editing ? 'Edit Question' : 'Create Question'} onClose={() => setShowModal(false)} maxWidth="900px" footer={<><button className="btn btn-outline" type="button" onClick={() => setShowModal(false)}>Cancel</button><button className="btn btn-primary" type="submit" form="question-form" disabled={saving}>{saving ? 'Saving...' : editing ? 'Update' : 'Create'}</button></>}><form id="question-form" onSubmit={submit} className="question-bank-form"><div className="question-bank-form-grid"><div className="form-group full-width"><label>Question *</label><QuestionEditor value={form.question} onChange={(value) => setForm((current) => ({ ...current, question: value }))} /></div><div className="form-group"><label>Section *</label><select name="sectionId" value={form.sectionId} onChange={change} required><option value="">Select Section</option>{sections.map((section) => <option key={section.id} value={section.id}>{section.name || section.sectionName || section.title}</option>)}</select></div><div className="form-group"><label>Question Type *</label><select name="questionType" value={form.questionType} onChange={change}><option value="MCQ">MCQ</option><option value="DESCRIPTIVE">Descriptive</option></select></div>{['optionA', 'optionB', 'optionC', 'optionD'].map((field) => <div className="form-group" key={field}><label>Option {field.slice(-1)} {form.questionType === 'MCQ' && '*'}</label><input name={field} value={form[field]} onChange={change} disabled={form.questionType !== 'MCQ'} /></div>)}<div className="form-group"><label>Correct Answer</label><select name="correctAnswer" value={form.correctAnswer} onChange={change} disabled={form.questionType !== 'MCQ'}><option value="A">A</option><option value="B">B</option><option value="C">C</option><option value="D">D</option></select></div><div className="form-group"><label>Explanation</label><textarea name="answerExplanation" rows="3" value={form.answerExplanation} onChange={change} /></div></div><label className="series-active"><input name="active" type="checkbox" checked={!!form.active} onChange={change} /> Active</label></form></Modal>}
+    {showModal && <Modal title={editing ? 'Edit Question' : 'Create Question'} onClose={() => setShowModal(false)} maxWidth="900px" footer={<><button className="btn btn-outline" type="button" onClick={() => setShowModal(false)}>Cancel</button><button className="btn btn-primary" type="submit" form="question-form" disabled={saving}>{saving ? 'Saving...' : editing ? 'Update' : 'Create'}</button></>}><form id="question-form" onSubmit={submit} className="question-bank-form"><div className="question-bank-form-grid"><div className="form-group full-width"><label>Question *</label><QuestionEditor value={form.question} onChange={(value) => setForm((current) => ({ ...current, question: value }))} /></div><div className="form-group"><label>Section *</label><select name="sectionId" value={form.sectionId} onChange={change} required><option value="">Select Section</option>{sections.map((section) => <option key={section.id} value={section.id}>{section.name || section.sectionName || section.title}</option>)}</select></div><div className="form-group"><label>Question Type *</label><select name="questionType" value={form.questionType} onChange={change}><option value="MCQ">MCQ</option><option value="DESCRIPTIVE">Descriptive</option></select></div>{OPTION_KEYS.map((field) => { const kind = normalizeOptionKind(form.optionKinds?.[field] || DEFAULT_OPTION_KINDS[field]); return <OptionField key={field} label={`Option ${field.slice(-1)} ${form.questionType === 'MCQ' ? '*' : ''}`} kind={kind} value={form[field] || ''} disabled={form.questionType !== 'MCQ'} onKindChange={(nextKind) => setForm((current) => ({ ...current, optionKinds: { ...(current.optionKinds || DEFAULT_OPTION_KINDS), [field]: normalizeOptionKind(nextKind) } }))} onValueChange={(nextValue) => setForm((current) => ({ ...current, [field]: nextValue }))} onFileChange={(file) => setOptionFiles((current) => ({ ...current, [`${field}File`]: file }))} /> })}<div className="form-group"><label>Correct Answer</label><select name="correctAnswer" value={form.correctAnswer} onChange={change} disabled={form.questionType !== 'MCQ'}><option value="A">A</option><option value="B">B</option><option value="C">C</option><option value="D">D</option></select></div><div className="form-group"><label>Explanation</label><textarea name="answerExplanation" rows="3" value={form.answerExplanation} onChange={change} /></div></div><label className="series-active"><input name="active" type="checkbox" checked={!!form.active} onChange={change} /> Active</label></form></Modal>}
     {deleteTarget && <Modal title="Delete Question" onClose={() => setDeleteTarget(null)} footer={<><button className="btn btn-outline" type="button" onClick={() => setDeleteTarget(null)}>Cancel</button><button className="btn btn-danger" type="button" disabled={saving} onClick={remove}>{saving ? 'Deleting...' : 'Delete'}</button></>}><p>Delete question {deleteTarget.id}?</p></Modal>}
   </section>
 }

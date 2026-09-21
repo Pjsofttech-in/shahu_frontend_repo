@@ -42,7 +42,25 @@ export default function ContactForm() {
       extraRowAction={{
         icon: <FiCheckCircle />,
         label: (row) => rowIsReplied(row) ? 'Mark Not Replied' : 'Mark Replied',
-        onClick: (row) => setReplyStates((current) => ({ ...current, [contactId(row)]: !rowIsReplied(row) })),
+        onClick: async (row) => {
+          const id = row?.id ?? row?.contactId ?? row?.contact_id
+          if (id === undefined || id === null || id === '') {
+            window.alert('This contact form does not have a valid ID.')
+            return
+          }
+
+          const previous = rowIsReplied(row)
+          const next = !previous
+          setReplyStates((current) => ({ ...current, [id]: next }))
+
+          try {
+            await contactFormService.markAsReplied(id, next)
+          } catch (error) {
+            setReplyStates((current) => ({ ...current, [id]: previous }))
+            const message = error?.response?.data?.message || error?.response?.data?.error || error?.message || 'Could not update reply status.'
+            window.alert(message)
+          }
+        },
       }}
     />
   )

@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react'
 import { FiDownload, FiPlus, FiTrash2 } from 'react-icons/fi'
 import { useNavigate } from 'react-router-dom'
 import { vmMaterialService } from '../../api/services.js'
+import Pagination from '../../components/common/Pagination.jsx'
 
 export default function MaterialListPage() {
   const navigate = useNavigate()
@@ -9,6 +10,8 @@ export default function MaterialListPage() {
   const [search, setSearch] = useState('')
   const [filters, setFilters] = useState({})
   const [loading, setLoading] = useState(true)
+  const [page, setPage] = useState(1)
+  const [pageSize, setPageSize] = useState(10)
 
   useEffect(() => {
     const load = async () => {
@@ -33,6 +36,10 @@ export default function MaterialListPage() {
       .some((field) => String(field || '').toLowerCase().includes(value)))
       .filter((row) => Object.entries(filters).every(([key, query]) => !query || String(row[key] ?? '').toLowerCase().includes(query.toLowerCase())))
   }, [materials, search, filters])
+  useEffect(() => { setPage(1) }, [search, filters, pageSize])
+  const totalPages = Math.max(1, Math.ceil(rows.length / pageSize))
+  const currentPage = Math.min(page, totalPages)
+  const pageRows = rows.slice((currentPage - 1) * pageSize, currentPage * pageSize)
 
   const remove = async (id) => {
     if (!window.confirm('Delete this material?')) return
@@ -96,7 +103,7 @@ export default function MaterialListPage() {
               <tr><td colSpan={8} style={{ textAlign: 'center', padding: '24px' }}>Loading…</td></tr>
             ) : rows.length === 0 ? (
               <tr><td colSpan={8} style={{ textAlign: 'center', padding: '24px' }}>No material records found.</td></tr>
-            ) : rows.map((row) => (
+            ) : pageRows.map((row) => (
               <tr key={row.id}>
                 <td>{row.id}</td>
                 <td style={{ color: '#1e63c9', fontWeight: 600 }}>{row.materialtype || '—'}</td>
@@ -114,6 +121,7 @@ export default function MaterialListPage() {
           </tbody>
         </table>
       </div>
+      {!loading && rows.length > 0 && <Pagination page={currentPage} pageSize={pageSize} totalItems={rows.length} onPageChange={setPage} onPageSizeChange={setPageSize} />}
     </div>
   )
 }
