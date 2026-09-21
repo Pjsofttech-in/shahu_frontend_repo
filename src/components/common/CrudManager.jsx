@@ -134,9 +134,37 @@ export default function CrudManager({
     setShowModal(true)
   }
 
-  const openEdit = (row) => {
-    setEditing(row)
-    setFormValues({ ...row })
+  const openEdit = async (row) => {
+    const rowId = getRowId(row)
+    let fullRow = row
+
+    if (rowId !== undefined && rowId !== null && rowId !== '' && typeof service.getById === 'function') {
+      try {
+        const response = await service.getById(rowId)
+        const fetched = response?.data && typeof response.data === 'object' ? response.data : response
+        fullRow = fetched?.student && typeof fetched.student === 'object' ? { ...fetched.student, id: fetched.student.id ?? rowId } : { ...fetched, id: fetched?.id ?? rowId }
+      } catch (fetchError) {
+        console.warn('Could not fetch the complete record for editing; using the list row.', fetchError)
+      }
+    }
+
+    setEditing(fullRow)
+    const values = { ...fullRow }
+    fields.forEach((field) => {
+      if (typeof field.editValue === 'function') {
+        const editedValue = field.editValue(fullRow)
+        if (editedValue !== undefined && editedValue !== null) {
+          values[field.name] = editedValue
+          return
+        }
+      }
+
+      if (values[field.name] !== undefined && values[field.name] !== null) return
+      const snakeCaseName = field.name.replace(/[A-Z]/g, (letter) => `_${letter.toLowerCase()}`)
+      const alias = [snakeCaseName, ...(field.editAliases || [])].find((key) => fullRow[key] !== undefined && fullRow[key] !== null)
+      if (alias) values[field.name] = fullRow[alias]
+    })
+    setFormValues(values)
     setShowModal(true)
   }
 
@@ -204,8 +232,10 @@ export default function CrudManager({
         return
       }
 
-      // Ensure editing id is sent when updating
-      if (editing && editing.id) payload.id = editing.id
+      const editingId = editing ? getRowId(editing) : null
+
+      // Ensure the canonical record id is sent when updating.
+      if (editing && editingId !== undefined && editingId !== null && editingId !== '') payload.id = editingId
 
       const normalizeIdFields = (obj) => {
         const normalized = { ...obj }
@@ -275,7 +305,10 @@ export default function CrudManager({
       }
 
       if (editing) {
-        await service.update(editing.id, { ...editing, ...payload })
+        if (editingId === undefined || editingId === null || editingId === '') {
+          throw new Error('This record does not have a valid ID and cannot be updated.')
+        }
+        await service.update(editingId, payload)
       } else {
         console.log(
           'FINAL CREATE REQUEST:',

@@ -7,7 +7,7 @@ import {
   talukasByDistrict,
   centersByTaluka,
   coordinatorService,
-  userService,
+  schoolService,
 } from '../../api/services.js'
 
 const classOptions = ['4th', '5th', '6th', '7th', '8th', '9th', '10th', '11th', '12th', 'None'].map((s) => ({
@@ -35,14 +35,6 @@ const toList = (response) => {
   if (Array.isArray(response?.content)) return response.content
   if (Array.isArray(response?.data)) return response.data
   return []
-}
-
-const loadUserOptions = async () => {
-  const list = toList(await userService.getAll())
-  return list.map((u) => ({
-    label: u?.fullName || u?.full_name || u?.name || u?.email || `User #${u?.id}`,
-    value: u?.id,
-  }))
 }
 
 const loadDistrictOptions = async () => {
@@ -83,10 +75,20 @@ const loadCoordinatorOptions = async () => {
   }))
 }
 
-const isValidIndianMobile = (value) => {
-  const digits = String(value ?? '').replace(/\s+/g, '').replace(/\+/g, '')
-  return /^9\d{9}$|^8\d{9}$|^7\d{9}$|^6\d{9}$/.test(digits)
+const loadSchoolOptions = async () => {
+  const list = toList(await schoolService.getAll())
+  return list.map((school) => ({
+    label: school?.schoolName || school?.school_name || school?.name || school?.school?.schoolName || school?.school?.school_name || `#${school?.id}`,
+    value: school?.schoolName || school?.school_name || school?.name || school?.school?.schoolName || school?.school?.school_name || '',
+  })).filter((option) => option.value)
 }
+
+const isValidIndianMobile = (value) => {
+  return /^[6-9]\d{9}$/.test(String(value ?? '').trim())
+}
+
+const enumValue = (value) => String(value ?? '').trim().toUpperCase()
+const dateValue = (value) => String(value ?? '').slice(0, 10)
 
 const FilterSelect = ({ children, ...props }) => (
   <div className="filter-select-wrap">
@@ -164,6 +166,7 @@ export default function Students() {
         { key: 'studentClass', label: 'Class', render: (r) => r.studentClass || r.standard || r.std || '' },
         { key: 'examMode', label: 'Exam Mode', render: (r) => String(r.examMode || r.exam_mode || '').toUpperCase() || '—' },
         { key: 'mobile', label: 'Mobile', render: (r) => r.mobile || r.phone || r.phoneNumber || r.contact || '' },
+        { key: 'paymentAmount', label: 'Payment Amount', render: (r) => r.paymentAmount ?? r.amount ?? r.payment_amount ?? r.payment?.paymentAmount ?? r.payment?.amount ?? '0' },
         { key: 'districtName', label: 'District', render: (r) => r.districtName || r.district?.name || r.district?.districtName || r.districtId || '' },
         { key: 'talukaName', label: 'Taluka', render: (r) => r.talukaName || r.taluka?.name || r.taluka?.talukaName || r.talukaId || '' },
         { key: 'centerName', label: 'Center', render: (r) => r.centerName || r.center?.name || r.center?.centerName || r.centerId || '' },
@@ -192,14 +195,14 @@ export default function Students() {
         },
       ]}
       fields={[
-        { name: 'studentName', label: 'Student Name', type: 'text', required: true },
-        { name: 'fatherName', label: "Father's Name", type: 'text', required: true },
-        { name: 'lastName', label: 'Last Name', type: 'text', required: true },
-        { name: 'schoolName', label: 'School Name', type: 'text', required: true },
-        { name: 'mobile', label: 'Mobile Number', type: 'tel', required: true },
+        { name: 'studentName', label: 'Student Name', type: 'text', required: true, editAliases: ['name'] },
+        { name: 'fatherName', label: "Father's Name", type: 'text', required: true, editValue: (row) => row.fatherName ?? row.father_name ?? row.father?.name },
+        { name: 'lastName', label: 'Last Name', type: 'text', required: true, editValue: (row) => row.lastName ?? row.last_name ?? row.student?.lastName },
+        { name: 'schoolName', label: 'School Name', type: 'text', required: true, editAliases: ['school', 'school_name'] },
+        { name: 'mobile', label: 'Mobile Number', type: 'tel', required: true, maxLength: 10, inputMode: 'numeric', editAliases: ['phone', 'phoneNumber', 'contact'] },
         { name: 'email', label: 'Email', type: 'email' },
         { name: 'password', label: 'Password', type: 'password', placeholder: 'Optional; defaults to mobile number' },
-        { name: 'gender', label: 'Gender', type: 'select', required: true, options: [
+        { name: 'gender', label: 'Gender', type: 'select', required: true, editValue: (row) => enumValue(row.gender), options: [
           { label: 'Male', value: 'MALE' },
           { label: 'Female', value: 'FEMALE' },
           { label: 'Other', value: 'OTHER' },
@@ -214,23 +217,21 @@ export default function Students() {
         { name: 'village', label: 'Village', type: 'text' },
         { name: 'state', label: 'State', type: 'text', default: 'Maharashtra' },
         { name: 'pincode', label: 'Pincode', type: 'text' },
-        { name: 'dateOfBirth', label: 'Date of Birth', type: 'date', required: true },
-        { name: 'userId', label: 'User', type: 'select', required: true, options: loadUserOptions },
-        { name: 'examMode', label: 'Exam Mode', type: 'select', required: true, options: examModeOptions },
-        { name: 'districtId', label: 'District', type: 'select', required: true, options: loadDistrictOptions },
-        { name: 'talukaId', label: 'Taluka', type: 'select', required: true, dependsOn: 'districtId', options: loadTalukaOptions },
-        { name: 'centerId', label: 'Center', type: 'select', required: true, dependsOn: 'talukaId', hidden: (fv) => fv.examMode === 'ONLINE', options: loadCenterOptions },
-        { name: 'coordinatorId', label: 'Coordinator', type: 'select', required: true, hidden: (fv) => fv.examMode === 'ONLINE', options: loadCoordinatorOptions },
-        { name: 'status', label: 'Status', type: 'select', default: 'ACTIVE', options: [
+        { name: 'dateOfBirth', label: 'Date of Birth', type: 'date', required: true, editValue: (row) => dateValue(row.dateOfBirth ?? row.date_of_birth ?? row.dob) },
+        { name: 'examMode', label: 'Exam Mode', type: 'select', required: true, editValue: (row) => enumValue(row.examMode ?? row.exam_mode), options: examModeOptions },
+        { name: 'districtId', label: 'District', type: 'select', required: true, options: loadDistrictOptions, editValue: (row) => row.districtId ?? row.district_id ?? row.district?.id },
+        { name: 'talukaId', label: 'Taluka', type: 'select', required: true, dependsOn: 'districtId', options: loadTalukaOptions, editValue: (row) => row.talukaId ?? row.taluka_id ?? row.taluka?.id },
+        { name: 'centerId', label: 'Center', type: 'select', required: true, dependsOn: 'talukaId', hidden: (fv) => fv.examMode === 'ONLINE', options: loadCenterOptions, editValue: (row) => row.centerId ?? row.center_id ?? row.center?.id },
+        { name: 'coordinatorId', label: 'Coordinator', type: 'select', required: true, hidden: (fv) => fv.examMode === 'ONLINE', options: loadCoordinatorOptions, editValue: (row) => row.coordinatorId ?? row.coordinator_id ?? row.coordinator?.id },
+        { name: 'status', label: 'Status', type: 'select', default: 'ACTIVE', editValue: (row) => row.status || (row.active === false ? 'INACTIVE' : 'ACTIVE'), options: [
           { label: 'Active', value: 'ACTIVE' },
           { label: 'Inactive', value: 'INACTIVE' },
         ] },
-        { name: 'amount', label: 'Payment Amount', type: 'number', required: true, default: '0', placeholder: 'Enter amount' },
-        { name: 'paymentStatus', label: 'Payment Status', type: 'select', default: 'PENDING', options: paymentStatusOptions },
-        { name: 'paymentMode', label: 'Payment Mode', type: 'select', default: 'CASH', options: paymentModeOptions },
+        { name: 'amount', label: 'Payment Amount', type: 'number', required: true, default: '0', placeholder: 'Enter amount', editAliases: ['paymentAmount', 'payment_amount'] },
+        { name: 'paymentStatus', label: 'Payment Status', type: 'select', default: 'PENDING', editValue: (row) => enumValue(row.paymentStatus ?? row.payment_status), options: paymentStatusOptions },
+        { name: 'paymentMode', label: 'Payment Mode', type: 'select', default: 'CASH', editValue: (row) => enumValue(row.paymentMode ?? row.payment_mode), options: paymentModeOptions },
       ]}
       transformSubmit={async (fv, editing) => {
-        const userId = fv.userId !== undefined && fv.userId !== null && fv.userId !== '' ? Number(fv.userId) : null
         const districtId = fv.districtId !== undefined && fv.districtId !== null && fv.districtId !== '' ? Number(fv.districtId) : null
         const talukaId = fv.talukaId !== undefined && fv.talukaId !== null && fv.talukaId !== '' ? Number(fv.talukaId) : null
         const centerId = fv.centerId !== undefined && fv.centerId !== null && fv.centerId !== '' ? Number(fv.centerId) : null
@@ -247,7 +248,6 @@ export default function Students() {
         if (!fv.studentClass) throw new Error('Class / Standard is required')
         if (!fv.medium) throw new Error('Medium is required')
         if (!fv.dateOfBirth) throw new Error('Date of Birth is required')
-        if (!userId) throw new Error('User is required')
         if (!examMode || !['ONLINE', 'OFFLINE'].includes(examMode)) throw new Error('Exam Mode is required')
         if (!districtId) throw new Error('District is required')
         if (!talukaId) throw new Error('Taluka is required')
@@ -258,17 +258,16 @@ export default function Students() {
           throw new Error('Pincode must be a 6-digit number')
         }
 
-        const amount = Number(fv.amount)
+        const amount = Number(fv.amount ?? editing?.paymentAmount ?? editing?.payment_amount ?? 0)
         if (!Number.isFinite(amount) || amount < 0) throw new Error('Payment Amount must be zero or greater')
 
-        const paymentStatus = 'PENDING'
-        const paymentMode = (fv.paymentMode || 'CASH').toUpperCase()
+        const paymentStatus = String(fv.paymentStatus || editing?.paymentStatus || editing?.payment_status || 'PENDING').toUpperCase()
+        const paymentMode = String(fv.paymentMode || editing?.paymentMode || editing?.payment_mode || 'CASH').toUpperCase()
 
         const payload = {
           studentName: fv.studentName?.trim(),
           fatherName: fv.fatherName?.trim(),
           lastName: fv.lastName?.trim(),
-          school: schoolName,
           schoolName,
           mobile: fv.mobile?.trim(),
           email: fv.email?.trim() || null,
@@ -283,7 +282,6 @@ export default function Students() {
           dateOfBirth: fv.dateOfBirth || null,
           examMode,
           active: fv.status === 'ACTIVE',
-          userId,
           districtId,
           talukaId,
           centerId: examMode === 'OFFLINE' ? centerId : null,
@@ -291,17 +289,6 @@ export default function Students() {
           amount,
           paymentMode,
           paymentStatus,
-          paymentDone: false,
-        }
-
-        if (editing?.userId !== undefined && editing?.userId !== null && editing.userId !== '') {
-          payload.userId = Number(editing.userId)
-        } else if (fv.userId !== undefined && fv.userId !== null && fv.userId !== '') {
-          payload.userId = Number(fv.userId)
-        }
-
-        if (editing?.id) {
-          payload.id = editing.id
         }
 
         return payload
