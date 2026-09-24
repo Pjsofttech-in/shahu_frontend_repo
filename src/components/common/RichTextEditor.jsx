@@ -8,7 +8,7 @@ const commands = [
   { label: '1. List', command: 'insertOrderedList', title: 'Numbered list' },
 ]
 
-export default function RichTextEditor({ id, value, onChange, placeholder }) {
+export default function RichTextEditor({ id, value, onChange, placeholder, compact = false }) {
   const editorRef = useRef(null)
 
   useEffect(() => {
@@ -24,7 +24,7 @@ export default function RichTextEditor({ id, value, onChange, placeholder }) {
   }
 
   return (
-    <div className="rich-text-editor">
+    <div className={`rich-text-editor${compact ? ' rich-text-editor-compact' : ''}`}>
       <div className="rich-text-toolbar" role="toolbar" aria-label="Text formatting">
         {commands.map((item) => (
           <button

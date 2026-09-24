@@ -638,6 +638,9 @@ table.data-table tr:hover td { background: var(--blue-100); }
 .rich-text-content { min-height: 110px; padding: 10px 12px; outline: none; line-height: 1.55; font-size: 13px; }
 .rich-text-content:empty::before { content: attr(data-placeholder); color: var(--text-400); pointer-events: none; }
 .rich-text-content:focus { box-shadow: inset 0 0 0 2px var(--blue-500); }
+.rich-text-editor-compact .rich-text-toolbar { gap: 2px; padding: 3px 5px; }
+.rich-text-editor-compact .rich-text-toolbar button { min-width: 25px; min-height: 24px; padding: 2px 5px; font-size: 11px; }
+.rich-text-editor-compact .rich-text-content { min-height: 82px; padding: 7px 9px; font-size: 12px; line-height: 1.4; }
 .ebook-upload-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 30px; margin-top: 38px; }
 .ebook-file-picker { min-width: 0; }
 .ebook-file-button { display: inline-flex; align-items: center; gap: 7px; width: fit-content; max-width: 100%; padding: 7px 12px; border: 1px solid var(--border); border-radius: 6px; background: #fff; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; cursor: pointer; }

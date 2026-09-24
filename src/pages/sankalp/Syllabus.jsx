@@ -27,7 +27,7 @@ export default function Syllabus() {
         fields={[
           { name: 'title', label: 'Title', type: 'text', required: true },
           { name: 'link', label: 'Link', type: 'url', placeholder: 'https://example.com/syllabus.pdf' },
-          { name: 'description', label: 'Description', type: 'textarea', rows: 4, placeholder: 'Add a short description for this syllabus…', fullWidth: true },
+          { name: 'description', label: 'Description', type: 'richtext', tinyEditor: true, placeholder: 'Add a short description for this syllabus…', fullWidth: true },
           { name: 'file', label: 'PDF File', type: 'file', accept: 'application/pdf', required: true },
         ]}
         transformSubmit={async (values) => {

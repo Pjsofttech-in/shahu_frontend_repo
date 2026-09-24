@@ -47,7 +47,7 @@ export default function FormField({ field, value, onChange, options, error }) {
       )}
 
       {type === 'richtext' && (
-        <RichTextEditor id={name} value={value} onChange={(nextValue) => onChange(name, nextValue)} placeholder={placeholder || label} />
+        <RichTextEditor id={name} value={value} onChange={(nextValue) => onChange(name, nextValue)} placeholder={placeholder || label} compact={field.tinyEditor} />
       )}
 
       {type === 'file' && (
