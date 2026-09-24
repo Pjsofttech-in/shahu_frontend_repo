@@ -11,7 +11,7 @@ const initialOrders = [
 export default function OrderListPage() {
   const [search, setSearch] = useState('')
   const [page, setPage] = useState(1)
-  const [pageSize, setPageSize] = useState(10)
+  const [pageSize, setPageSize] = useState(25)
   const rows = useMemo(() => {
     const value = search.trim().toLowerCase()
     if (!value) return initialOrders

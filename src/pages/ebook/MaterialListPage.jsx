@@ -11,7 +11,7 @@ export default function MaterialListPage() {
   const [filters, setFilters] = useState({})
   const [loading, setLoading] = useState(true)
   const [page, setPage] = useState(1)
-  const [pageSize, setPageSize] = useState(10)
+  const [pageSize, setPageSize] = useState(25)
 
   useEffect(() => {
     const load = async () => {

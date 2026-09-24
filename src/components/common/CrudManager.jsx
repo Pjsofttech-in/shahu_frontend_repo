@@ -45,7 +45,7 @@ export default function CrudManager({
   const [saving, setSaving] = useState(false)
   const [optionsCache, setOptionsCache] = useState({})
   const [page, setPage] = useState(1)
-  const [pageSize, setPageSize] = useState(10)
+  const [pageSize, setPageSize] = useState(25)
 
   const getApiErrorMessage = (e, fallback = 'Something went wrong') => {
     const payload = e?.response?.data
@@ -415,7 +415,7 @@ export default function CrudManager({
             </div>
           )}
           {extraToolbar}
-          <div className="result-count">Showing <strong>{filteredRows.length}</strong> of {rows.length} records</div>
+          <div className="result-count">Count: <strong>{filteredRows.length}</strong></div>
           {showCreateAction && (
             <button className="btn btn-primary crud-inline-add" data-open-create onClick={openCreate}>
               <FiPlus /> {addLabel}

@@ -17,7 +17,7 @@ export default function OrderListPage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [page, setPage] = useState(1)
-  const [pageSize, setPageSize] = useState(10)
+  const [pageSize, setPageSize] = useState(25)
 
   const load = async () => {
     setLoading(true); setError('')

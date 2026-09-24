@@ -182,14 +182,14 @@ button { font-family: inherit; cursor: pointer; }
   position: sticky; top: 0; z-index: 20;
   flex-shrink: 0;
 }
-.topbar .page-title { font-weight: 700; font-size: 16px; color: var(--navy-900); }
+.topbar .page-title { font-weight: 700; font-size: 16px; color: #fff; }
 .topbar-right { display: flex; align-items: center; gap: 14px; position: relative; }
 
 .avatar-btn {
   display: flex; align-items: center; gap: 8px;
   background: rgba(255,255,255,0.4);
   border: 1px solid rgba(58,42,13,0.1);
-  padding: 6px 12px 6px 6px; border-radius: 30px; color: var(--navy-900);
+  padding: 6px 12px 6px 6px; border-radius: 30px; color: #fff;
 }
 .avatar-circle {
   width: 30px; height: 30px; border-radius: 50%;
@@ -730,15 +730,55 @@ table.data-table tr.is-clickable:hover td:not(:last-child) { color: var(--blue-7
   display: flex;
   align-items: center;
   justify-content: flex-end;
-  gap: 10px;
+  gap: 8px;
   padding: 12px 4px 0;
   color: var(--text-600);
   font-size: 12px;
 }
-.pagination-bar label { display: inline-flex; align-items: center; gap: 7px; }
-.pagination-bar select { min-height: 30px; padding: 4px 8px; }
-.pagination-bar .btn { min-width: 32px; min-height: 30px; padding: 6px 8px; justify-content: center; }
-.pagination-bar .btn svg { width: 15px; height: 15px; }
+.pagination-arrow,
+.pagination-pages button {
+  width: 40px;
+  height: 40px;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--text-900);
+  font: inherit;
+  font-size: 16px;
+}
+.pagination-arrow svg { width: 18px; height: 18px; }
+.pagination-arrow:disabled { color: #c7c7c7; cursor: not-allowed; }
+.pagination-pages { display: flex; align-items: center; gap: 4px; }
+.pagination-pages button.active {
+  border: 1px solid #1671e8;
+  color: #1671e8;
+  background: #fff;
+}
+.pagination-pages button:hover:not(.active),
+.pagination-arrow:hover:not(:disabled) { background: var(--orange-100); }
+.pagination-size { display: inline-flex; align-items: center; margin-left: 18px; }
+.pagination-size select {
+  min-width: 138px;
+  height: 40px;
+  padding: 0 30px 0 12px;
+  border: 1px solid #d9d9d9;
+  border-radius: 8px;
+  background: #fff;
+  font-size: 16px;
+}
+
+/* Compact, consistent typography for shared website controls. */
+body { font-size: 13px; }
+button, input, select, textarea { font-size: 13px; }
+label, .result-count, .pagination-bar, .sidebar-link, .sidebar-toggle { font-size: 12px; }
+table.data-table { font-size: 12px; }
+table.data-table th { font-size: 11px; }
+.btn { font-size: 12px; }
+.pagination-pages button { font-size: 14px; }
+.pagination-size select { font-size: 14px; }
 
 .badge { display: inline-block; padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 600; }
 .badge-active { background: var(--success-100); color: var(--success); }
@@ -754,15 +794,16 @@ table.data-table tr.is-clickable:hover td:not(:last-child) { color: var(--blue-7
   box-shadow: 0 10px 22px rgba(249, 115, 22, 0.07);
 }
 .filter-controls-row {
-  display: flex;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(105px, 1fr));
   align-items: end;
-  gap: 12px;
-  overflow-x: auto;
+  gap: 8px;
+  min-width: 0;
 }
-.filter-controls-row > .form-group { flex: 1 1 140px; min-width: 120px; margin-bottom: 0; }
+.filter-controls-row > .form-group { min-width: 0; margin-bottom: 0; }
 .filter-controls-row > .form-group input,
 .filter-controls-row > .form-group select { width: 100%; min-width: 0; background: #fff; border-color: #fed7aa; }
-.crud-inline-add { flex: 0 0 auto; white-space: nowrap; min-height: 39px; }
+.crud-inline-add { min-width: 0; white-space: nowrap; min-height: 39px; }
 .toolbar {
   display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); align-items: end; gap: 12px;
   margin-bottom: 10px; background: transparent; padding: 0; border: 0;
@@ -791,6 +832,55 @@ table.data-table tr.is-clickable:hover td:not(:last-child) { color: var(--blue-7
 .column-filter-row { display: contents; }
 .column-filter-row input, .column-filter-row select { min-width: 0; width: 100%; padding: 8px 9px; border-radius: 6px; font-size: 12px; }
 .result-count { flex: 0 0 auto; margin: 0; color: var(--text-600); font-size: 12px; white-space: nowrap; align-self: center; }
+
+/* Keep filter controls consistent across all list pages. */
+.filter-controls-row > .form-group,
+.filter-controls-row > .form-group input,
+.filter-controls-row > .form-group select,
+.filter-controls-row .student-filters .form-group,
+.filter-controls-row .student-filters .filter-select-wrap,
+.filter-controls-row .student-filters input,
+.filter-controls-row .student-filters select,
+.toolbar .form-group input,
+.toolbar .form-group select,
+.ebook-material-filters input,
+.ebook-material-filters select,
+.series-filters input,
+.series-filters select,
+.paper-toolbar select,
+.solved-paper-toolbar input,
+.column-filter-row input,
+.column-filter-row select {
+  height: 38px;
+  min-height: 38px;
+  box-sizing: border-box;
+}
+
+.filter-controls-row > .form-group,
+.filter-controls-row .student-filters .form-group,
+.ebook-material-filters input,
+.ebook-material-filters select,
+.series-filters input,
+.series-filters select,
+.paper-toolbar select,
+.solved-paper-toolbar input {
+  width: 100%;
+}
+
+.filter-controls-row .student-filters .form-group {
+  min-width: 0;
+}
+
+.filter-controls-row .student-filters .filter-select-wrap,
+.filter-controls-row .student-filters input,
+.filter-controls-row .student-filters select {
+  width: 100%;
+}
+
+.toolbar .form-group input,
+.toolbar .form-group select {
+  width: 100%;
+}
 
 /* ---------- Modal ---------- */
 .modal-overlay {
@@ -1021,6 +1111,7 @@ table.data-table tbody tr { transition: background .16s ease; }
 .ebook-material-filters {
   display: flex;
   align-items: center;
+  flex-wrap: wrap;
   gap: 12px;
   margin-bottom: 12px;
 }
@@ -1044,7 +1135,7 @@ table.data-table tbody tr { transition: background .16s ease; }
 
 /* ---------- Test Series ---------- */
 .series-manager { width: 100%; max-width: 1240px; margin: 0 auto; }
-.series-filters { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; overflow-x: auto; }
+.series-filters { display: flex; align-items: center; flex-wrap: wrap; gap: 12px; margin-bottom: 16px; }
 .series-filters input, .series-filters select { flex: 1 1 180px; width: 100%; min-width: 140px; }
 .series-filters .btn { flex: 0 0 auto; white-space: nowrap; }
 .series-table-card { padding: 0; }
@@ -1550,6 +1641,14 @@ img, svg, video, canvas { max-width: 100%; }
   .toolbar { grid-template-columns: repeat(2, minmax(0, 1fr)); align-items: end; }
   .toolbar:has(.student-filters) { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .student-filters { grid-column: 1 / -1; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .filter-controls-row > .form-group,
+  .filter-controls-row .student-filters .form-group,
+  .ebook-material-filters input,
+  .ebook-material-filters select,
+  .series-filters input,
+  .series-filters select,
+  .paper-toolbar select,
+  .solved-paper-toolbar input { width: 100%; }
   .footer-preview { grid-template-columns: 1fr 1fr; padding: 20px; gap: 16px; }
   .chip-grid { grid-template-columns: repeat(auto-fit, minmax(min(220px, 100%), 1fr)); }
 }

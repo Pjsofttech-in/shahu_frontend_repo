@@ -91,7 +91,7 @@ export default function SeriesManager() {
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
   const [page, setPage] = useState(1)
-  const [pageSize, setPageSize] = useState(10)
+  const [pageSize, setPageSize] = useState(25)
 
   const load = async () => {
     setLoading(true)
