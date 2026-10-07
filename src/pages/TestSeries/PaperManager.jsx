@@ -11,13 +11,18 @@ import { categoryService, examService } from '../../api/services.js'
 
 const EMPTY_FORM = {
   examName: '', examDate: '', totalMarks: '', totalQuestions: '', duration: '',
-  testStartDate: '', testEndDate: '', terms: '', downloadTestPaper: false,
+  maxAttempt: '', testStartDate: '', testEndDate: '', terms: '', downloadTestPaper: false,
   showTestResult: false, showAllResult: false, active: true, categoryId: '', image: '',
 }
 
 const rowsOf = (data) => Array.isArray(data) ? data : data?.content || data?.data || []
 const categoryIdOf = (row) => row.categoryId ?? row.category?.id ?? ''
 const categoryNameOf = (row) => row.category?.categoryName || row.category?.name || row.categoryName || categoryIdOf(row) || '-'
+const normalizeMaxAttempt = (value) => {
+  const numericValue = Number(value ?? 1)
+  return Number.isFinite(numericValue) && numericValue > 0 ? numericValue : 1
+}
+const maxAttemptsOf = (row) => normalizeMaxAttempt(row?.maxAttempt ?? row?.maxAttempts ?? row?.maxAttem ?? row?.attemptLimit ?? 1)
 const errorOf = (error) => String(error?.response?.data?.message || error?.response?.data?.error || error?.message || 'Could not complete the paper request.')
 const dateOf = (value) => value ? String(value).slice(0, 10) : '-'
 const imageUrlOf = (row) => row.image || row.imageUrl || row.examImage || ''
@@ -30,6 +35,7 @@ const resolveImageUrl = (value) => {
   return `${origin}/${String(value).replace(/^\/+/, '')}`
 }
 const EMPTY_PAPER_IMAGE = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII='
+const createFallbackExamFile = () => new File(['paper'], 'paper-image.png', { type: 'image/png' })
 
 const getExistingImageFile = async (row) => {
   const source = imageUrlOf(row)
@@ -66,6 +72,7 @@ export default function PaperManager() {
   const [showModal, setShowModal] = useState(false)
   const [deleteTarget, setDeleteTarget] = useState(null)
   const [deleting, setDeleting] = useState(false)
+  const [attemptDrafts, setAttemptDrafts] = useState({})
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
@@ -94,7 +101,15 @@ export default function PaperManager() {
   const open = (row = null) => {
     setEditing(row)
     setImage(null)
-    setForm(row ? { ...EMPTY_FORM, ...row, categoryId: categoryIdOf(row), examDate: row.examDate || '', testStartDate: row.testStartDate || '', testEndDate: row.testEndDate || '' } : EMPTY_FORM)
+    setForm(row ? {
+      ...EMPTY_FORM,
+      ...row,
+      categoryId: categoryIdOf(row),
+      examDate: row.examDate || '',
+      maxAttempt: normalizeMaxAttempt(row.maxAttempt ?? row.maxAttempts ?? row.maxAttem ?? row.attemptLimit ?? '') || '',
+      testStartDate: row.testStartDate || '',
+      testEndDate: row.testEndDate || '',
+    } : EMPTY_FORM)
     setError(''); setShowModal(true)
   }
 
@@ -117,13 +132,19 @@ export default function PaperManager() {
 
   const submit = async (event) => {
     event.preventDefault()
-    if (!form.examName.trim() || !form.examDate || !form.categoryId || !form.totalMarks || !form.totalQuestions || !form.duration) {
-      setError('Paper title, date, series, marks, questions, and duration are required.'); return
+    if (!form.examName.trim() || !form.examDate || !form.categoryId || !form.totalMarks || !form.totalQuestions || !form.duration || !form.maxAttempt) {
+      setError('Paper title, date, series, marks, questions, duration, and max attempts are required.'); return
+    }
+    const numericMaxAttempts = Number(form.maxAttempt)
+    if (!Number.isFinite(numericMaxAttempts) || numericMaxAttempts < 1) {
+      setError('Max attempts must be a number greater than or equal to 1.'); return
     }
     if (!editing && !image) { setError('Paper image is required when creating a paper.'); return }
     const values = { ...form }; delete values.image; delete values.active
     values.examName = values.examName.trim(); values.categoryId = Number(values.categoryId)
     ;['totalMarks', 'totalQuestions', 'duration'].forEach((key) => { values[key] = Number(values[key]) })
+    values.maxAttempt = Number(values.maxAttempt)
+    values.maxAttempts = Number(values.maxAttempt)
     ;['testStartDate', 'testEndDate', 'terms'].forEach((key) => { if (!values[key]) values[key] = null })
     setSaving(true); setError('')
     try {
@@ -131,6 +152,30 @@ export default function PaperManager() {
       else await examService.create(values, image)
       setShowModal(false); setEditing(null); await load()
     } catch (saveError) { setError(errorOf(saveError)) } finally { setSaving(false) }
+  }
+
+  const updateMaxAttempts = async (row, nextValue) => {
+    const numericValue = Number(nextValue)
+    if (!Number.isFinite(numericValue) || numericValue < 1) return
+
+    try {
+      const values = {
+        ...row,
+        maxAttempt: numericValue,
+        maxAttempts: numericValue,
+      }
+      delete values.id; delete values.image; delete values.imageUrl; delete values.examImage; delete values.category; delete values.active
+      const existingImage = await getExistingImageFile(row).catch(() => createFallbackExamFile())
+      await examService.update(row.id, values, existingImage)
+      setAttemptDrafts((current) => {
+        const next = { ...current }
+        delete next[row.id]
+        return next
+      })
+      await load()
+    } catch (updateError) {
+      setError(errorOf(updateError))
+    }
   }
 
   const toggle = async (row, field) => {
@@ -179,7 +224,24 @@ export default function PaperManager() {
           <td>{(currentPage - 1) * pageSize + index + 1}</td>
           <td className="paper-title">{row.examName || row.title || '-'}</td>
           <td className="muted-cell">{imageUrlOf(row) ? <img src={resolveImageUrl(imageUrlOf(row))} alt={`${row.examName || 'Paper'} thumbnail`} onError={(event) => { event.currentTarget.style.display = 'none' }} /> : 'No Image'}</td>
-          <td>{row.attempt ?? row.attem ?? 'No'}</td><td>{row.maxAttempt ?? row.maxAttem ?? 1}</td>
+          <td>{row.attempt ?? row.attem ?? 'No'}</td>
+          <td>
+            <input
+              className="max-attempt-input"
+              type="number"
+              min="1"
+              value={attemptDrafts[row.id] ?? String(maxAttemptsOf(row))}
+              onChange={(event) => setAttemptDrafts((current) => ({ ...current, [row.id]: event.target.value }))}
+              onBlur={(event) => updateMaxAttempts(row, event.target.value)}
+              onKeyDown={(event) => {
+                if (event.key === 'Enter') {
+                  event.preventDefault()
+                  event.target.blur()
+                }
+              }}
+              aria-label={`Update max attempts for ${row.examName || 'paper'}`}
+            />
+          </td>
           <td><span className={`status-badge ${row.active === false ? 'inactive' : 'active'}`}>{row.active === false ? 'Inactive' : 'Active'}</span></td>
           <td><button className={`switch ${row.showTestResult ? 'on' : ''}`} type="button" onClick={() => toggle(row, 'showTestResult')}><span />{row.showTestResult ? 'ON' : 'OFF'}</button></td>
           <td>{row.totalQuestions ?? row.noq ?? '-'}</td><td>{row.totalMarks ?? '-'}</td><td>{row.duration ?? '-'}</td>
@@ -190,7 +252,7 @@ export default function PaperManager() {
         </tr>
       ))}
     </tbody></table></div>{!loading && visibleRows.length > 0 && <Pagination page={currentPage} pageSize={pageSize} totalItems={visibleRows.length} onPageChange={setPage} onPageSizeChange={(size) => { setPageSize(size); setPage(1) }} />}</div>
-    {showModal && <Modal title={editing ? 'Edit Paper' : 'Create Paper'} onClose={() => setShowModal(false)} maxWidth="980px" footer={<><button className="btn btn-outline" type="button" onClick={() => setShowModal(false)}>Cancel</button><button className="btn btn-primary" type="submit" form="paper-form" disabled={saving}>{saving ? 'Saving...' : editing ? 'Update' : 'Create'}</button></>}><form id="paper-form" onSubmit={submit} className="series-form"><div className="series-form-grid"><div className="form-group"><label>Paper Title *</label><input name="examName" value={form.examName} onChange={change} required /></div><div className="form-group"><label>Exam Date *</label><input name="examDate" type="date" value={form.examDate} onChange={change} required /></div><div className="form-group"><label>Series *</label><select name="categoryId" value={form.categoryId} onChange={change} required><option value="">Select Series</option>{categories.map((item) => <option key={item.id} value={item.id}>{item.categoryName || item.name}</option>)}</select></div><div className="form-group"><label>Total Marks *</label><input name="totalMarks" type="number" min="1" value={form.totalMarks} onChange={change} required /></div><div className="form-group"><label>Total Questions *</label><input name="totalQuestions" type="number" min="1" value={form.totalQuestions} onChange={change} required /></div><div className="form-group"><label>Duration (minutes) *</label><input name="duration" type="number" min="1" value={form.duration} onChange={change} required /></div><MediaReplaceField id="paper-image" label="Paper Image" accept="image/*" currentUrl={editing ? resolveImageUrl(imageUrlOf(editing)) : ''} value={image} onChange={setImage} required={!editing} preview /><div className="form-group"><label>Start Date</label><input name="testStartDate" type="date" value={form.testStartDate} onChange={change} /></div><div className="form-group"><label>End Date</label><input name="testEndDate" type="date" value={form.testEndDate} onChange={change} /></div></div><div className="form-group"><label>Terms</label><textarea name="terms" rows="4" value={form.terms} onChange={change} /></div></form></Modal>}
+    {showModal && <Modal title={editing ? 'Edit Paper' : 'Create Paper'} onClose={() => setShowModal(false)} maxWidth="980px" footer={<><button className="btn btn-outline" type="button" onClick={() => setShowModal(false)}>Cancel</button><button className="btn btn-primary" type="submit" form="paper-form" disabled={saving}>{saving ? 'Saving...' : editing ? 'Update' : 'Create'}</button></>}><form id="paper-form" onSubmit={submit} className="series-form"><div className="series-form-grid"><div className="form-group"><label>Paper Title *</label><input name="examName" value={form.examName} onChange={change} required /></div><div className="form-group"><label>Exam Date *</label><input name="examDate" type="date" value={form.examDate} onChange={change} required /></div><div className="form-group"><label>Series *</label><select name="categoryId" value={form.categoryId} onChange={change} required><option value="">Select Series</option>{categories.map((item) => <option key={item.id} value={item.id}>{item.categoryName || item.name}</option>)}</select></div><div className="form-group"><label>Total Marks *</label><input name="totalMarks" type="number" min="1" value={form.totalMarks} onChange={change} required /></div><div className="form-group"><label>Total Questions *</label><input name="totalQuestions" type="number" min="1" value={form.totalQuestions} onChange={change} required /></div><div className="form-group"><label>Duration (minutes) *</label><input name="duration" type="number" min="1" value={form.duration} onChange={change} required /></div><div className="form-group"><label>Max Attempts *</label><input name="maxAttempt" type="number" min="1" value={form.maxAttempt} onChange={change} required /></div><MediaReplaceField id="paper-image" label="Paper Image" accept="image/*" currentUrl={editing ? resolveImageUrl(imageUrlOf(editing)) : ''} value={image} onChange={setImage} required={!editing} preview /><div className="form-group"><label>Start Date</label><input name="testStartDate" type="date" value={form.testStartDate} onChange={change} /></div><div className="form-group"><label>End Date</label><input name="testEndDate" type="date" value={form.testEndDate} onChange={change} /></div></div><div className="form-group"><label>Terms</label><textarea name="terms" rows="4" value={form.terms} onChange={change} /></div></form></Modal>}
     {deleteTarget && <Modal title="Delete Paper" onClose={() => !deleting && setDeleteTarget(null)} maxWidth="460px" footer={<><button className="btn btn-outline" type="button" onClick={() => setDeleteTarget(null)} disabled={deleting}>Cancel</button><button className="btn btn-danger" type="button" onClick={() => remove(deleteTarget)} disabled={deleting}>{deleting ? 'Deleting...' : 'Delete Paper'}</button></>}><p>Are you sure you want to delete this paper?</p><p><strong>{deleteTarget.examName || deleteTarget.title || `Paper #${deleteTarget.id}`}</strong></p></Modal>}
   </section>
 }

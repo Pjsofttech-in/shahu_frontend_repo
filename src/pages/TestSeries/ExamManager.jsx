@@ -8,7 +8,7 @@ import { categoryService, examService } from '../../api/services.js'
 
 const EMPTY_FORM = {
   examName: '', examDate: '', totalMarks: '', totalQuestions: '', duration: '',
-  testStartDate: '', testEndDate: '', terms: '', downloadTestPaper: false, showTestResult: false,
+  maxAttempt: '', testStartDate: '', testEndDate: '', terms: '', downloadTestPaper: false, showTestResult: false,
   showAllResult: false, active: true, categoryId: '', image: '',
 }
 
@@ -45,7 +45,15 @@ export default function ExamManager({ solvedOnly = false }) {
   const open = (row = null) => {
     setEditing(row)
     setImage(null)
-    setForm(row ? { ...EMPTY_FORM, ...row, categoryId: categoryIdOf(row), examDate: row.examDate || '', testStartDate: row.testStartDate || '', testEndDate: row.testEndDate || '' } : EMPTY_FORM)
+    setForm(row ? {
+      ...EMPTY_FORM,
+      ...row,
+      categoryId: categoryIdOf(row),
+      examDate: row.examDate || '',
+      maxAttempt: row.maxAttempt ?? row.maxAttempts ?? row.maxAttem ?? row.attemptLimit ?? '',
+      testStartDate: row.testStartDate || '',
+      testEndDate: row.testEndDate || '',
+    } : EMPTY_FORM)
     setError('')
     setShowModal(true)
   }
@@ -55,21 +63,28 @@ export default function ExamManager({ solvedOnly = false }) {
   }
   const submit = async (event) => {
     event.preventDefault()
-    if (!form.examName.trim() || !form.examDate || !form.categoryId || !form.totalMarks || !form.totalQuestions || !form.duration) {
-      setError('Exam name, date, category, marks, questions, and duration are required.')
+    if (!form.examName.trim() || !form.examDate || !form.categoryId || !form.totalMarks || !form.totalQuestions || !form.duration || !form.maxAttempt) {
+      setError('Exam name, date, category, marks, questions, duration, and max attempts are required.')
       return
     }
-    if (!image) { setError('Exam image is required by the backend.'); return }
+    const numericMaxAttempts = Number(form.maxAttempt)
+    if (!Number.isFinite(numericMaxAttempts) || numericMaxAttempts < 1) {
+      setError('Max attempts must be a number greater than or equal to 1.')
+      return
+    }
+    if (!image && !editing) { setError('Exam image is required by the backend.'); return }
     const values = { ...form }
     delete values.image
     delete values.active
     values.examName = values.examName.trim()
     values.categoryId = Number(values.categoryId)
     ;['totalMarks', 'totalQuestions', 'duration'].forEach((key) => { values[key] = Number(values[key]) })
+    values.maxAttempt = Number(values.maxAttempt)
+    values.maxAttempts = Number(values.maxAttempt)
     ;['testStartDate', 'testEndDate', 'terms'].forEach((key) => { if (!values[key]) values[key] = null })
     setSaving(true); setError('')
     try {
-      if (editing) await examService.update(editing.id, values, image)
+      if (editing) await examService.update(editing.id, values, image || new File([''], 'existing-paper-image.png', { type: 'image/png' }))
       else await examService.create(values, image)
       setShowModal(false); setEditing(null); await load()
     } catch (saveError) { setError(errorOf(saveError)) } finally { setSaving(false) }
@@ -93,7 +108,7 @@ export default function ExamManager({ solvedOnly = false }) {
     </tbody></table></div>{!loading && visibleRows.length > 0 && <Pagination page={currentPage} pageSize={pageSize} totalItems={visibleRows.length} onPageChange={setPage} onPageSizeChange={(size) => { setPageSize(size); setPage(1) }} />}</div>
     {showModal && <Modal title={editing ? 'Edit Paper' : 'Create Paper'} onClose={() => setShowModal(false)} maxWidth="980px" footer={<><button className="btn btn-outline" type="button" onClick={() => setShowModal(false)}>Cancel</button><button className="btn btn-primary" type="submit" form="exam-form" disabled={saving}>{saving ? 'Saving...' : editing ? 'Update' : 'Create'}</button></>}>
       {error && <div className="login-alert">{error}</div>}<form id="exam-form" onSubmit={submit} className="series-form"><div className="series-form-grid">
-        <div className="form-group"><label>Exam Name *</label><input name="examName" value={form.examName} onChange={change} required /></div><div className="form-group"><label>Exam Date *</label><input name="examDate" type="date" value={form.examDate} onChange={change} required /></div><div className="form-group"><label>Category *</label><select name="categoryId" value={form.categoryId} onChange={change} required><option value="">Select Category</option>{categories.map((category) => <option key={category.id} value={category.id}>{category.categoryName || category.name}</option>)}</select></div><div className="form-group"><label>Total Marks *</label><input name="totalMarks" type="number" min="1" value={form.totalMarks} onChange={change} required /></div><div className="form-group"><label>Total Questions *</label><input name="totalQuestions" type="number" min="1" value={form.totalQuestions} onChange={change} required /></div><div className="form-group"><label>Duration (minutes) *</label><input name="duration" type="number" min="1" value={form.duration} onChange={change} required /></div><div className="form-group"><label>Exam Image *</label><input name="image" type="file" accept="image/*" onChange={(event) => setImage(event.target.files?.[0] || null)} required /></div><div className="form-group"><label>Test Start Date</label><input name="testStartDate" type="date" value={form.testStartDate} onChange={change} /></div><div className="form-group"><label>Test End Date</label><input name="testEndDate" type="date" value={form.testEndDate} onChange={change} /></div></div><div className="form-group"><label>Terms</label><textarea name="terms" rows="4" value={form.terms} onChange={change} /></div><div className="series-form-bottom"><label className="series-active"><input name="active" type="checkbox" checked={!!form.active} onChange={change} /> Active</label><label className="series-active"><input name="downloadTestPaper" type="checkbox" checked={!!form.downloadTestPaper} onChange={change} /> Download test paper</label><label className="series-active"><input name="showTestResult" type="checkbox" checked={!!form.showTestResult} onChange={change} /> Show result</label><label className="series-active"><input name="showAllResult" type="checkbox" checked={!!form.showAllResult} onChange={change} /> Show all result</label></div></form>
+        <div className="form-group"><label>Exam Name *</label><input name="examName" value={form.examName} onChange={change} required /></div><div className="form-group"><label>Exam Date *</label><input name="examDate" type="date" value={form.examDate} onChange={change} required /></div><div className="form-group"><label>Category *</label><select name="categoryId" value={form.categoryId} onChange={change} required><option value="">Select Category</option>{categories.map((category) => <option key={category.id} value={category.id}>{category.categoryName || category.name}</option>)}</select></div><div className="form-group"><label>Total Marks *</label><input name="totalMarks" type="number" min="1" value={form.totalMarks} onChange={change} required /></div><div className="form-group"><label>Total Questions *</label><input name="totalQuestions" type="number" min="1" value={form.totalQuestions} onChange={change} required /></div><div className="form-group"><label>Duration (minutes) *</label><input name="duration" type="number" min="1" value={form.duration} onChange={change} required /></div><div className="form-group"><label>Max Attempts *</label><input name="maxAttempt" type="number" min="1" value={form.maxAttempt} onChange={change} required /></div><div className="form-group"><label>Exam Image *</label><input name="image" type="file" accept="image/*" onChange={(event) => setImage(event.target.files?.[0] || null)} required={!editing} /></div><div className="form-group"><label>Test Start Date</label><input name="testStartDate" type="date" value={form.testStartDate} onChange={change} /></div><div className="form-group"><label>Test End Date</label><input name="testEndDate" type="date" value={form.testEndDate} onChange={change} /></div></div><div className="form-group"><label>Terms</label><textarea name="terms" rows="4" value={form.terms} onChange={change} /></div><div className="series-form-bottom"><label className="series-active"><input name="active" type="checkbox" checked={!!form.active} onChange={change} /> Active</label><label className="series-active"><input name="downloadTestPaper" type="checkbox" checked={!!form.downloadTestPaper} onChange={change} /> Download test paper</label><label className="series-active"><input name="showTestResult" type="checkbox" checked={!!form.showTestResult} onChange={change} /> Show result</label><label className="series-active"><input name="showAllResult" type="checkbox" checked={!!form.showAllResult} onChange={change} /> Show all result</label></div></form>
     </Modal>}
   </section>
 }
