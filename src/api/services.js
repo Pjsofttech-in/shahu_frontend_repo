@@ -648,12 +648,15 @@ export const questionService = {
       active: payload?.active ?? true,
     }
 
-    // The Spring controller reads this value with @RequestParam("questionRequestJson").
-    // Always use multipart so text-only and image questions follow the same path.
     form.append('questionRequestJson', JSON.stringify(requestPayload))
 
     Object.entries(files).forEach(([key, file]) => {
-      if (file) form.append(key, file)
+      if (file) {
+        form.append(key, file)
+        if (key === 'questionImage' && files.questionImageFile) {
+          form.append('questionImageFile', files.questionImageFile)
+        }
+      }
     })
 
     return apiUpload.post('/questions', form).then((r) => r.data)
@@ -669,7 +672,12 @@ export const questionService = {
     form.append('questionRequestJson', JSON.stringify(requestPayload))
 
     Object.entries(files).forEach(([key, file]) => {
-      if (file) form.append(key, file)
+      if (file) {
+        form.append(key, file)
+        if (key === 'questionImage' && files.questionImageFile) {
+          form.append('questionImageFile', files.questionImageFile)
+        }
+      }
     })
 
     return apiUpload.put(`/questions/${id}`, form).then((r) => r.data)

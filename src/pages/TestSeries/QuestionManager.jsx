@@ -2,11 +2,13 @@ import React, { useEffect, useMemo, useRef, useState } from 'react'
 import { FiEdit2, FiPlus, FiSearch, FiTrash2 } from 'react-icons/fi'
 import Modal from '../../components/common/Modal.jsx'
 import { questionService, sectionService } from '../../api/services.js'
+import { useLanguage } from '../../context/LanguageContext.jsx'
 
 const OPTION_KEYS = ['optionA', 'optionB', 'optionC', 'optionD']
 const DEFAULT_OPTION_KINDS = { optionA: 'text', optionB: 'text', optionC: 'text', optionD: 'text' }
 const EMPTY_FORM = {
   question: '',
+  questionImage: '',
   questionType: 'MCQ',
   sectionId: '',
   optionA: '',
@@ -24,6 +26,11 @@ const SYMBOL_GROUPS = [
   { label: 'Logic', symbols: ['<', '>', '≤', '≥', '∈', '∉', '⊂', '⊆', '∩', '∪', '∀', '∃', '¬', '∧', '∨', '→', '↔'] },
   { label: 'Other', symbols: ['%', '°', '′', '″', '©', '®', '™', '₹', '$', '€', '£', '…', '•', '✓', '✗', '←', '↑', '↓', '↗'] },
 ]
+const DEVANAGARI_DIGITS = ['०', '१', '२', '३', '४', '५', '६', '७', '८', '९']
+const formatForLanguage = (value, language) => {
+  if (language !== 'mr') return value
+  return String(value ?? '').replace(/\d/g, (digit) => DEVANAGARI_DIGITS[Number(digit)] || digit)
+}
 const rowsOf = (data) => Array.isArray(data) ? data : data?.content || data?.data || []
 const errorOf = (error) => String(error?.response?.data?.message || error?.response?.data?.error || error?.message || 'Could not complete the question request.')
 const sectionIdOf = (row) => row.sectionId ?? row.section?.id ?? row.section?.sectionId
@@ -32,6 +39,7 @@ const normalizeQuestionPayload = (form) => {
   const optionKinds = form?.optionKinds || DEFAULT_OPTION_KINDS
   return {
     question: (form?.question || '').trim(),
+    questionImage: form?.questionImage || '',
     questionType: form?.questionType || 'MCQ',
     sectionId: form?.sectionId == null || form?.sectionId === '' ? null : Number(form.sectionId),
     optionA: optionKinds.optionA === 'image' ? (form.optionA || '') : (form.optionA || '').trim(),
@@ -45,6 +53,8 @@ const normalizeQuestionPayload = (form) => {
 }
 
 function OptionField({ label, kind, value, onKindChange, onValueChange, onFileChange, disabled }) {
+  const { language } = useLanguage()
+  const languageCode = language === 'mr' ? 'mr' : 'en'
   const handleFile = (event) => {
     const file = event.target.files?.[0] || null
     onFileChange(file)
@@ -62,31 +72,41 @@ function OptionField({ label, kind, value, onKindChange, onValueChange, onFileCh
     </div>
     {kind === 'image' ? (
       <div className="option-image-box">
-        <input type="file" accept="image/*" onChange={handleFile} disabled={disabled} />
+        <input type="file" accept="image/*" onChange={handleFile} disabled={disabled} lang={languageCode} />
         {value && <small>{value}</small>}
       </div>
     ) : kind === 'data' ? (
-      <textarea rows="3" value={value} onChange={(event) => onValueChange(event.target.value)} disabled={disabled} placeholder="Write raw data / JSON / formula / text..." />
+      <textarea rows="3" value={value} onChange={(event) => onValueChange(formatForLanguage(event.target.value, language))} disabled={disabled} placeholder="Write raw data / JSON / formula / text..." lang={languageCode} />
     ) : (
-      <input value={value} onChange={(event) => onValueChange(event.target.value)} disabled={disabled} placeholder="Enter option text" />
+      <input value={value} onChange={(event) => onValueChange(formatForLanguage(event.target.value, language))} disabled={disabled} placeholder="Enter option text" lang={languageCode} />
     )}
   </div>
 }
 
 function QuestionEditor({ value, onChange }) {
+  const { language } = useLanguage()
   const inputRef = useRef(null)
   const [group, setGroup] = useState('Math')
   const symbols = SYMBOL_GROUPS.find((item) => item.label === group)?.symbols || []
+  const languageCode = language === 'mr' ? 'mr' : 'en'
 
-  const insertSymbol = (symbol) => {
+  const insertAtCursor = (text) => {
     const input = inputRef.current
     const start = input?.selectionStart ?? value.length
     const end = input?.selectionEnd ?? value.length
-    onChange(`${value.slice(0, start)}${symbol}${value.slice(end)}`)
+    onChange(`${value.slice(0, start)}${text}${value.slice(end)}`)
     requestAnimationFrame(() => {
       input?.focus()
-      input?.setSelectionRange(start + symbol.length, start + symbol.length)
+      input?.setSelectionRange(start + text.length, start + text.length)
     })
+  }
+
+  const insertSymbol = (symbol) => {
+    insertAtCursor(symbol)
+  }
+
+  const insertMarathiDigit = (digit) => {
+    insertAtCursor(digit)
   }
 
   return <div className="question-editor">
@@ -98,13 +118,45 @@ function QuestionEditor({ value, onChange }) {
       <div className="question-symbol-list">
         {symbols.map((symbol, index) => <button type="button" key={`${symbol}-${index}`} onClick={() => insertSymbol(symbol)} title={`Insert ${symbol}`}>{symbol}</button>)}
       </div>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginLeft: 8 }}>
+        <span style={{ fontSize: 11, fontWeight: 600 }}>मराठी अंक</span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 4, flexWrap: 'wrap' }}>
+          {DEVANAGARI_DIGITS.map((digit, index) => (
+            <button
+              key={`${digit}-${index}`}
+              type="button"
+              onClick={() => insertMarathiDigit(digit)}
+              title={`Insert Devanagari digit ${index}`}
+              style={{
+                width: 24,
+                height: 24,
+                minWidth: 24,
+                padding: 0,
+                border: '1px solid #e0a36e',
+                borderRadius: 4,
+                background: '#fff',
+                color: '#2d2d2d',
+                fontSize: 12,
+                lineHeight: 1,
+                cursor: 'pointer',
+                display: 'inline-flex',
+                alignItems: 'center',
+                justifyContent: 'center'
+              }}
+            >
+              {digit}
+            </button>
+          ))}
+        </div>
+      </div>
     </div>
-    <textarea ref={inputRef} rows="5" value={value} onChange={(event) => onChange(event.target.value)} required aria-label="Question text" placeholder="Type the question using letters, numbers, symbols, or equations..." />
+    <textarea ref={inputRef} rows="5" value={value} onChange={(event) => onChange(formatForLanguage(event.target.value, language))} required aria-label="Question text" placeholder="Type the question using letters, numbers, symbols, or equations..." lang={languageCode} />
     <div className="question-editor-hint">Supports letters, numbers, punctuation, Unicode symbols, Greek letters, and mathematical notation.</div>
   </div>
 }
 
 export default function QuestionManager() {
+  const { language } = useLanguage()
   const [rows, setRows] = useState([])
   const [sections, setSections] = useState([])
   const [form, setForm] = useState(EMPTY_FORM)
@@ -119,6 +171,7 @@ export default function QuestionManager() {
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
+  const [questionImageFile, setQuestionImageFile] = useState(null)
   const [optionFiles, setOptionFiles] = useState({})
 
   const load = async () => {
@@ -141,9 +194,10 @@ export default function QuestionManager() {
   const pageRows = filtered.slice((page - 1) * pageSize, page * pageSize)
 
   const open = (row = null) => {
-    const baseForm = row ? { ...EMPTY_FORM, ...row, sectionId: sectionIdOf(row) || '', optionKinds: { ...DEFAULT_OPTION_KINDS, ...(row.optionKinds || {}) } } : { ...EMPTY_FORM, optionKinds: { ...DEFAULT_OPTION_KINDS } }
+    const baseForm = row ? { ...EMPTY_FORM, ...row, questionImage: row.questionImage || row.image || '', sectionId: sectionIdOf(row) || '', optionKinds: { ...DEFAULT_OPTION_KINDS, ...(row.optionKinds || {}) } } : { ...EMPTY_FORM, optionKinds: { ...DEFAULT_OPTION_KINDS } }
     setEditing(row)
     setForm(baseForm)
+    setQuestionImageFile(null)
     setOptionFiles({})
     setError('')
     setShowModal(true)
@@ -168,6 +222,8 @@ export default function QuestionManager() {
 
     const payload = normalizeQuestionPayload(form)
     const files = {
+      questionImage: questionImageFile || null,
+      questionImageFile: questionImageFile || null,
       optionAFile: optionKinds.optionA === 'image' ? optionFiles.optionAFile || null : null,
       optionBFile: optionKinds.optionB === 'image' ? optionFiles.optionBFile || null : null,
       optionCFile: optionKinds.optionC === 'image' ? optionFiles.optionCFile || null : null,
@@ -193,7 +249,7 @@ export default function QuestionManager() {
     {error && !showModal && !deleteTarget && <div className="login-alert">{error}</div>}
     <div className="question-bank-filters"><select value={typeFilter} onChange={(event) => setTypeFilter(event.target.value)} aria-label="Filter question type"><option value="">Type</option><option value="MCQ">MCQ</option><option value="DESCRIPTIVE">Descriptive</option></select><select value={sectionFilter} onChange={(event) => setSectionFilter(event.target.value)} aria-label="Filter question section"><option value="">Section</option>{sections.map((section) => <option key={section.id} value={section.id}>{section.name || section.sectionName || section.title}</option>)}</select><div className="question-bank-search"><input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search Question" aria-label="Search question" /><FiSearch /></div></div>
     <div className="card question-bank-list-card"><div className="table-wrap"><table className="data-table question-bank-table"><thead><tr><th>Id</th><th>Question</th><th>Type</th><th>Section</th><th>Actions</th></tr></thead><tbody>{loading && <tr className="empty-row"><td colSpan="5">Loading questions...</td></tr>}{!loading && !pageRows.length && <tr className="empty-row"><td colSpan="5">No data</td></tr>}{!loading && pageRows.map((row) => <tr key={row.id}><td>{row.id}</td><td className="question-preview">{row.question || `Question #${row.id}`}</td><td>{row.questionType || 'MCQ'}</td><td>{sectionNameOf(row)}</td><td><div className="table-actions"><button className="icon-btn edit" type="button" onClick={() => open(row)} title="Edit question" aria-label={`Edit question ${row.id}`}><FiEdit2 /></button><button className="icon-btn danger" type="button" onClick={() => setDeleteTarget(row)} title="Delete question" aria-label={`Delete question ${row.id}`}><FiTrash2 /></button></div></td></tr>)}</tbody></table></div><div className="question-bank-footer"><label>Rows per page <select value={pageSize} onChange={(event) => setPageSize(Number(event.target.value))}><option value="20">20</option><option value="50">50</option><option value="100">100</option><option value="1000">1000</option></select></label><span>{filtered.length ? `${(page - 1) * pageSize + 1}-${Math.min(page * pageSize, filtered.length)} of ${filtered.length}` : '0 results'}</span><div><button className="btn btn-outline btn-sm" type="button" disabled={page <= 1} onClick={() => setPage((current) => current - 1)}>Previous</button><button className="btn btn-outline btn-sm" type="button" disabled={page >= totalPages} onClick={() => setPage((current) => current + 1)}>Next</button></div></div></div>
-    {showModal && <Modal title={editing ? 'Edit Question' : 'Create Question'} onClose={() => setShowModal(false)} maxWidth="900px" footer={<><button className="btn btn-outline" type="button" onClick={() => setShowModal(false)}>Cancel</button><button className="btn btn-primary" type="submit" form="question-form" disabled={saving}>{saving ? 'Saving...' : editing ? 'Update' : 'Create'}</button></>}><form id="question-form" onSubmit={submit} className="question-bank-form"><div className="question-bank-form-grid"><div className="form-group full-width"><label>Question *</label><QuestionEditor value={form.question} onChange={(value) => setForm((current) => ({ ...current, question: value }))} /></div><div className="form-group"><label>Section *</label><select name="sectionId" value={form.sectionId} onChange={change} required><option value="">Select Section</option>{sections.map((section) => <option key={section.id} value={section.id}>{section.name || section.sectionName || section.title}</option>)}</select></div><div className="form-group"><label>Question Type *</label><select name="questionType" value={form.questionType} onChange={change}><option value="MCQ">MCQ</option><option value="DESCRIPTIVE">Descriptive</option></select></div>{OPTION_KEYS.map((field) => { const kind = normalizeOptionKind(form.optionKinds?.[field] || DEFAULT_OPTION_KINDS[field]); return <OptionField key={field} label={`Option ${field.slice(-1)} ${form.questionType === 'MCQ' ? '*' : ''}`} kind={kind} value={form[field] || ''} disabled={form.questionType !== 'MCQ'} onKindChange={(nextKind) => setForm((current) => ({ ...current, optionKinds: { ...(current.optionKinds || DEFAULT_OPTION_KINDS), [field]: normalizeOptionKind(nextKind) } }))} onValueChange={(nextValue) => setForm((current) => ({ ...current, [field]: nextValue }))} onFileChange={(file) => setOptionFiles((current) => ({ ...current, [`${field}File`]: file }))} /> })}<div className="form-group"><label>Correct Answer</label><select name="correctAnswer" value={form.correctAnswer} onChange={change} disabled={form.questionType !== 'MCQ'}><option value="A">A</option><option value="B">B</option><option value="C">C</option><option value="D">D</option></select></div><div className="form-group"><label>Explanation</label><textarea name="answerExplanation" rows="3" value={form.answerExplanation} onChange={change} /></div></div><label className="series-active"><input name="active" type="checkbox" checked={!!form.active} onChange={change} /> Active</label></form></Modal>}
+    {showModal && <Modal title={editing ? 'Edit Question' : 'Create Question'} onClose={() => setShowModal(false)} maxWidth="900px" footer={<><button className="btn btn-outline" type="button" onClick={() => setShowModal(false)}>Cancel</button><button className="btn btn-primary" type="submit" form="question-form" disabled={saving}>{saving ? 'Saving...' : editing ? 'Update' : 'Create'}</button></>}><form id="question-form" onSubmit={submit} className="question-bank-form"><div className="question-bank-form-grid"><div className="form-group full-width"><label>Question *</label><QuestionEditor value={form.question} onChange={(value) => setForm((current) => ({ ...current, question: value }))} /></div><div className="form-group full-width"><label>Question Image</label><input type="file" accept="image/*" onChange={(event) => { const file = event.target.files?.[0] || null; setQuestionImageFile(file); setForm((current) => ({ ...current, questionImage: file ? file.name : current.questionImage || '' })) }} lang={language === 'mr' ? 'mr' : 'en'} /><small>{form.questionImage || (editing ? 'Existing question image' : 'Optional')}</small></div><div className="form-group"><label>Section *</label><select name="sectionId" value={form.sectionId} onChange={change} required><option value="">Select Section</option>{sections.map((section) => <option key={section.id} value={section.id}>{section.name || section.sectionName || section.title}</option>)}</select></div><div className="form-group"><label>Question Type *</label><select name="questionType" value={form.questionType} onChange={change}><option value="MCQ">MCQ</option><option value="DESCRIPTIVE">Descriptive</option></select></div>{OPTION_KEYS.map((field) => { const kind = normalizeOptionKind(form.optionKinds?.[field] || DEFAULT_OPTION_KINDS[field]); return <OptionField key={field} label={`Option ${field.slice(-1)} ${form.questionType === 'MCQ' ? '*' : ''}`} kind={kind} value={form[field] || ''} disabled={form.questionType !== 'MCQ'} onKindChange={(nextKind) => setForm((current) => ({ ...current, optionKinds: { ...(current.optionKinds || DEFAULT_OPTION_KINDS), [field]: normalizeOptionKind(nextKind) } }))} onValueChange={(nextValue) => setForm((current) => ({ ...current, [field]: nextValue }))} onFileChange={(file) => setOptionFiles((current) => ({ ...current, [`${field}File`]: file }))} /> })}<div className="form-group"><label>Correct Answer</label><select name="correctAnswer" value={form.correctAnswer} onChange={change} disabled={form.questionType !== 'MCQ'}><option value="A">A</option><option value="B">B</option><option value="C">C</option><option value="D">D</option></select></div><div className="form-group"><label>Explanation</label><textarea name="answerExplanation" rows="3" value={form.answerExplanation} onChange={change} /></div></div><label className="series-active"><input name="active" type="checkbox" checked={!!form.active} onChange={change} /> Active</label></form></Modal>}
     {deleteTarget && <Modal title="Delete Question" onClose={() => setDeleteTarget(null)} footer={<><button className="btn btn-outline" type="button" onClick={() => setDeleteTarget(null)}>Cancel</button><button className="btn btn-danger" type="button" disabled={saving} onClick={remove}>{saving ? 'Deleting...' : 'Delete'}</button></>}><p>Delete question {deleteTarget.id}?</p></Modal>}
   </section>
 }
