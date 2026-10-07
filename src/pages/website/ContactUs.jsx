@@ -24,12 +24,8 @@ export default function ContactUs({ title = 'Contact Us' }) {
           mapLink: String(values.mapLink ?? '').trim(),
         }
 
-        if (!payload.id) {
-          throw new Error('Contact details could not be loaded. Please refresh and try again.')
-        }
-
         if (!payload.address || !payload.contactNo || !payload.email) {
-          throw new Error('Please complete all contact fields.')
+          throw new Error('Please complete all required contact fields.')
         }
 
         return payload

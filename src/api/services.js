@@ -251,7 +251,18 @@ export const visionMissionService = {
   update: (payload) => dynamicApi.put('/website/vision-mission', payload).then((r) => r.data),
 }
 export const contactService = {
-  get: () => dynamicApi.get('/contact-us', {
+  get: async () => {
+    try {
+      const response = await dynamicApi.get('/contact-us', {
+        headers: { Authorization: `Bearer ${tokenStore.get() || ''}` },
+      })
+      return response.data || {}
+    } catch (error) {
+      if (error?.response?.status === 404) return {}
+      throw error
+    }
+  },
+  create: (payload) => dynamicApi.post('/contact-us', payload, {
     headers: { Authorization: `Bearer ${tokenStore.get() || ''}` },
   }).then((r) => r.data),
   update: (payload) => dynamicApi.put('/contact-us', payload, {

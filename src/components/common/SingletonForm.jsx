@@ -35,13 +35,20 @@ export default function SingletonForm({ title, subtitle, service, fields, transf
     setMessage('')
     try {
       const submitted = transformSubmit ? await transformSubmit(values, initialValues) : values
-      const payload = values.id ? { ...initialValues, ...submitted } : submitted
-      const saved = await service.update(payload)
+      const hasExistingRecord = Boolean(values.id || initialValues.id)
+      const payload = hasExistingRecord ? { ...initialValues, ...submitted } : submitted
+
+      const saved = hasExistingRecord
+        ? await service.update(payload)
+        : service.create
+          ? await service.create(payload)
+          : await service.update(payload)
+
       setValues(saved || payload)
       setInitialValues(saved || payload)
       setMessage('Saved successfully — changes are now live on the website.')
     } catch (e) {
-      setError(e?.response?.data?.message || 'Save failed. Please try again.')
+      setError(e?.response?.data?.message || e?.message || 'Save failed. Please try again.')
     } finally {
       setSaving(false)
     }
