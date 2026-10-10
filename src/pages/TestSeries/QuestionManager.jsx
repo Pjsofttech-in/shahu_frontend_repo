@@ -27,9 +27,26 @@ const SYMBOL_GROUPS = [
   { label: 'Other', symbols: ['%', '°', '′', '″', '©', '®', '™', '₹', '$', '€', '£', '…', '•', '✓', '✗', '←', '↑', '↓', '↗'] },
 ]
 const DEVANAGARI_DIGITS = ['०', '१', '२', '३', '४', '५', '६', '७', '८', '९']
+const DEVANAGARI_VOWELS = ['अ', 'आ', 'इ', 'ई', 'उ', 'ऊ', 'ऋ', 'ए', 'ऐ', 'ओ', 'औ', 'अं', 'अः']
+const DEVANAGARI_CONSONANTS = ['क', 'ख', 'ग', 'घ', 'च', 'छ', 'ज', 'झ', 'ट', 'ठ', 'ड', 'ढ', 'ण', 'त', 'थ', 'द', 'ध', 'न', 'प', 'फ', 'ब', 'भ', 'म', 'य', 'र', 'ल', 'व', 'श', 'ष', 'स', 'ह', 'ळ', 'क्ष', 'त्र', 'ज्ञ']
+const DEVANAGARI_FORMS = [
+  { label: 'अ', sign: '' },
+  { label: 'आ', sign: 'ा' },
+  { label: 'इ', sign: 'ि' },
+  { label: 'ई', sign: 'ी' },
+  { label: 'उ', sign: 'ु' },
+  { label: 'ऊ', sign: 'ू' },
+  { label: 'ए', sign: 'े' },
+  { label: 'ऐ', sign: 'ै' },
+  { label: 'ओ', sign: 'ो' },
+  { label: 'औ', sign: 'ौ' },
+  { label: 'अं', sign: 'ं' },
+  { label: 'अः', sign: 'ः' },
+]
+const formatDevanagariDigits = (value) => String(value ?? '').replace(/\d/g, (digit) => DEVANAGARI_DIGITS[Number(digit)] || digit)
 const formatForLanguage = (value, language) => {
   if (language !== 'mr') return value
-  return String(value ?? '').replace(/\d/g, (digit) => DEVANAGARI_DIGITS[Number(digit)] || digit)
+  return formatDevanagariDigits(value)
 }
 const rowsOf = (data) => Array.isArray(data) ? data : data?.content || data?.data || []
 const errorOf = (error) => String(error?.response?.data?.message || error?.response?.data?.error || error?.message || 'Could not complete the question request.')
@@ -87,6 +104,7 @@ function QuestionEditor({ value, onChange }) {
   const { language } = useLanguage()
   const inputRef = useRef(null)
   const [group, setGroup] = useState('Math')
+  const [activeConsonant, setActiveConsonant] = useState(DEVANAGARI_CONSONANTS[0])
   const symbols = SYMBOL_GROUPS.find((item) => item.label === group)?.symbols || []
   const languageCode = language === 'mr' ? 'mr' : 'en'
 
@@ -105,10 +123,6 @@ function QuestionEditor({ value, onChange }) {
     insertAtCursor(symbol)
   }
 
-  const insertMarathiDigit = (digit) => {
-    insertAtCursor(digit)
-  }
-
   return <div className="question-editor">
     <div className="question-editor-toolbar" aria-label="Question symbols">
       <label htmlFor="question-symbol-group">Insert symbols</label>
@@ -116,41 +130,71 @@ function QuestionEditor({ value, onChange }) {
         {SYMBOL_GROUPS.map((item) => <option key={item.label} value={item.label}>{item.label}</option>)}
       </select>
       <div className="question-symbol-list">
-        {symbols.map((symbol, index) => <button type="button" key={`${symbol}-${index}`} onClick={() => insertSymbol(symbol)} title={`Insert ${symbol}`}>{symbol}</button>)}
+        {symbols.map((symbol, index) => <button type="button" key={`${symbol}-${index}`} onMouseDown={(event) => event.preventDefault()} onClick={() => insertSymbol(symbol)} title={`Insert ${symbol}`}>{symbol}</button>)}
       </div>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginLeft: 8 }}>
-        <span style={{ fontSize: 11, fontWeight: 600 }}>मराठी अंक</span>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 4, flexWrap: 'wrap' }}>
-          {DEVANAGARI_DIGITS.map((digit, index) => (
-            <button
-              key={`${digit}-${index}`}
-              type="button"
-              onClick={() => insertMarathiDigit(digit)}
-              title={`Insert Devanagari digit ${index}`}
-              style={{
-                width: 24,
-                height: 24,
-                minWidth: 24,
-                padding: 0,
-                border: '1px solid #e0a36e',
-                borderRadius: 4,
-                background: '#fff',
-                color: '#2d2d2d',
-                fontSize: 12,
-                lineHeight: 1,
-                cursor: 'pointer',
-                display: 'inline-flex',
-                alignItems: 'center',
-                justifyContent: 'center'
-              }}
-            >
-              {digit}
-            </button>
-          ))}
+      <div className="question-marathi-palette" aria-label="Marathi character palette" lang="mr">
+        {[
+          { label: 'मराठी अंक', characters: DEVANAGARI_DIGITS },
+          { label: 'स्वर', characters: DEVANAGARI_VOWELS },
+        ].map(({ label, characters }) => (
+          <div className="question-marathi-group" key={label} role="group" aria-label={label}>
+            <span>{label}</span>
+            <div className="question-marathi-characters">
+              {characters.map((character, index) => (
+                <button
+                  key={`${character}-${index}`}
+                  type="button"
+                  className={label === 'मराठी अंक' ? 'question-marathi-digit' : undefined}
+                  onMouseDown={(event) => event.preventDefault()}
+                  onClick={() => insertAtCursor(character)}
+                  title={`Insert ${character}`}
+                >
+                  {character}
+                </button>
+              ))}
+            </div>
+          </div>
+        ))}
+        <div className="question-marathi-group" role="group" aria-label="व्यंजन निवडा">
+          <span>व्यंजन</span>
+          <div className="question-marathi-characters question-marathi-consonants">
+            {DEVANAGARI_CONSONANTS.map((consonant) => (
+              <button
+                key={consonant}
+                type="button"
+                className={activeConsonant === consonant ? 'active' : ''}
+                aria-pressed={activeConsonant === consonant}
+                onMouseDown={(event) => event.preventDefault()}
+                onClick={() => setActiveConsonant(consonant)}
+                title={`Show forms for ${consonant}`}
+              >
+                {consonant}
+              </button>
+            ))}
+          </div>
+        </div>
+        <div className="question-marathi-group" role="group" aria-label={`${activeConsonant} चे अक्षररूप`}>
+          <span>{activeConsonant} चे रूप</span>
+          <div className="question-marathi-characters">
+            {DEVANAGARI_FORMS.map(({ label, sign }) => {
+              const form = `${activeConsonant}${sign}`
+              return (
+                <button
+                  key={`${activeConsonant}-${label}`}
+                  type="button"
+                  onMouseDown={(event) => event.preventDefault()}
+                  onClick={() => insertAtCursor(form)}
+                  title={`Insert ${form}`}
+                >
+                  {form}
+                </button>
+              )
+            })}
+          </div>
         </div>
       </div>
     </div>
-    <textarea ref={inputRef} rows="5" value={value} onChange={(event) => onChange(formatForLanguage(event.target.value, language))} required aria-label="Question text" placeholder="Type the question using letters, numbers, symbols, or equations..." lang={languageCode} />
+    <textarea ref={inputRef} rows="5" value={value} onChange={(event) => onChange(formatDevanagariDigits(event.target.value))} required aria-label="Question text" placeholder="Type the question using letters, numbers, symbols, or equations..." lang={languageCode} />
     <div className="question-editor-hint">Supports letters, numbers, punctuation, Unicode symbols, Greek letters, and mathematical notation.</div>
   </div>
 }

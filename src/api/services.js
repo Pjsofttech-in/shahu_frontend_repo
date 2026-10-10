@@ -713,6 +713,17 @@ export const examService = {
   },
   remove: (id) => api.delete(`/exams/${id}`).then((r) => r.data),
 }
+
+export const examAttemptService = {
+  start: (examId, testSeriesId = null) => api.post('/exam-attempts/start', null, {
+    params: { examId, testSeriesId },
+  }).then((r) => r.data),
+  getQuestions: (attemptId) => api.get(`/exam-attempts/${attemptId}/questions`).then((r) => r.data),
+  saveAnswer: (attemptId, payload) => api.post(`/exam-attempts/${attemptId}/answers`, payload).then((r) => r.data),
+  submit: (attemptId) => api.post(`/exam-attempts/${attemptId}/submit`).then((r) => r.data),
+  getResult: (attemptId) => api.get(`/exam-attempts/${attemptId}/result`).then((r) => r.data),
+}
+
 export const resultService = {
   getAll: () => api.get('/results').then((r) => r.data),
   getById: (id) => api.get(`/results/${id}`).then((r) => r.data),
