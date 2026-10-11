@@ -11,7 +11,7 @@ ReactDOM.createRoot(document.getElementById('root')).render(
     <BrowserRouter>
       <AuthProvider>
         <LanguageProvider>
-          <App />
+          {/* <App /> */}
         </LanguageProvider>
       </AuthProvider>
     </BrowserRouter>
