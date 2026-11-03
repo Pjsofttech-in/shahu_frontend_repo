@@ -103,7 +103,7 @@ export default function Faculty() {
     try {
       const payload = {
         facilityName: form.facilityName.trim(),
-        experienceInYear: Number(form.experienceInYear) || 0,
+        experienceInYear: form.experienceInYear.trim(),
         subject: form.subject.trim(),
         facilityEducation: form.facilityEducation.trim(),
         description: form.description.trim(),
@@ -211,8 +211,8 @@ export default function Faculty() {
                   <input
                     id="f-experience"
                     name="experienceInYear"
-                    type="number"
-                    placeholder="10"
+                    type="Text"
+                    placeholder="Enter Experience in year, month"
                     value={form.experienceInYear}
                     onChange={handleField}
                   />
